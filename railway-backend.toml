@@ -1,0 +1,23 @@
+# Railway Backend Deployment Configuration
+# This file configures the backend Node.js service for Railway
+
+# Build command
+build = "cd backend && npm install"
+
+# Start command  
+start = "cd backend && npm start"
+
+# Environment variables needed
+[env]
+NODE_ENV = "production"
+PORT = "3001"
+
+# Health check
+[healthcheck]
+path = "/health"
+port = 3001
+
+# Auto-scaling
+[scaling]
+min_instances = 1
+max_instances = 3

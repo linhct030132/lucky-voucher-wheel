@@ -1,0 +1,22 @@
+# Railway Frontend Deployment Configuration
+# This file configures the frontend React app for Railway
+
+# Build command
+build = "cd frontend && npm install && npm run build"
+
+# Start command (serve the built React app)
+start = "cd frontend && npx serve -s build -l 3000"
+
+# Environment variables
+[env]
+NODE_ENV = "production"
+PORT = "3000"
+
+# Health check
+[healthcheck]
+path = "/"
+port = 3000
+
+# Static files serving
+[static]
+dir = "frontend/build"
