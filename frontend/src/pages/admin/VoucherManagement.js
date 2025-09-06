@@ -26,6 +26,7 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import AdminLayout from "../../components/AdminLayout";
 
 const VoucherManagement = () => {
   const { token } = useAuth();
@@ -302,18 +303,20 @@ const VoucherManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải voucher...</p>
+      <AdminLayout title="Quản Lý Voucher">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Đang tải voucher...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout title="Quản Lý Voucher">
+      <div className="space-y-8">
         {/* Header */}
         <div className="mb-8">
           <motion.div
@@ -908,7 +911,7 @@ const VoucherManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </AdminLayout>
   );
 };
 

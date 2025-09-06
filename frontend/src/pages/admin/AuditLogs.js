@@ -17,6 +17,7 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import AdminLayout from "../../components/AdminLayout";
 
 const AuditLogs = () => {
   const { token } = useAuth();
@@ -176,18 +177,20 @@ const AuditLogs = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải nhật ký hệ thống...</p>
+      <AdminLayout title="Nhật Ký Hệ Thống">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Đang tải nhật ký hệ thống...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <AdminLayout title="Nhật Ký Hệ Thống">
+      <div className="space-y-6">
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
@@ -444,7 +447,7 @@ const AuditLogs = () => {
           )}
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 

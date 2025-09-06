@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import axios from "axios";
 import FingerprintJS from "fingerprintjs2";
 
@@ -20,7 +20,7 @@ export const SpinProvider = ({ children }) => {
   const [availableVouchers, setAvailableVouchers] = useState([]);
 
   // Generate device fingerprint
-  const generateDeviceFingerprint = () => {
+  const generateDeviceFingerprint = useCallback(() => {
     return new Promise((resolve) => {
       FingerprintJS.get((components) => {
         const values = components.map((component) => component.value);
@@ -46,20 +46,20 @@ export const SpinProvider = ({ children }) => {
         resolve(finalFingerprint);
       });
     });
-  };
+  }, []);
 
   // Initialize device fingerprint
-  const initializeDevice = async () => {
+  const initializeDevice = useCallback(async () => {
     if (!deviceId) {
       const fingerprint = await generateDeviceFingerprint();
       setDeviceId(fingerprint);
       return fingerprint;
     }
     return deviceId;
-  };
+  }, [deviceId, generateDeviceFingerprint]);
 
   // Get available vouchers
-  const getAvailableVouchers = async () => {
+  const getAvailableVouchers = useCallback(async () => {
     try {
       const response = await axios.get("/api/vouchers");
       setAvailableVouchers(response.data.data || []);
@@ -69,95 +69,103 @@ export const SpinProvider = ({ children }) => {
       setAvailableVouchers([]);
       return [];
     }
-  };
+  }, []);
 
   // Check eligibility for spin
-  const checkEligibility = async (email = null, phone = null) => {
-    try {
-      const currentDeviceId = await initializeDevice();
+  const checkEligibility = useCallback(
+    async (email = null, phone = null) => {
+      try {
+        const currentDeviceId = await initializeDevice();
 
-      const response = await axios.post("/api/verify-eligibility", {
-        deviceId: currentDeviceId,
-        email,
-        phone,
-      });
+        const response = await axios.post("/api/verify-eligibility", {
+          deviceId: currentDeviceId,
+          email,
+          phone,
+        });
 
-      setEligibilityStatus(response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Eligibility check failed:", error);
-      const errorData = {
-        eligible: false,
-        reason: "NETWORK_ERROR",
-        message: "Unable to check eligibility. Please try again.",
-      };
-      setEligibilityStatus(errorData);
-      return errorData;
-    }
-  };
+        setEligibilityStatus(response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Eligibility check failed:", error);
+        const errorData = {
+          eligible: false,
+          reason: "NETWORK_ERROR",
+          message: "Unable to check eligibility. Please try again.",
+        };
+        setEligibilityStatus(errorData);
+        return errorData;
+      }
+    },
+    [initializeDevice]
+  );
 
   // Perform spin
-  const performSpin = async (userProfile) => {
-    if (isSpinning) return;
+  const performSpin = useCallback(
+    async (userProfile) => {
+      if (isSpinning) return;
 
-    setIsSpinning(true);
-    setSpinResult(null);
+      setIsSpinning(true);
+      setSpinResult(null);
 
-    try {
-      const currentDeviceId = await initializeDevice();
+      try {
+        const currentDeviceId = await initializeDevice();
 
-      const spinData = {
-        fullName: userProfile.fullName,
-        email: userProfile.email || null,
-        phone: userProfile.phone || null,
-        consent: userProfile.consent,
-        deviceId: currentDeviceId,
-      };
+        const spinData = {
+          fullName: userProfile.fullName,
+          email: userProfile.email,
+          phone: userProfile.phone,
+          consent: Boolean(userProfile.consent),
+          deviceId: currentDeviceId,
+        };
 
-      const response = await axios.post("/api/spins", spinData);
+        console.log("Sending spin data:", spinData);
 
-      if (response.data) {
-        setSpinResult(response.data);
-        return response.data;
+        const response = await axios.post("/api/spins", spinData);
+
+        if (response.data) {
+          setSpinResult(response.data);
+          return response.data;
+        }
+      } catch (error) {
+        console.error("Spin failed:", error);
+
+        let errorMessage = "Spin failed. Please try again.";
+        let errorCode = "UNKNOWN_ERROR";
+
+        if (error.response?.status === 409) {
+          errorMessage = "You have already participated in this lucky draw.";
+          errorCode = "ALREADY_PARTICIPATED";
+        } else if (error.response?.status === 429) {
+          errorMessage = "Too many attempts. Please try again later.";
+          errorCode = "RATE_LIMITED";
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+          errorCode = "API_ERROR";
+        }
+
+        const errorResult = {
+          outcome: "error",
+          error: errorMessage,
+          errorCode,
+        };
+
+        setSpinResult(errorResult);
+        return errorResult;
+      } finally {
+        setIsSpinning(false);
       }
-    } catch (error) {
-      console.error("Spin failed:", error);
-
-      let errorMessage = "Spin failed. Please try again.";
-      let errorCode = "UNKNOWN_ERROR";
-
-      if (error.response?.status === 409) {
-        errorMessage = "You have already participated in this lucky draw.";
-        errorCode = "ALREADY_PARTICIPATED";
-      } else if (error.response?.status === 429) {
-        errorMessage = "Too many attempts. Please try again later.";
-        errorCode = "RATE_LIMITED";
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-        errorCode = "API_ERROR";
-      }
-
-      const errorResult = {
-        outcome: "error",
-        error: errorMessage,
-        errorCode,
-      };
-
-      setSpinResult(errorResult);
-      return errorResult;
-    } finally {
-      setIsSpinning(false);
-    }
-  };
+    },
+    [isSpinning, initializeDevice]
+  );
 
   // Reset spin state
-  const resetSpin = () => {
+  const resetSpin = useCallback(() => {
     setSpinResult(null);
     setEligibilityStatus(null);
-  };
+  }, []);
 
   // Get system status
-  const getSystemStatus = async () => {
+  const getSystemStatus = useCallback(async () => {
     try {
       const response = await axios.get("/api/status");
       return response.data.data;
@@ -165,7 +173,7 @@ export const SpinProvider = ({ children }) => {
       console.error("Failed to get system status:", error);
       return null;
     }
-  };
+  }, []);
 
   const value = {
     // State

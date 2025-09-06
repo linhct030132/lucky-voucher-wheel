@@ -1,0 +1,19 @@
+[build]
+cmd = "cd frontend && npm install && npm run build"
+
+[start]
+cmd = "cd frontend && npx serve -s build -l $PORT"
+
+[variables]
+NODE_ENV = "production"
+
+[phases.setup]
+dependsOn = []
+
+[phases.install]
+dependsOn = ["setup"]
+cmd = "cd frontend && npm install"
+
+[phases.build]
+dependsOn = ["install"]
+cmd = "cd frontend && npm run build"

@@ -20,6 +20,7 @@ import {
   Activity,
   Percent,
   RefreshCw,
+  RotateCcw,
   Download,
   Filter,
   Settings,
@@ -27,11 +28,13 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
+  Trophy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import AdminLayout from "../../components/AdminLayout";
 
 const AdminDashboard = () => {
   const { token } = useAuth();
@@ -40,31 +43,28 @@ const AdminDashboard = () => {
     totalVouchers: 0,
     totalSpins: 0,
     totalWins: 0,
-    totalRevenue: 0,
+    todaySpins: 0,
+    todayWins: 0,
     conversionRate: 0,
     stockValue: 0,
-    recentActivities: [],
     topVouchers: [],
-    monthlyStats: [],
+    recentActivity: [],
   });
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("7");
   const [refreshing, setRefreshing] = useState(false);
+  const [timeRange, setTimeRange] = useState("7d");
 
   useEffect(() => {
     fetchDashboardData();
-  }, [timeRange]);
+  }, [token, timeRange]);
 
   const fetchDashboardData = async () => {
+    if (!token) return;
+
     try {
-      if (!token) {
-        toast.error("Không có token xác thực");
-        return;
-      }
+      setLoading(true);
 
-      setRefreshing(true);
-
-      // Use dedicated stats endpoint if available, otherwise fallback to individual endpoints
+      // Try to get stats from the dedicated stats endpoint first
       try {
         const statsResponse = await axios.get(
           `${process.env.REACT_APP_API_BASE_URL}/admin/stats`,
@@ -97,32 +97,27 @@ const AdminDashboard = () => {
           }),
           axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/audit-logs`, {
             headers: { Authorization: `Bearer ${token}` },
-            params: { limit: 10, timeRange },
+            params: { limit: 10 },
           }),
         ]);
 
-      const users = usersResponse.data.users || usersResponse.data.data || [];
-      const vouchers = vouchersResponse.data.vouchers || vouchersResponse.data.data || [];
-      const spins = spinsResponse.data.spins || spinsResponse.data.data || [];
-      const activities = auditResponse.data.logs || auditResponse.data.data || [];
+      const users = usersResponse.data.data || [];
+      const vouchers = vouchersResponse.data.data || [];
+      const spins = spinsResponse.data.data || [];
+      const auditLogs = auditResponse.data.data || [];
 
-      // Calculate statistics
-      const totalWins = spins.filter((spin) => spin.result === "win").length;
-      const conversionRate =
-        spins.length > 0 ? (totalWins / spins.length) * 100 : 0;
+      // Calculate wins from spins
+      const wins = spins.filter((spin) => spin.outcome === "win");
+      const today = new Date().toISOString().split("T")[0];
+      const todaySpins = spins.filter((spin) =>
+        spin.created_at?.startsWith(today)
+      );
+      const todayWins = todaySpins.filter((spin) => spin.outcome === "win");
 
-      // Calculate total value of won vouchers
-      const totalRevenue = spins
-        .filter((spin) => spin.result === "win")
-        .reduce((sum, spin) => {
-          const voucher = vouchers.find((v) => v.id === spin.voucher_id);
-          return sum + (voucher ? parseFloat(voucher.face_value) || 0 : 0);
-        }, 0);
-
-      // Get top performing vouchers
+      // Calculate voucher statistics
       const voucherWins = {};
       spins
-        .filter((spin) => spin.result === "win")
+        .filter((spin) => spin.outcome === "win" && spin.voucher_id)
         .forEach((spin) => {
           voucherWins[spin.voucher_id] =
             (voucherWins[spin.voucher_id] || 0) + 1;
@@ -144,20 +139,33 @@ const AdminDashboard = () => {
         totalUsers: users.length,
         totalVouchers: vouchers.length,
         totalSpins: spins.length,
-        totalWins,
-        totalRevenue,
-        conversionRate,
-        recentActivities: activities,
-        topVouchers,
-        activeVouchers: vouchers.filter((v) => v.status === "active").length,
+        totalWins: wins.length,
+        todaySpins: todaySpins.length,
+        todayWins: todayWins.length,
+        conversionRate:
+          spins.length > 0 ? (wins.length / spins.length) * 100 : 0,
         stockValue: vouchers.reduce(
-          (sum, v) => sum + v.remaining_stock * parseFloat(v.face_value || 0),
+          (sum, v) => sum + (v.remaining_stock || 0),
           0
         ),
+        topVouchers,
+        recentActivity: auditLogs.slice(0, 8),
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast.error("Không thể tải dữ liệu dashboard");
+      setStats({
+        totalUsers: 0,
+        totalVouchers: 0,
+        totalSpins: 0,
+        totalWins: 0,
+        todaySpins: 0,
+        todayWins: 0,
+        conversionRate: 0,
+        stockValue: 0,
+        topVouchers: [],
+        recentActivity: [],
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -174,86 +182,110 @@ const AdminDashboard = () => {
       color: "text-blue-600",
       bg: "bg-blue-100",
       gradient: "from-blue-500 to-blue-600",
+      description: "Người dùng đã tham gia hệ thống",
     },
     {
-      label: "Tổng Voucher",
-      value: stats.totalVouchers || 0,
-      change: "+8%",
+      label: "Voucher Đã Phát",
+      value: stats.totalWins || 0,
+      change: "+24%",
       trend: "up",
       icon: <Gift className="w-6 h-6" />,
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-      gradient: "from-purple-500 to-purple-600",
+      color: "text-green-600",
+      bg: "bg-green-100",
+      gradient: "from-green-500 to-green-600",
+      description: "Voucher đã được trao thưởng",
     },
     {
       label: "Tổng Lượt Quay",
       value: stats.totalSpins || 0,
-      change: "+24%",
+      change: "+15%",
       trend: "up",
-      icon: <Zap className="w-6 h-6" />,
-      color: "text-yellow-600",
-      bg: "bg-yellow-100",
-      gradient: "from-yellow-500 to-yellow-600",
+      icon: <RotateCcw className="w-6 h-6" />,
+      color: "text-orange-600",
+      bg: "bg-orange-100",
+      gradient: "from-orange-500 to-orange-600",
+      description: "Lượt tham gia may mắn",
     },
     {
-      label: "Tổng Lượt Thắng",
-      value: stats.totalWins || 0,
-      change: "+18%",
-      trend: "up",
-      icon: <Award className="w-6 h-6" />,
-      color: "text-green-600",
-      bg: "bg-green-100",
-      gradient: "from-green-500 to-green-600",
-    },
-    {
-      label: "Tỷ Lệ Chuyển Đổi",
+      label: "Tỷ Lệ Thành Công",
       value: `${(stats.conversionRate || 0).toFixed(1)}%`,
-      change: "+5.2%",
+      change: "+2.5%",
       trend: "up",
       icon: <Target className="w-6 h-6" />,
+      color: "text-purple-600",
+      bg: "bg-purple-100",
+      gradient: "from-purple-500 to-purple-600",
+      description: "Tỷ lệ người chơi trúng thưởng",
+    },
+  ];
+
+  const todayStats = [
+    {
+      label: "Hôm Nay",
+      value: stats.todaySpins || 0,
+      icon: <Calendar className="w-5 h-5" />,
       color: "text-indigo-600",
-      bg: "bg-indigo-100",
-      gradient: "from-indigo-500 to-indigo-600",
+      suffix: "lượt quay",
     },
     {
-      label: "Giá Trị Kho",
-      value: `${stats.stockValue?.toFixed(0) || 0}K VND`,
-      change: "-3%",
-      trend: "down",
-      icon: <DollarSign className="w-6 h-6" />,
-      color: "text-emerald-600",
-      bg: "bg-emerald-100",
-      gradient: "from-emerald-500 to-emerald-600",
+      label: "Thành Công",
+      value: stats.todayWins || 0,
+      icon: <Award className="w-5 h-5" />,
+      color: "text-green-600",
+      suffix: "voucher",
+    },
+    {
+      label: "Tích Cực",
+      value: stats.totalUsers || 0,
+      icon: <Activity className="w-5 h-5" />,
+      color: "text-blue-600",
+      suffix: "người dùng",
+    },
+    {
+      label: "Kho Voucher",
+      value: stats.stockValue || 0,
+      icon: <Package className="w-5 h-5" />,
+      color: "text-purple-600",
+      suffix: "voucher",
     },
   ];
 
   const quickActions = [
     {
-      label: "Quản Lý Voucher",
+      title: "Quản Lý Voucher",
       description: "Tạo và chỉnh sửa voucher",
       icon: <Gift className="w-6 h-6" />,
       link: "/admin/vouchers",
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-      gradient: "from-purple-500 to-purple-600",
-    },
-    {
-      label: "Xem Báo Cáo",
-      description: "Phân tích và thông tin chi tiết",
-      icon: <BarChart3 className="w-6 h-6" />,
-      link: "/admin/reports",
       color: "text-blue-600",
       bg: "bg-blue-100",
       gradient: "from-blue-500 to-blue-600",
     },
     {
-      label: "Nhật Ký Kiểm Tra",
-      description: "Nhật ký hoạt động hệ thống",
-      icon: <Activity className="w-6 h-6" />,
-      link: "/admin/audit-logs",
+      title: "Xem Lượt Quay",
+      description: "Theo dõi hoạt động quay số",
+      icon: <RotateCcw className="w-6 h-6" />,
+      link: "/admin/spins",
+      color: "text-purple-600",
+      bg: "bg-purple-100",
+      gradient: "from-purple-500 to-purple-600",
+    },
+    {
+      title: "Quản Lý Khách Hàng",
+      description: "Xem thông tin khách hàng",
+      icon: <Users className="w-6 h-6" />,
+      link: "/admin/customers",
       color: "text-green-600",
       bg: "bg-green-100",
       gradient: "from-green-500 to-green-600",
+    },
+    {
+      title: "Nhật Ký Hệ Thống",
+      description: "Lịch sử hoạt động hệ thống",
+      icon: <Activity className="w-6 h-6" />,
+      link: "/admin/audit-logs",
+      color: "text-orange-600",
+      bg: "bg-orange-100",
+      gradient: "from-orange-500 to-orange-600",
     },
   ];
 
@@ -270,13 +302,18 @@ const AdminDashboard = () => {
       case "spin":
         return <Zap className="w-4 h-4 text-purple-500" />;
       default:
-        return <Activity className="w-4 h-4 text-gray-500" />;
+        return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const formatTimeAgo = (timestamp) => {
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return "Không xác định";
+
     const now = new Date();
     const time = new Date(timestamp);
+
+    if (isNaN(time.getTime())) return "Không xác định";
+
     const diffInMinutes = Math.floor((now - time) / (1000 * 60));
 
     if (diffInMinutes < 1) return "Vừa xong";
@@ -288,18 +325,20 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dashboard...</p>
+      <AdminLayout title="Dashboard">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Đang tải dashboard...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout title="Dashboard">
+      <div className="space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -313,312 +352,244 @@ const AdminDashboard = () => {
                 Bảng Điều Khiển Quản Trị
               </h1>
               <p className="text-gray-600 mt-2">
-                Chào mừng trở lại! Đây là những gì đang xảy ra với hệ thống của
-                bạn.
+                Chào mừng trở lại! Hệ thống đang hoạt động tốt với dữ liệu tích
+                cực.
               </p>
             </div>
-            <div className="mt-4 sm:mt-0 flex items-center space-x-4">
-              {/* Time Range Filter */}
+            <div className="mt-4 sm:mt-0 flex space-x-3">
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
-                <option value="1">24 giờ qua</option>
-                <option value="7">7 ngày qua</option>
-                <option value="30">30 ngày qua</option>
-                <option value="90">90 ngày qua</option>
+                <option value="1d">Hôm nay</option>
+                <option value="7d">7 ngày</option>
+                <option value="30d">30 ngày</option>
+                <option value="90d">90 ngày</option>
               </select>
-
-              {/* Refresh Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={fetchDashboardData}
+              <button
+                onClick={() => {
+                  setRefreshing(true);
+                  fetchDashboardData();
+                }}
                 disabled={refreshing}
-                className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center text-sm disabled:opacity-50"
               >
                 <RefreshCw
-                  className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                  className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
                 />
-                <span>Làm mới</span>
-              </motion.button>
+                Làm mới
+              </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Main Statistics Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
-        >
+        {/* Main Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mainStats.map((stat, index) => (
             <motion.div
-              key={index}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl`}>
-                    {stat.icon}
-                  </div>
-                  <div
-                    className={`flex items-center text-sm font-medium ${
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.bg} rounded-lg p-3`}>
+                  <div className={stat.color}>{stat.icon}</div>
+                </div>
+                <div className="flex items-center space-x-1">
+                  {stat.trend === "up" ? (
+                    <ArrowUpRight className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <ArrowDownRight className="w-4 h-4 text-red-500" />
+                  )}
+                  <span
+                    className={`text-sm font-medium ${
                       stat.trend === "up" ? "text-green-600" : "text-red-600"
                     }`}
                   >
-                    {stat.trend === "up" ? (
-                      <ArrowUpRight className="w-4 h-4 mr-1" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 mr-1" />
-                    )}
                     {stat.change}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {typeof stat.value === "number"
-                      ? stat.value.toLocaleString()
-                      : stat.value}
-                  </h3>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
+                  </span>
                 </div>
               </div>
-              <div className={`h-2 bg-gradient-to-r ${stat.gradient}`}></div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  {typeof stat.value === "number"
+                    ? stat.value.toLocaleString("vi-VN")
+                    : stat.value}
+                </h3>
+                <p className="text-gray-600 text-sm font-medium">
+                  {stat.label}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+              </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* Today's Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl p-6 shadow-lg border border-gray-200"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <Star className="w-6 h-6 mr-2 text-yellow-500" />
+            Thống Kê Nổi Bật Hôm Nay
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {todayStats.map((stat, index) => (
+              <div
+                key={stat.label}
+                className="text-center p-4 bg-gray-50 rounded-lg"
+              >
+                <div className={`${stat.color} mb-2 flex justify-center`}>
+                  {stat.icon}
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stat.value.toLocaleString("vi-VN")}
+                </div>
+                <div className="text-sm text-gray-600">{stat.suffix}</div>
+                <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Top Performing Vouchers */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                    <TrendingUp className="w-6 h-6 mr-2 text-indigo-600" />
-                    Voucher Hiệu Suất Cao
-                  </h2>
-                  <Link
-                    to="/admin/vouchers"
-                    className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-xl p-6 shadow-lg border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <Zap className="w-6 h-6 mr-2 text-indigo-600" />
+              Thao Tác Nhanh
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {quickActions.map((action, index) => (
+                <Link key={action.title} to={action.link} className="group">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="p-4 rounded-lg border-2 border-gray-100 hover:border-indigo-200 transition-all duration-200 hover:shadow-lg"
                   >
-                    Xem Tất Cả
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  {stats.topVouchers.length > 0 ? (
-                    stats.topVouchers.map((voucher, index) => (
-                      <motion.div
-                        key={voucher.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 * index }}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    <div className="flex items-start space-x-3">
+                      <div
+                        className={`${action.bg} rounded-lg p-2 group-hover:scale-110 transition-transform`}
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full text-sm font-bold">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {voucher.name}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {voucher.voucher_type === "discount_percentage"
-                                ? `${voucher.face_value}% OFF`
-                                : voucher.voucher_type === "discount_amount"
-                                ? `$${voucher.face_value}`
-                                : "Free Product"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-gray-900">
-                            {voucher.wins}
-                          </div>
-                          <div className="text-sm text-gray-600">thắng</div>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Gift className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p>Không có dữ liệu voucher</p>
+                        <div className={action.color}>{action.icon}</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                          {action.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {action.description}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
                     </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
 
-            {/* Recent Activity */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                    <Activity className="w-6 h-6 mr-2 text-indigo-600" />
-                    Hoạt Động Gần Đây
-                  </h2>
-                  <Link
-                    to="/admin/audit-logs"
-                    className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center"
-                  >
-                    Xem Tất Cả
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  {stats.recentActivities.length > 0 ? (
-                    stats.recentActivities.map((activity, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 * index }}
-                        className="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex-shrink-0 mt-1">
-                          {getActivityIcon(activity.action)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">
-                              {activity.user_email || "System"}
-                            </span>{" "}
-                            <span className="text-gray-600">
-                              {activity.details}
-                            </span>
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatTimeAgo(activity.timestamp)}
-                          </p>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p>Không có hoạt động gần đây</p>
+          {/* Recent Activity */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-xl p-6 shadow-lg border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <Activity className="w-6 h-6 mr-2 text-green-600" />
+              Hoạt Động Gần Đây
+            </h2>
+            <div className="space-y-4">
+              {stats.recentActivity && stats.recentActivity.length > 0 ? (
+                stats.recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      {getActivityIcon(activity?.action)}
                     </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100"
-            >
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <Zap className="w-6 h-6 mr-2 text-indigo-600" />
-                  Hành Động Nhanh
-                </h2>
-                <div className="space-y-4">
-                  {quickActions.map((action, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link
-                        to={action.link}
-                        className="block p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200 group"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`${action.bg} ${action.color} p-2 rounded-lg group-hover:scale-110 transition-transform`}
-                          >
-                            {action.icon}
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900 group-hover:text-indigo-900">
-                              {action.label}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {action.description}
-                            </p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 ml-auto" />
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* System Status */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100"
-            >
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <Settings className="w-6 h-6 mr-2 text-indigo-600" />
-                  Trạng Thái Hệ Thống
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Cơ Sở Dữ Liệu</span>
-                    <div className="flex items-center text-green-600">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      <span className="text-sm font-medium">Trực Tuyến</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 truncate">
+                        {activity?.description ||
+                          `${activity?.action || "Hoạt động"} ${
+                            activity?.entity_type || ""
+                          }`}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {getTimeAgo(activity?.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Dịch Vụ API</span>
-                    <div className="flex items-center text-green-600">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      <span className="text-sm font-medium">Trực Tuyến</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Voucher Đang Hoạt Động
-                    </span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.activeVouchers || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Cập Nhật Lần Cuối</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {new Date().toLocaleTimeString()}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <Activity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p>Chưa có hoạt động nào</p>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+              )}
+            </div>
+          </motion.div>
         </div>
+
+        {/* Top Vouchers */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white rounded-xl p-6 shadow-lg border border-gray-200"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
+            Top Voucher Phổ Biến
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats.topVouchers && stats.topVouchers.length > 0 ? (
+              stats.topVouchers.map((voucher, index) => (
+                <div
+                  key={voucher?.id || index}
+                  className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-medium text-gray-900 truncate">
+                      {voucher?.name || "Voucher không tên"}
+                    </h3>
+                    <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                      #{index + 1}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {voucher?.face_value || "Chưa xác định"}
+                  </p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 font-medium">
+                      {voucher?.wins || 0} lượt thắng
+                    </span>
+                    <span className="text-gray-500">
+                      {(voucher?.winRate || 0).toFixed(1)}% tỷ lệ
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-4 text-gray-500">
+                <Gift className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p>Chưa có dữ liệu voucher</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 

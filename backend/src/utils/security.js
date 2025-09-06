@@ -63,8 +63,14 @@ class SecurityUtils {
   static detectSuspiciousActivity(req, userProfile) {
     const warnings = [];
 
+    // Ensure userProfile exists
+    if (!userProfile) {
+      warnings.push("Missing user profile");
+      return warnings;
+    }
+
     // Check for common fraud patterns
-    if (userProfile.full_name.length < 2) {
+    if (userProfile.fullName && userProfile.fullName.length < 2) {
       warnings.push("Suspiciously short name");
     }
 

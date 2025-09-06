@@ -13,7 +13,8 @@ import ThankYouPage from "./pages/ThankYouPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import VoucherManagement from "./pages/admin/VoucherManagement";
-import Reports from "./pages/admin/Reports";
+import SpinManagement from "./pages/admin/SpinManagement";
+import CustomerManagement from "./pages/admin/CustomerManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
 
 // Components
@@ -51,15 +52,23 @@ function App() {
                 }
               />
               <Route
-                path="/admin/reports"
+                path="/admin/spins"
                 element={
                   <ProtectedRoute>
-                    <Reports />
+                    <SpinManagement />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/admin/logs"
+                path="/admin/customers"
+                element={
+                  <ProtectedRoute>
+                    <CustomerManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/audit-logs"
                 element={
                   <ProtectedRoute>
                     <AuditLogs />

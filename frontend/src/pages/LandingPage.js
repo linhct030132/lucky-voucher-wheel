@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Play,
 } from "lucide-react";
+import LogoIcon from "../components/LogoIcon";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -29,10 +30,6 @@ const LandingPage = () => {
 
   const handleStartSpin = () => {
     navigate("/spin");
-  };
-
-  const handleAdminLogin = () => {
-    navigate("/admin/login");
   };
 
   const features = [
@@ -65,56 +62,10 @@ const LandingPage = () => {
     },
   ];
 
-  const stats = [
-    {
-      icon: <Users className="w-6 h-6" />,
-      label: "Người Thắng Giải",
-      value: "10,000+",
-      color: "text-blue-600",
-    },
-    {
-      icon: <Trophy className="w-6 h-6" />,
-      label: "Phần Thưởng Đã Tặng",
-      value: "25,000+",
-      color: "text-green-600",
-    },
-    {
-      icon: <Target className="w-6 h-6" />,
-      label: "Tỷ Lệ Thành Công",
-      value: "85%",
-      color: "text-purple-600",
-    },
-    {
-      icon: <Calendar className="w-6 h-6" />,
-      label: "Ngày Hoạt Động",
-      value: "365+",
-      color: "text-orange-600",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Nguyễn Thị Hương",
-      quote:
-        "Tôi đã trúng giảm giá 50% tại cửa hàng yêu thích! Thật tuyệt vời!",
-      prize: "Phiếu Giảm Giá 50%",
-    },
-    {
-      name: "Trần Minh Đức",
-      quote: "Quy trình rất dễ dàng và tôi nhận được voucher ngay lập tức.",
-      prize: "Voucher Sản Phẩm Miễn Phí",
-    },
-    {
-      name: "Lê Thị Mai",
-      quote: "Hệ thống công bằng và minh bạch. Rất khuyến khích!",
-      prize: "Thẻ Quà Tặng 2.000.000đ",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Navigation Header */}
-      <nav className="z-10 bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0">
+      <nav className="z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200 sticky top-0">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <motion.div
@@ -122,28 +73,8 @@ const LandingPage = () => {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-3"
             >
-              <div className="relative">
-                <Crown className="w-8 h-8 text-indigo-600" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Vòng Quay May Mắn
-                </h1>
-                <p className="text-xs text-gray-500">
-                  Chiến Thắng Lớn Hôm Nay!
-                </p>
-              </div>
+              <LogoIcon className="h-8 ml-0" />
             </motion.div>
-
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={handleAdminLogin}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-md"
-            >
-              Admin
-            </motion.button>
           </div>
         </div>
       </nav>
@@ -165,7 +96,7 @@ const LandingPage = () => {
               transition={{ duration: 0.8 }}
             >
               <motion.div
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-8"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium mb-8"
                 whileHover={{ scale: 1.05 }}
               >
                 <Sparkles className="w-4 h-4" />
@@ -217,40 +148,13 @@ const LandingPage = () => {
                   </div>
                 </motion.div>
               </div>
-
-              {/* Live Stats */}
-              <motion.div
-                className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className={`${stat.color} mb-3 flex justify-center`}>
-                      {stat.icon}
-                    </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">
-                      {stat.value}
-                    </div>
-                    <div className="text-gray-600 text-sm font-medium">
-                      {stat.label}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white/50">
+      <section className="py-24 bg-white/80">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -278,7 +182,7 @@ const LandingPage = () => {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
               >
-                <div className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group-hover:border-gray-200">
+                <div className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group-hover:border-indigo-200">
                   <div
                     className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
@@ -371,59 +275,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Người Thắng Giải Hạnh Phúc
-            </h2>
-            <p className="text-xl text-gray-600">
-              Xem những gì người thắng giải của chúng tôi nói!
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-center space-x-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-5 h-5 text-yellow-400 fill-current"
-                    />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 italic">
-                  "{testimonial.quote}"
-                </p>
-                <div className="border-t pt-4">
-                  <div className="font-semibold text-gray-900">
-                    {testimonial.name}
-                  </div>
-                  <div className="text-sm text-indigo-600 font-medium">
-                    Đã trúng: {testimonial.prize}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA Section */}
       <section className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -467,8 +318,7 @@ const LandingPage = () => {
             className="text-center"
           >
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <Crown className="w-6 h-6 text-indigo-400" />
-              <span className="text-xl font-bold">Vòng Quay May Mắn</span>
+              <LogoIcon className="h-6 ml-0" />
             </div>
             <p className="text-gray-400 mb-2">
               © 2024 Hệ Thống Voucher May Mắn. Tất cả quyền được bảo lưu.

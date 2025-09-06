@@ -73,6 +73,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
     setIsSubmitting(true);
 
     try {
+      console.log("Form data being submitted:", formData);
       await onSubmit(formData);
     } catch (error) {
       console.error("Form submission error:", error);

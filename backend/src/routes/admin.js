@@ -707,6 +707,111 @@ router.get(
 );
 
 /**
+ * GET /api/admin/spins
+ * Get all spin attempts with user and outcome details
+ */
+router.get("/spins", async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      outcome,
+      dateFrom,
+      dateTo,
+      userId,
+    } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const offset = (pageNum - 1) * limitNum;
+
+    const safeLimitNum = Number.isInteger(limitNum) ? limitNum : 20;
+    const safeOffset = Number.isInteger(offset) ? offset : 0;
+
+    let whereClause = "WHERE 1=1";
+    const params = [];
+
+    if (outcome) {
+      whereClause += " AND sa.outcome = ?";
+      params.push(outcome);
+    }
+
+    if (dateFrom) {
+      whereClause += " AND sa.created_at >= ?";
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      whereClause += " AND sa.created_at <= ?";
+      params.push(dateTo);
+    }
+
+    if (userId) {
+      whereClause += " AND sa.user_id = ?";
+      params.push(userId);
+    }
+
+    const spins = await query(
+      `SELECT 
+        sa.id,
+        sa.outcome,
+        sa.created_at,
+        sa.ip_address,
+        up.full_name,
+        up.email,
+        up.phone,
+        v.name as voucher_name,
+        vc.code as voucher_code,
+        v.face_value as voucher_value
+       FROM spin_attempts sa
+       LEFT JOIN user_profiles up ON sa.user_id = up.id
+       LEFT JOIN vouchers v ON sa.voucher_id = v.id
+       LEFT JOIN voucher_codes vc ON sa.voucher_code_id = vc.id
+       ${whereClause}
+       ORDER BY sa.created_at DESC
+       LIMIT ${safeLimitNum} OFFSET ${safeOffset}`,
+      params
+    );
+
+    const [{ total }] = await query(
+      `SELECT COUNT(*) as total FROM spin_attempts sa ${whereClause}`,
+      params
+    );
+
+    const [stats] = await query(`
+      SELECT 
+        COUNT(*) as total_spins,
+        COUNT(CASE WHEN outcome = 'win' THEN 1 END) as total_wins,
+        COUNT(CASE WHEN outcome = 'lose' THEN 1 END) as total_losses,
+        COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as today_spins
+      FROM spin_attempts
+    `);
+
+    res.json({
+      success: true,
+      data: spins,
+      pagination: {
+        page: pageNum,
+        limit: safeLimitNum,
+        total: parseInt(total) || 0,
+        pages: Math.ceil((parseInt(total) || 0) / safeLimitNum),
+      },
+      stats: {
+        totalSpins: parseInt(stats.total_spins) || 0,
+        totalWins: parseInt(stats.total_wins) || 0,
+        totalLosses: parseInt(stats.total_losses) || 0,
+        todaySpins: parseInt(stats.today_spins) || 0,
+        winRate:
+          stats.total_spins > 0
+            ? ((stats.total_wins / stats.total_spins) * 100).toFixed(1)
+            : 0,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/admin/stats
  * Get dashboard statistics
  */
@@ -758,8 +863,11 @@ router.get("/stats", async (req, res, next) => {
         totalUsers: parseInt(total_users) || 0,
         codesIssued: parseInt(codes_issued) || 0,
         codesRedeemed: parseInt(codes_redeemed) || 0,
-        redemptionRate: codes_issued > 0 ? ((codes_redeemed / codes_issued) * 100).toFixed(1) : 0
-      }
+        redemptionRate:
+          codes_issued > 0
+            ? ((codes_redeemed / codes_issued) * 100).toFixed(1)
+            : 0,
+      },
     });
   } catch (error) {
     next(error);
@@ -772,32 +880,59 @@ router.get("/stats", async (req, res, next) => {
  */
 router.get("/users", async (req, res, next) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, search, dateFrom, dateTo } = req.query;
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
     const offset = (pageNum - 1) * limitNum;
 
-    // Get unique users from audit logs with their activity
+    let whereClause = "WHERE 1=1";
+    const params = [];
+
+    if (search) {
+      whereClause +=
+        " AND (up.full_name LIKE ? OR up.email LIKE ? OR up.phone LIKE ?)";
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    if (dateFrom) {
+      whereClause += " AND up.created_at >= ?";
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      whereClause += " AND up.created_at <= ?";
+      params.push(dateTo);
+    }
+
     const users = await query(
       `SELECT 
-        actor_id as id,
-        entity_data->>'$.email' as email,
-        entity_data->>'$.phone' as phone,
-        entity_data->>'$.full_name' as full_name,
-        COUNT(*) as activity_count,
-        MAX(created_at) as last_activity,
-        MIN(created_at) as first_activity
-       FROM audit_logs 
-       WHERE actor_id IS NOT NULL AND entity_type = 'spin_attempt'
-       GROUP BY actor_id, entity_data->>'$.email', entity_data->>'$.phone', entity_data->>'$.full_name'
-       ORDER BY last_activity DESC
-       LIMIT ? OFFSET ?`,
-      [limitNum, offset]
+        up.id,
+        up.full_name,
+        up.email,
+        up.phone,
+        up.created_at as first_activity,
+        COALESCE(sa.activity_count, 0) as activity_count,
+        sa.last_activity
+       FROM user_profiles up
+       LEFT JOIN (
+         SELECT 
+           user_id,
+           COUNT(*) as activity_count,
+           MAX(created_at) as last_activity
+         FROM spin_attempts 
+         GROUP BY user_id
+       ) sa ON up.id = sa.user_id
+       ${whereClause}
+       ORDER BY COALESCE(sa.last_activity, up.created_at) DESC
+       LIMIT ${limitNum} OFFSET ${offset}`,
+      params
     );
 
     // Get total count
     const [{ total }] = await query(
-      "SELECT COUNT(DISTINCT actor_id) as total FROM audit_logs WHERE actor_id IS NOT NULL AND entity_type = 'spin_attempt'"
+      `SELECT COUNT(*) as total FROM user_profiles up ${whereClause}`,
+      params
     );
 
     res.json({
@@ -807,8 +942,8 @@ router.get("/users", async (req, res, next) => {
         page: pageNum,
         limit: limitNum,
         total: parseInt(total) || 0,
-        pages: Math.ceil((parseInt(total) || 0) / limitNum)
-      }
+        pages: Math.ceil((parseInt(total) || 0) / limitNum),
+      },
     });
   } catch (error) {
     next(error);

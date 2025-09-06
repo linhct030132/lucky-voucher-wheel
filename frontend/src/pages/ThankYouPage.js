@@ -48,7 +48,7 @@ const ThankYouPage = () => {
           transition={{ delay: 0.3 }}
           className="text-4xl font-bold text-gray-900 mb-4"
         >
-          Thank You! 🎉
+          cảm ơn! 🎉
         </motion.h1>
 
         <motion.p
@@ -57,7 +57,7 @@ const ThankYouPage = () => {
           transition={{ delay: 0.4 }}
           className="text-xl text-gray-600 mb-8"
         >
-          Your participation has been recorded successfully!
+          Tham gia của bạn đã được ghi nhận thành công!
         </motion.p>
 
         {/* Features section */}
@@ -71,14 +71,14 @@ const ThankYouPage = () => {
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
               <Gift className="w-5 h-5 text-blue-600" />
             </div>
-            <span>Your voucher details have been sent to your email</span>
+            <span>Thông tin voucher của bạn đã được gửi đến email của bạn</span>
           </div>
 
           <div className="flex items-center justify-center space-x-3 text-gray-700">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-purple-600" />
             </div>
-            <span>Keep an eye out for more exciting promotions</span>
+            <span>Hãy chú ý đến những chương trình khuyến mãi thú vị hơn</span>
           </div>
         </motion.div>
 
@@ -93,12 +93,12 @@ const ThankYouPage = () => {
             to="/"
             className="inline-flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            Back to Home
+            Quay lại trang chủ
             <ArrowRight className="w-5 h-5 ml-2" />
           </Link>
 
           <p className="text-sm text-gray-500">
-            Share this experience with your friends and family!
+            Chia sẻ trải nghiệm này với bạn bè và gia đình của bạn!
           </p>
         </motion.div>
 
