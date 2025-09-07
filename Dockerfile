@@ -31,6 +31,10 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 # Create necessary directories
 RUN mkdir -p logs uploads
 
+# Set environment variables
+ENV NODE_ENV=production
+ENV RAILWAY_ENVIRONMENT=true
+
 # Expose single port
 EXPOSE 8080
 

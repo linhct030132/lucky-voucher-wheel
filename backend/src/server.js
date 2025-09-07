@@ -16,6 +16,8 @@ console.log("🔧 Environment Debug:");
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`PORT (raw): ${process.env.PORT}`);
 console.log(`BACKEND_PORT (raw): ${process.env.BACKEND_PORT}`);
+console.log(`RAILWAY_ENVIRONMENT: ${process.env.RAILWAY_ENVIRONMENT}`);
+console.log(`RAILWAY_STATIC_URL: ${process.env.RAILWAY_STATIC_URL}`);
 
 // For Railway/production: Always use Railway's PORT if available
 // For development: use BACKEND_PORT to avoid conflicts with frontend dev server
@@ -117,18 +119,65 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Debug endpoint for static files
+app.get("/api/debug", (req, res) => {
+  const staticPath = process.env.RAILWAY_ENVIRONMENT
+    ? path.join(__dirname, "../frontend/build")
+    : path.join(__dirname, "../../frontend/build");
+
+  res.json({
+    staticPath: staticPath,
+    staticFilesExist: require("fs").existsSync(staticPath),
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+      PORT: process.env.PORT,
+    },
+    indexHtmlExists: require("fs").existsSync(
+      path.join(staticPath, "index.html")
+    ),
+  });
+});
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", publicRoutes);
 
-// Serve static files from the React app in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/build")));
+// Serve static files from the React app
+// In Railway/Docker, files are at /frontend/build
+// In development, files are at ../../frontend/build
+const staticPath = process.env.RAILWAY_ENVIRONMENT
+  ? path.join(__dirname, "../frontend/build")
+  : path.join(__dirname, "../../frontend/build");
+
+console.log(`📁 Static files path: ${staticPath}`);
+console.log(`📁 Static files exist: ${require("fs").existsSync(staticPath)}`);
+
+if (require("fs").existsSync(staticPath)) {
+  console.log("✅ Serving static files from:", staticPath);
+  app.use(express.static(staticPath));
 
   // Catch all handler: send back React's index.html file for client-side routing
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../frontend/build/index.html"));
+    const indexPath = path.join(staticPath, "index.html");
+    console.log(`📄 Serving index.html from: ${indexPath}`);
+    res.sendFile(indexPath);
+  });
+} else {
+  console.log("⚠️  Static files not found at:", staticPath);
+  console.log(
+    "📁 Available files in __dirname:",
+    require("fs").readdirSync(__dirname)
+  );
+
+  // Fallback: serve a simple message for non-API routes
+  app.get("*", (req, res) => {
+    res.status(404).json({
+      error: "Frontend files not found",
+      path: staticPath,
+      message: "This appears to be an API-only deployment",
+    });
   });
 }
 

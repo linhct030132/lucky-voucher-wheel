@@ -2,9 +2,13 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "node src/server.js"
+startCommand = "NODE_ENV=production node src/server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+[env]
+NODE_ENV = "production"
+RAILWAY_ENVIRONMENT = "true"
 
 [build.env]
 CI = "false"
