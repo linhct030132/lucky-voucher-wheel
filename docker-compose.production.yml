@@ -1,0 +1,61 @@
+version: "3.8"
+
+# Single-port production deployment
+# This override uses the unified Dockerfile to run everything on one port
+services:
+  # Unified application (frontend + backend on single port)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voucher_app_unified
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-secret-key}
+      COOKIE_SECRET: ${COOKIE_SECRET:-your-cookie-secret-key}
+      DEVICE_HMAC_SECRET: ${DEVICE_HMAC_SECRET:-your-device-fingerprint-secret-key}
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER:-your-email@gmail.com}
+      EMAIL_PASS: ${EMAIL_PASS:-your-app-password}
+      EMAIL_FROM: ${EMAIL_FROM:-"Lucky Voucher System <noreply@yourdomain.com>"}
+      # If using separate DB container
+      DB_HOST: ${DB_HOST:-database}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-voucher_system}
+      DB_USER: ${DB_USER:-voucher_user}
+      DB_PASSWORD: ${DB_PASSWORD:-password123}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - voucher_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Remove the separate frontend and backend services
+  backend:
+    profiles: ["disabled"]
+  
+  frontend:
+    profiles: ["disabled"]
+
+networks:
+  voucher_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

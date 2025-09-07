@@ -1,8 +1,9 @@
 [build]
-buildCommand = "npm run railway-build"
+# Build both frontend and backend using the unified Dockerfile
+builder = "dockerfile"
 
 [deploy]
-startCommand = "npm run railway-start"
+startCommand = "npm run start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 

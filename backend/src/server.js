@@ -10,8 +10,11 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-// For Railway: use PORT directly since we're serving both API and static files
-const PORT = process.env.PORT || 3001;
+// For production/Railway: use PORT directly since we're serving both API and static files
+// For development: use BACKEND_PORT to avoid conflicts with frontend dev server
+const PORT = process.env.NODE_ENV === 'production' 
+  ? (process.env.PORT || 8080)
+  : (process.env.BACKEND_PORT || 3001);
 
 // Import database and utilities
 const { testConnection } = require("./config/database");
@@ -46,11 +49,8 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
         connectSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -59,7 +59,27 @@ app.use(
 
 // CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins in development
+  origin: function (origin, callback) {
+    // In production, allow same origin (since frontend is served by the same server)
+    if (process.env.NODE_ENV === 'production') {
+      // Allow same origin and the Railway URL
+      const allowedOrigins = [
+        process.env.RAILWAY_STATIC_URL,
+        process.env.FRONTEND_URL,
+        // Allow same origin (null when serving static files)
+        null
+      ].filter(Boolean);
+      
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Be permissive in production for now
+      }
+    } else {
+      // In development, allow all origins
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
@@ -73,7 +93,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// Rate limiting for API routes
+// Rate limiting
 app.use("/api", apiLimiter);
 
 // Health check endpoint
@@ -86,81 +106,17 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Serve static files from the React app in production
-if (process.env.NODE_ENV === "production") {
-  const staticPath = path.join(__dirname, "../../frontend/build");
-  console.log(`📁 Serving static files from: ${staticPath}`);
-
-  // First, serve static files with proper MIME types and explicit paths
-  app.use(
-    "/static",
-    express.static(path.join(staticPath, "static"), {
-      maxAge: "1y",
-      etag: true,
-      setHeaders: (res, filePath) => {
-        console.log(`📄 Serving static asset: ${filePath}`);
-        // Set correct MIME types based on file extension
-        if (filePath.endsWith(".js")) {
-          res.set("Content-Type", "application/javascript; charset=utf-8");
-        } else if (filePath.endsWith(".css")) {
-          res.set("Content-Type", "text/css; charset=utf-8");
-        }
-      },
-    })
-  );
-
-  // Serve manifest.json and other root-level assets
-  app.use(
-    express.static(staticPath, {
-      maxAge: "1d",
-      etag: false,
-      // Set proper MIME types for different file extensions
-      setHeaders: (res, filePath) => {
-        console.log(`📄 Serving root asset: ${filePath}`);
-
-        // Set correct MIME types based on file extension
-        if (filePath.endsWith(".js")) {
-          res.set("Content-Type", "application/javascript; charset=utf-8");
-        } else if (filePath.endsWith(".css")) {
-          res.set("Content-Type", "text/css; charset=utf-8");
-        } else if (filePath.endsWith(".json")) {
-          res.set("Content-Type", "application/json; charset=utf-8");
-        } else if (filePath.endsWith(".png")) {
-          res.set("Content-Type", "image/png");
-        } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
-          res.set("Content-Type", "image/jpeg");
-        } else if (filePath.endsWith(".ico")) {
-          res.set("Content-Type", "image/x-icon");
-        }
-      },
-    })
-  );
-}
-
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", publicRoutes);
 
-// Catch all handler for React routing (only in production)
-// This MUST come after static file serving to avoid intercepting asset requests
+// Serve static files from the React app in production
 if (process.env.NODE_ENV === "production") {
-  app.get("*", (req, res) => {
-    // Don't catch static asset requests
-    if (
-      req.path.startsWith("/static/") ||
-      req.path.endsWith(".js") ||
-      req.path.endsWith(".css") ||
-      req.path.endsWith(".map") ||
-      req.path.endsWith(".ico") ||
-      req.path.endsWith(".png") ||
-      req.path.endsWith(".jpg") ||
-      req.path.endsWith(".json")
-    ) {
-      return res.status(404).send("Asset not found");
-    }
+  app.use(express.static(path.join(__dirname, "../../frontend/build")));
 
-    console.log(`🔄 Serving React app for route: ${req.path}`);
+  // Catch all handler: send back React's index.html file for client-side routing
+  app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../../frontend/build/index.html"));
   });
 }
