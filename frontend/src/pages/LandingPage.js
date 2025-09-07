@@ -316,7 +316,8 @@ const LandingPage = () => {
               <LogoIcon className="h-6 ml-0" />
             </div>
             <p className="text-gray-400 mb-2">
-              © 2024 Hệ Thống Voucher May Mắn. Tất cả quyền được bảo lưu.
+              © {new Date().getFullYear()} Hệ Thống Voucher May Mắn. Tất cả
+              quyền được bảo lưu.
             </p>
             <p className="text-sm text-gray-500">
               Được xây dựng với ❤️ để mang đến trải nghiệm giải thưởng tuyệt vời

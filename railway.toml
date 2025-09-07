@@ -1,0 +1,16 @@
+[build]
+buildCommand = "npm run railway-build"
+
+[deploy]
+startCommand = "npm run railway-start"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[env]
+PORT = "3000"
+NODE_ENV = "production"
+
+[build.env]
+CI = "false"
+NODE_OPTIONS = "--max-old-space-size=4096"
+NODE_ENV = "production"
