@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
-const { query } = require("../config/database");
+const { prisma } = require("../config/database");
 const { handleValidationErrors } = require("../middleware/errorHandler");
 const { spinLimiter } = require("../middleware/rateLimiter");
 const { DeviceFingerprint, SecurityUtils } = require("../utils/security");
@@ -94,56 +94,57 @@ router.post(
       let userId;
 
       // Check if user already exists
-      const [existingUser] = await query(
-        `
-      SELECT id FROM user_profiles 
-      WHERE (email = ? AND email IS NOT NULL) OR (phone = ? AND phone IS NOT NULL)
-    `,
-        [sanitizedProfile.email, sanitizedProfile.phone]
-      );
+      const existingUser = await prisma.userProfile.findFirst({
+        where: {
+          OR: [
+            { email: sanitizedProfile.email, email: { not: null } },
+            { phone: sanitizedProfile.phone, phone: { not: null } },
+          ],
+        },
+        select: { id: true },
+      });
 
       if (existingUser) {
         userId = existingUser.id;
       } else {
         // Create new user profile
         userId = uuidv4();
-        await query(
-          `
-        INSERT INTO user_profiles (id, full_name, email, phone, consent_at)
-        VALUES (?, ?, ?, ?, NOW())
-      `,
-          [
-            userId,
-            sanitizedProfile.fullName,
-            sanitizedProfile.email,
-            sanitizedProfile.phone,
-          ]
-        );
+        await prisma.userProfile.create({
+          data: {
+            id: userId,
+            full_name: sanitizedProfile.fullName,
+            email: sanitizedProfile.email,
+            phone: sanitizedProfile.phone,
+            consent_at: new Date(),
+          },
+        });
       }
 
       // Create or get device record
       let deviceRecordId;
-      const [existingDevice] = await query(
-        "SELECT id FROM devices WHERE device_fp_hash = ?",
-        [combinedDeviceId]
-      );
+      const existingDevice = await prisma.device.findUnique({
+        where: { device_fp_hash: combinedDeviceId },
+        select: { id: true },
+      });
 
       if (existingDevice) {
         deviceRecordId = existingDevice.id;
         // Update last seen
-        await query("UPDATE devices SET last_seen_at = NOW() WHERE id = ?", [
-          deviceRecordId,
-        ]);
+        await prisma.device.update({
+          where: { id: deviceRecordId },
+          data: { last_seen_at: new Date() },
+        });
       } else {
         // Create new device record
         deviceRecordId = uuidv4();
-        await query(
-          `
-        INSERT INTO devices (id, device_fp_hash, first_seen_at, last_seen_at)
-        VALUES (?, ?, NOW(), NOW())
-      `,
-          [deviceRecordId, combinedDeviceId]
-        );
+        await prisma.device.create({
+          data: {
+            id: deviceRecordId,
+            device_fp_hash: combinedDeviceId,
+            first_seen_at: new Date(),
+            last_seen_at: new Date(),
+          },
+        });
       }
 
       // Check for suspicious activity
@@ -160,17 +161,16 @@ router.post(
       }
 
       // Enhanced fraud detection - check for recent attempts from same IP/User-Agent
-      const recentAttempts = await query(
-        `
-      SELECT COUNT(*) as count
-      FROM spin_attempts sa
-      WHERE sa.ip_address = ? 
-      AND sa.created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-    `,
-        [req.ip]
-      );
+      const recentAttemptsCount = await prisma.spinAttempt.count({
+        where: {
+          ip_address: req.ip,
+          created_at: {
+            gt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+          },
+        },
+      });
 
-      if (recentAttempts[0].count >= 10) {
+      if (recentAttemptsCount >= 10) {
         return res.status(429).json({
           error: "Quá nhiều lần thử",
           message: "Vui lòng thử lại sau",
@@ -258,17 +258,26 @@ router.post(
 router.get("/vouchers", async (req, res, next) => {
   try {
     // Get available voucher categories (without exact probabilities)
-    const vouchers = await query(
-      `
-      SELECT name, face_value, description
-      FROM vouchers 
-      WHERE status = 'active' 
-      AND remaining_stock > 0
-      AND (valid_from IS NULL OR valid_from <= NOW())
-      AND (valid_to IS NULL OR valid_to >= NOW())
-      ORDER BY base_probability DESC
-    `
-    );
+    const vouchers = await prisma.voucher.findMany({
+      where: {
+        status: "active",
+        remaining_stock: { gt: 0 },
+        OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+        AND: [
+          {
+            OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+          },
+        ],
+      },
+      select: {
+        name: true,
+        face_value: true,
+        description: true,
+      },
+      orderBy: {
+        base_probability: "desc",
+      },
+    });
 
     res.json({
       success: true,
@@ -287,28 +296,32 @@ router.get("/vouchers", async (req, res, next) => {
  */
 router.get("/status", async (req, res, next) => {
   try {
-    const [voucherData] = await query(
-      `
-      SELECT 
-        COUNT(v.id) as active_vouchers,
-        SUM(v.remaining_stock) as total_remaining_stock
-      FROM vouchers v
-      WHERE v.status = 'active' 
-        AND v.remaining_stock > 0
-        AND (v.valid_from IS NULL OR v.valid_from <= NOW())
-        AND (v.valid_to IS NULL OR v.valid_to >= NOW())
-    `
-    );
+    const voucherData = await prisma.voucher.aggregate({
+      where: {
+        status: "active",
+        remaining_stock: { gt: 0 },
+        OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+        AND: [
+          {
+            OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+          },
+        ],
+      },
+      _count: { id: true },
+      _sum: { remaining_stock: true },
+    });
 
-    const hasStock = (voucherData?.total_remaining_stock || 0) > 0;
+    const totalRemainingStock = Number(voucherData._sum.remaining_stock || 0);
+    const activeVouchers = Number(voucherData._count.id || 0);
+    const hasStock = totalRemainingStock > 0;
 
     res.json({
       success: true,
       data: {
         isActive: hasStock,
         hasStock,
-        totalRemainingStock: voucherData?.total_remaining_stock || 0,
-        activeVouchers: voucherData?.active_vouchers || 0,
+        totalRemainingStock,
+        activeVouchers,
       },
     });
   } catch (error) {
@@ -335,20 +348,17 @@ router.post(
       );
 
       // Get device record
-      const [device] = await query(
-        "SELECT id FROM devices WHERE device_fp_hash = ?",
-        [combinedDeviceId]
-      );
+      const device = await prisma.device.findUnique({
+        where: { device_fp_hash: combinedDeviceId },
+        select: { id: true },
+      });
 
       if (device) {
         // Check if already spun
-        const [existingAttempt] = await query(
-          `
-        SELECT id FROM spin_attempts 
-        WHERE device_id = ?
-      `,
-          [device.id]
-        );
+        const existingAttempt = await prisma.spinAttempt.findFirst({
+          where: { device_id: device.id },
+          select: { id: true },
+        });
 
         if (existingAttempt) {
           return res.json({
@@ -360,15 +370,22 @@ router.post(
       }
 
       // Check if there are available vouchers
-      const [{ availableStock }] = await query(
-        `
-      SELECT SUM(remaining_stock) as availableStock
-      FROM vouchers 
-      WHERE status = 'active'
-      AND remaining_stock > 0
-      AND (valid_from IS NULL OR valid_from <= NOW())
-      AND (valid_to IS NULL OR valid_to >= NOW())
-    `
+      const availableStockSum = await prisma.voucher.aggregate({
+        where: {
+          status: "active",
+          remaining_stock: { gt: 0 },
+          OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+          AND: [
+            {
+              OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+            },
+          ],
+        },
+        _sum: { remaining_stock: true },
+      });
+
+      const availableStock = Number(
+        availableStockSum._sum.remaining_stock || 0
       );
 
       if (!availableStock || availableStock === 0) {

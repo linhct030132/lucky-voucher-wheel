@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, query: queryValidator, param } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
-const { query, transaction } = require("../config/database");
+const { prisma } = require("../config/database");
 const { authenticateToken, requireRole } = require("../middleware/auth");
 const { handleValidationErrors } = require("../middleware/errorHandler");
 const AuditLogger = require("../utils/auditLogger");
@@ -86,62 +86,64 @@ router.get(
       const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
       const offset = (pageNum - 1) * limitNum;
 
-      // Ensure limitNum and offset are valid integers
-      const safeLimitNum = Number.isInteger(limitNum) ? limitNum : 20;
-      const safeOffset = Number.isInteger(offset) ? offset : 0;
-
-      console.log("Pagination params:", {
-        pageNum,
-        limitNum,
-        offset,
-        safeLimitNum,
-        safeOffset,
-      });
-
-      let whereClause = "WHERE 1=1";
-      const params = [];
-
+      // Build where clause for Prisma
+      const where = {};
       if (status) {
-        whereClause += " AND v.status = ?";
-        params.push(status);
+        where.status = status;
       }
 
-      console.log("Query params before LIMIT/OFFSET:", params);
-      console.log("Final params:", [...params, safeLimitNum, safeOffset]);
+      console.log("Prisma where clause:", where);
+      console.log("Pagination params:", { pageNum, limitNum, offset });
 
-      // Get vouchers with campaign info
-      const vouchers = await query(
-        `
-      SELECT 
-        v.*,
-        (SELECT COUNT(*) FROM voucher_codes vc WHERE vc.voucher_id = v.id AND vc.status = 'issued') as codes_issued,
-        (SELECT COUNT(*) FROM voucher_codes vc WHERE vc.voucher_id = v.id AND vc.status = 'redeemed') as codes_redeemed
-      FROM vouchers v
-      ${whereClause}
-      ORDER BY v.created_at DESC
-      LIMIT ${safeLimitNum} OFFSET ${safeOffset}
-    `,
-        params
-      );
+      // Get vouchers with aggregated counts using Prisma
+      const [vouchers, total] = await Promise.all([
+        prisma.voucher.findMany({
+          where,
+          include: {
+            _count: {
+              select: {
+                voucher_codes: {
+                  where: { status: "issued" },
+                },
+              },
+            },
+          },
+          orderBy: {
+            created_at: "desc",
+          },
+          skip: offset,
+          take: limitNum,
+        }),
+        prisma.voucher.count({ where }),
+      ]);
 
-      // Get total count
-      const [{ total }] = await query(
-        `
-      SELECT COUNT(*) as total
-      FROM vouchers v
-      ${whereClause}
-    `,
-        params
+      // Transform the data to match expected format
+      const transformedVouchers = await Promise.all(
+        vouchers.map(async (voucher) => {
+          const codes_issued = await prisma.voucherCode.count({
+            where: { voucher_id: voucher.id, status: "issued" },
+          });
+
+          const codes_redeemed = await prisma.voucherCode.count({
+            where: { voucher_id: voucher.id, status: "redeemed" },
+          });
+
+          return {
+            ...voucher,
+            codes_issued: Number(codes_issued),
+            codes_redeemed: Number(codes_redeemed),
+          };
+        })
       );
 
       res.json({
         success: true,
-        data: vouchers,
+        data: transformedVouchers,
         pagination: {
           page: pageNum,
-          limit: safeLimitNum,
-          total: parseInt(total),
-          pages: Math.ceil(total / safeLimitNum),
+          limit: limitNum,
+          total: Number(total), // Convert BigInt to number
+          pages: Math.ceil(Number(total) / limitNum),
         },
       });
     } catch (error) {
@@ -162,24 +164,37 @@ router.get(
     try {
       const { id } = req.params;
 
-      const [voucher] = await query(
-        `
-      SELECT 
-        v.*,
-        (SELECT COUNT(*) FROM voucher_codes vc WHERE vc.voucher_id = v.id AND vc.status = 'issued') as codes_issued,
-        (SELECT COUNT(*) FROM voucher_codes vc WHERE vc.voucher_id = v.id AND vc.status = 'redeemed') as codes_redeemed,
-        (SELECT COUNT(*) FROM voucher_codes vc WHERE vc.voucher_id = v.id AND vc.status = 'available') as codes_available
-      FROM vouchers v
-      WHERE v.id = ?
-    `,
-        [id]
-      );
+      const voucher = await prisma.voucher.findUnique({
+        where: { id },
+      });
 
       if (!voucher) {
         return res.status(404).json({ error: "Voucher not found" });
       }
 
-      res.json({ success: true, data: voucher });
+      // Get voucher code counts
+      const [codes_issued, codes_redeemed, codes_available] = await Promise.all(
+        [
+          prisma.voucherCode.count({
+            where: { voucher_id: id, status: "issued" },
+          }),
+          prisma.voucherCode.count({
+            where: { voucher_id: id, status: "redeemed" },
+          }),
+          prisma.voucherCode.count({
+            where: { voucher_id: id, status: "available" },
+          }),
+        ]
+      );
+
+      const voucherWithCounts = {
+        ...voucher,
+        codes_issued: Number(codes_issued),
+        codes_redeemed: Number(codes_redeemed),
+        codes_available: Number(codes_available),
+      };
+
+      res.json({ success: true, data: voucherWithCounts });
     } catch (error) {
       next(error);
     }
@@ -221,63 +236,50 @@ router.post(
       const voucherId = uuidv4();
       const remainingStock = initialStock;
 
-      // Create voucher
-      await query(
-        `
-      INSERT INTO vouchers (
-        id, name, description, face_value, voucher_type, base_probability,
-        initial_stock, remaining_stock, max_per_user, valid_from, valid_to,
-        status, code_generation, code_prefix
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-        [
-          voucherId,
-          name,
-          description,
-          faceValue,
-          voucherType,
-          baseProbability,
-          initialStock,
-          remainingStock,
-          maxPerUser,
-          validFrom,
-          validTo,
-          status,
-          codeGeneration,
-          codePrefix,
-        ]
-      );
+      // Create voucher using Prisma transaction
+      const createdVoucher = await prisma.$transaction(async (tx) => {
+        // Create voucher
+        const voucher = await tx.voucher.create({
+          data: {
+            id: voucherId,
+            name,
+            description,
+            face_value: faceValue,
+            voucher_type: voucherType,
+            base_probability: baseProbability,
+            initial_stock: initialStock,
+            remaining_stock: remainingStock,
+            max_per_user: maxPerUser,
+            valid_from: validFrom ? new Date(validFrom) : null,
+            valid_to: validTo ? new Date(validTo) : null,
+            status,
+            code_generation: codeGeneration,
+            code_prefix: codePrefix,
+          },
+        });
 
-      // Generate voucher codes if auto generation
-      if (codeGeneration === "auto" && initialStock > 0) {
-        const codes = [];
-        for (let i = 1; i <= initialStock; i++) {
-          const code = SecurityUtils.generateVoucherCode(codePrefix, 8);
-          codes.push([uuidv4(), voucherId, code, "available"]);
+        // Generate voucher codes if auto generation
+        if (codeGeneration === "auto" && initialStock > 0) {
+          const codes = [];
+          for (let i = 1; i <= initialStock; i++) {
+            const code = SecurityUtils.generateVoucherCode(codePrefix, 8);
+            codes.push({
+              id: uuidv4(),
+              voucher_id: voucherId,
+              code,
+              status: "available",
+            });
+          }
+
+          if (codes.length > 0) {
+            await tx.voucherCode.createMany({
+              data: codes,
+            });
+          }
         }
 
-        if (codes.length > 0) {
-          const placeholders = codes.map(() => "(?, ?, ?, ?)").join(", ");
-          const flatValues = codes.flat();
-          await query(
-            `
-          INSERT INTO voucher_codes (id, voucher_id, code, status)
-          VALUES ${placeholders}
-        `,
-            flatValues
-          );
-        }
-      }
-
-      // Get created voucher
-      const [createdVoucher] = await query(
-        `
-      SELECT v.*
-      FROM vouchers v
-      WHERE v.id = ?
-    `,
-        [voucherId]
-      );
+        return voucher;
+      });
 
       // Log creation
       await AuditLogger.logVoucherCreate(
@@ -326,10 +328,10 @@ router.put(
       } = req.body;
 
       // Get current voucher for audit log
-      const [currentVoucher] = await query(
-        "SELECT * FROM vouchers WHERE id = ?",
-        [id]
-      );
+      const currentVoucher = await prisma.voucher.findUnique({
+        where: { id },
+      });
+
       if (!currentVoucher) {
         return res.status(404).json({ error: "Voucher not found" });
       }
@@ -342,38 +344,22 @@ router.put(
       }
 
       // Update voucher
-      await query(
-        `
-      UPDATE vouchers SET
-        name = ?, description = ?, face_value = ?,
-        base_probability = ?, max_per_user = ?, valid_from = ?, valid_to = ?,
-        status = ?, code_generation = ?, code_prefix = ?, updated_at = NOW()
-      WHERE id = ?
-    `,
-        [
+      const updatedVoucher = await prisma.voucher.update({
+        where: { id },
+        data: {
           name,
           description,
-          faceValue,
-          baseProbability,
-          maxPerUser,
-          validFrom,
-          validTo,
+          face_value: faceValue,
+          base_probability: baseProbability,
+          max_per_user: maxPerUser,
+          valid_from: validFrom ? new Date(validFrom) : null,
+          valid_to: validTo ? new Date(validTo) : null,
           status,
-          codeGeneration,
-          codePrefix,
-          id,
-        ]
-      );
-
-      // Get updated voucher
-      const [updatedVoucher] = await query(
-        `
-      SELECT v.*
-      FROM vouchers v
-      WHERE v.id = ?
-    `,
-        [id]
-      );
+          code_generation: codeGeneration,
+          code_prefix: codePrefix,
+          updated_at: new Date(),
+        },
+      });
 
       // Log update
       await AuditLogger.logVoucherUpdate(
@@ -409,29 +395,31 @@ router.delete(
       const { id } = req.params;
 
       // Get current voucher
-      const [voucher] = await query("SELECT * FROM vouchers WHERE id = ?", [
-        id,
-      ]);
+      const voucher = await prisma.voucher.findUnique({
+        where: { id },
+      });
+
       if (!voucher) {
         return res.status(404).json({ error: "Voucher not found" });
       }
 
       // Check if voucher has issued codes
-      const [{ issuedCount }] = await query(
-        `
-      SELECT COUNT(*) as issuedCount 
-      FROM voucher_codes 
-      WHERE voucher_id = ? AND status IN ('issued', 'redeemed')
-    `,
-        [id]
-      );
+      const issuedCount = await prisma.voucherCode.count({
+        where: {
+          voucher_id: id,
+          status: { in: ["issued", "redeemed"] },
+        },
+      });
 
       if (issuedCount > 0) {
         // Cannot delete if codes are issued, just set to inactive
-        await query(
-          "UPDATE vouchers SET status = ?, updated_at = NOW() WHERE id = ?",
-          ["inactive", id]
-        );
+        await prisma.voucher.update({
+          where: { id },
+          data: {
+            status: "inactive",
+            updated_at: new Date(),
+          },
+        });
 
         res.json({
           success: true,
@@ -440,10 +428,13 @@ router.delete(
         });
       } else {
         // Safe to delete - no issued codes
-        await query(
-          "UPDATE vouchers SET status = ?, updated_at = NOW() WHERE id = ?",
-          ["inactive", id]
-        );
+        await prisma.voucher.update({
+          where: { id },
+          data: {
+            status: "inactive",
+            updated_at: new Date(),
+          },
+        });
 
         res.json({
           success: true,
@@ -486,9 +477,10 @@ router.post(
       const { delta, reason } = req.body;
 
       // Get current voucher
-      const [voucher] = await query("SELECT * FROM vouchers WHERE id = ?", [
-        id,
-      ]);
+      const voucher = await prisma.voucher.findUnique({
+        where: { id },
+      });
+
       if (!voucher) {
         return res.status(404).json({ error: "Voucher not found" });
       }
@@ -500,63 +492,57 @@ router.post(
         return res.status(400).json({ error: "Stock cannot be negative" });
       }
 
-      // Update stock and create adjustment record
+      // Update stock and create adjustment record in transaction
       const adjustmentId = uuidv4();
-      await transaction([
-        {
-          sql: "UPDATE vouchers SET remaining_stock = ?, updated_at = NOW() WHERE id = ?",
-          params: [newStock, id],
-        },
-        {
-          sql: `INSERT INTO stock_adjustments (
-          id, voucher_id, staff_id, delta_amount, reason, previous_stock, new_stock
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          params: [
-            adjustmentId,
-            id,
-            req.user.id,
-            delta,
+      const adjustment = await prisma.$transaction(async (tx) => {
+        // Update voucher stock
+        await tx.voucher.update({
+          where: { id },
+          data: {
+            remaining_stock: newStock,
+            updated_at: new Date(),
+          },
+        });
+
+        // Create adjustment record
+        const adjustment = await tx.stockAdjustment.create({
+          data: {
+            id: adjustmentId,
+            voucher_id: id,
+            staff_id: req.user.id,
+            delta_amount: delta,
             reason,
-            previousStock,
-            newStock,
-          ],
-        },
-      ]);
+            previous_stock: previousStock,
+            new_stock: newStock,
+          },
+        });
 
-      // If adding stock and code generation is auto, generate new codes
-      if (delta > 0 && voucher.code_generation === "auto") {
-        const codes = [];
-        const startNumber = voucher.initial_stock - previousStock + 1;
+        // If adding stock and code generation is auto, generate new codes
+        if (delta > 0 && voucher.code_generation === "auto") {
+          const codes = [];
 
-        for (let i = 0; i < delta; i++) {
-          const code = SecurityUtils.generateVoucherCode(
-            voucher.code_prefix,
-            8
-          );
-          codes.push([uuidv4(), id, code, "available"]);
+          for (let i = 0; i < delta; i++) {
+            const code = SecurityUtils.generateVoucherCode(
+              voucher.code_prefix,
+              8
+            );
+            codes.push({
+              id: uuidv4(),
+              voucher_id: id,
+              code,
+              status: "available",
+            });
+          }
+
+          if (codes.length > 0) {
+            await tx.voucherCode.createMany({
+              data: codes,
+            });
+          }
         }
 
-        if (codes.length > 0) {
-          const placeholders = codes.map(() => "(?, ?, ?, ?)").join(", ");
-          const flatValues = codes.flat();
-          await query(
-            `
-          INSERT INTO voucher_codes (id, voucher_id, code, status)
-          VALUES ${placeholders}
-        `,
-            flatValues
-          );
-        }
-      }
-
-      const adjustment = {
-        id: adjustmentId,
-        voucher_id: id,
-        delta_amount: delta,
-        reason,
-        previous_stock: previousStock,
-        new_stock: newStock,
-      };
+        return adjustment;
+      });
 
       // Log adjustment
       await AuditLogger.logStockAdjustment(

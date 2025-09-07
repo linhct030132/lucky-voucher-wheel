@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { body } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
-const { query } = require("../config/database");
+const { prisma } = require("../config/database");
 const { handleValidationErrors } = require("../middleware/errorHandler");
 const { authLimiter } = require("../middleware/rateLimiter");
 const AuditLogger = require("../utils/auditLogger");
@@ -57,10 +57,18 @@ router.post(
       const { email, password } = req.body;
 
       // Find staff member
-      const [staff] = await query(
-        "SELECT id, email, password_hash, full_name, role, is_active, mfa_enabled FROM staff WHERE email = ?",
-        [email]
-      );
+      const staff = await prisma.staff.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          password_hash: true,
+          full_name: true,
+          role: true,
+          is_active: true,
+          mfa_enabled: true,
+        },
+      });
 
       if (!staff) {
         return res
@@ -101,9 +109,10 @@ router.post(
       );
 
       // Update last login
-      await query("UPDATE staff SET last_login_at = NOW() WHERE id = ?", [
-        staff.id,
-      ]);
+      await prisma.staff.update({
+        where: { id: staff.id },
+        data: { last_login_at: new Date() },
+      });
 
       // Log authentication
       await AuditLogger.logAuth("LOGIN", staff.id, staff.email, req);
@@ -148,10 +157,11 @@ router.post(
       const { email, password, fullName, role = "STAFF" } = req.body;
 
       // Check if staff member already exists
-      const [existingStaff] = await query(
-        "SELECT id FROM staff WHERE email = ?",
-        [email]
-      );
+      const existingStaff = await prisma.staff.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+
       if (existingStaff) {
         return res.status(409).json({ error: "Email already registered" });
       }
@@ -164,13 +174,16 @@ router.post(
 
       // Create staff member
       const staffId = uuidv4();
-      await query(
-        `
-      INSERT INTO staff (id, email, password_hash, full_name, role, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `,
-        [staffId, email, passwordHash, fullName, role, true]
-      );
+      await prisma.staff.create({
+        data: {
+          id: staffId,
+          email,
+          password_hash: passwordHash,
+          full_name: fullName,
+          role,
+          is_active: true,
+        },
+      });
 
       // Log registration
       await AuditLogger.logAuth("REGISTER", staffId, email, req);
@@ -207,10 +220,19 @@ router.post("/refresh", async (req, res, next) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     // Verify user still exists and is active
-    const [staff] = await query(
-      "SELECT id, email, full_name, role, is_active FROM staff WHERE id = ? AND is_active = TRUE",
-      [decoded.userId]
-    );
+    const staff = await prisma.staff.findFirst({
+      where: {
+        id: decoded.userId,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        role: true,
+        is_active: true,
+      },
+    });
 
     if (!staff) {
       return res.status(401).json({ error: "Invalid refresh token" });
@@ -279,10 +301,21 @@ router.get("/me", async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const [staff] = await query(
-      "SELECT id, email, full_name, role, is_active, mfa_enabled, last_login_at FROM staff WHERE id = ? AND is_active = TRUE",
-      [decoded.userId]
-    );
+    const staff = await prisma.staff.findFirst({
+      where: {
+        id: decoded.userId,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        role: true,
+        is_active: true,
+        mfa_enabled: true,
+        last_login_at: true,
+      },
+    });
 
     if (!staff) {
       return res.status(401).json({ error: "Invalid token" });
