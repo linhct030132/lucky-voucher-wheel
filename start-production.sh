@@ -6,6 +6,12 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
+# Load production environment if exists
+if [ -f .env.production ]; then
+    echo "Loading production environment variables..."
+    export $(grep -v '^#' .env.production | xargs)
+fi
+
 # Set default ports if not provided
 export BACKEND_PORT=${BACKEND_PORT:-5000}
 export FRONTEND_PORT=${PORT:-3000}
@@ -34,6 +40,17 @@ echo "Backend will run on port: $BACKEND_PORT"
 echo "Frontend will run on port: $FRONTEND_PORT"
 echo "API URL: $REACT_APP_API_URL"
 echo "Frontend URL: $FRONTEND_URL"
+
+# Debug database connection
+if [ -n "$DATABASE_URL" ]; then
+    echo "Database URL configured: ${DATABASE_URL%%:*}://***:***@${DATABASE_URL#*@}"
+else
+    echo "Using individual DB environment variables"
+    echo "DB_HOST: ${DB_HOST:-not set}"
+    echo "DB_PORT: ${DB_PORT:-not set}"
+    echo "DB_USER: ${DB_USER:-not set}"
+    echo "DB_NAME: ${DB_NAME:-not set}"
+fi
 
 # Start both services with concurrently
 npx concurrently \

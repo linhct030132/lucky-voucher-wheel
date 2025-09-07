@@ -8,6 +8,7 @@
         "install-backend": "cd backend && npm install",
         "install-frontend": "cd frontend && npm install",
         "setup-env": "if [ ! -f .env ]; then cp .env.example .env; echo 'Created .env file from .env.example. Please update with your values.'; fi",
+        "test-db": "node test-db-connection.js",
         "build": "npm run setup-env && npm run install-all && npm run build-frontend",
         "build-frontend": "cd frontend && npm run build",
         "start": "npm run start-production",
