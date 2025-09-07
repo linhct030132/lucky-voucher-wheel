@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "NODE_ENV=production node src/server.js"
+startCommand = "node src/server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
