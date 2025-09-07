@@ -162,6 +162,44 @@ const migrations = [
       DROP TABLE IF EXISTS staff;
     `,
   },
+  {
+    version: 2,
+    name: "make_voucher_id_nullable_in_spin_attempts",
+    up: `
+      -- Remove foreign key constraint first
+      ALTER TABLE spin_attempts DROP FOREIGN KEY spin_attempts_ibfk_3;
+      
+      -- Remove unique constraint that includes voucher_id
+      ALTER TABLE spin_attempts DROP INDEX unique_user_device_voucher;
+      
+      -- Modify voucher_id to be nullable
+      ALTER TABLE spin_attempts MODIFY COLUMN voucher_id VARCHAR(36) NULL;
+      
+      -- Re-add foreign key constraint
+      ALTER TABLE spin_attempts ADD CONSTRAINT spin_attempts_ibfk_3 
+      FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE CASCADE;
+      
+      -- Add new unique constraint for user and device only (allowing multiple attempts per voucher)
+      ALTER TABLE spin_attempts ADD UNIQUE KEY unique_user_device (user_id, device_id);
+    `,
+    down: `
+      -- Remove new unique constraint
+      ALTER TABLE spin_attempts DROP INDEX unique_user_device;
+      
+      -- Remove foreign key constraint
+      ALTER TABLE spin_attempts DROP FOREIGN KEY spin_attempts_ibfk_3;
+      
+      -- Make voucher_id NOT NULL again (this might fail if there are NULL values)
+      ALTER TABLE spin_attempts MODIFY COLUMN voucher_id VARCHAR(36) NOT NULL;
+      
+      -- Re-add original foreign key constraint
+      ALTER TABLE spin_attempts ADD CONSTRAINT spin_attempts_ibfk_3 
+      FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE CASCADE;
+      
+      -- Re-add original unique constraint
+      ALTER TABLE spin_attempts ADD UNIQUE KEY unique_user_device_voucher (user_id, device_id, voucher_id);
+    `,
+  },
 ];
 
 async function runMigrations(pool = null) {

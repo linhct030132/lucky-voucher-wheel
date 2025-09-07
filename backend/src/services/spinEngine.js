@@ -26,7 +26,12 @@ class SpinEngine {
     if (outcome.type === "win") {
       return await this.processWin(userProfile, deviceId, outcome.voucher, req);
     } else {
-      return await this.processLose(userProfile, deviceId, req);
+      return await this.processLose(
+        userProfile,
+        deviceId,
+        eligibleVouchers,
+        req
+      );
     }
   }
 
@@ -208,23 +213,47 @@ class SpinEngine {
   /**
    * Process a losing spin
    */
-  static async processLose(userProfile, deviceId, req) {
+  static async processLose(
+    userProfile,
+    deviceId,
+    eligibleVouchersOrReq,
+    req = null
+  ) {
+    // Handle both old and new calling patterns
+    let eligibleVouchers = [];
+    let actualReq = req;
+
+    if (req === null) {
+      // Old calling pattern: processLose(userProfile, deviceId, req)
+      actualReq = eligibleVouchersOrReq;
+      eligibleVouchers = [];
+    } else {
+      // New calling pattern: processLose(userProfile, deviceId, eligibleVouchers, req)
+      eligibleVouchers = eligibleVouchersOrReq || [];
+    }
+
     const spinAttemptId = uuidv4();
 
     try {
+      // If there are eligible vouchers, we can pick one to reference
+      // If there are no eligible vouchers, voucher_id will be NULL
+      const referenceVoucherId =
+        eligibleVouchers.length > 0 ? eligibleVouchers[0].id : null;
+
       await query(
         `
         INSERT INTO spin_attempts 
-        (id, user_id, device_id, outcome, ip_address, user_agent)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (id, user_id, device_id, outcome, voucher_id, ip_address, user_agent)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
         [
           spinAttemptId,
           userProfile.id,
           deviceId,
           "lose",
-          req.ip,
-          req.get("User-Agent"),
+          referenceVoucherId,
+          actualReq.ip,
+          actualReq.get("User-Agent"),
         ]
       );
 
@@ -236,7 +265,7 @@ class SpinEngine {
           user_id: userProfile.id,
           device_id: deviceId,
         },
-        req
+        actualReq
       );
 
       return {
