@@ -5,17 +5,11 @@ import Confetti from "react-confetti";
 import toast from "react-hot-toast";
 import {
   Gift,
-  Star,
-  Sparkles,
   Trophy,
   ChevronRight,
   Copy,
   Check,
-  Mail,
-  Phone,
-  AlertCircle,
   Heart,
-  Zap,
   Crown,
   ArrowLeft,
   Target,
@@ -23,9 +17,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useSpin } from "../context/SpinContext";
-import SpinWheel from "../components/SpinWheel";
 import UserInfoForm from "../components/UserInfoForm";
-import WinModal from "../components/WinModal";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const SpinPage = () => {
@@ -36,7 +28,7 @@ const SpinPage = () => {
     performSpin,
     isSpinning,
     spinResult,
-    eligibilityStatus,
+    // eligibilityStatus,
     availableVouchers,
   } = useSpin();
 

@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
-  Pause,
   RotateCcw,
   Sparkles,
   Gift,
@@ -42,9 +41,9 @@ const SpinWheel_improved = ({
     if (spinning && !isAnimating) {
       handleWheelSpin();
     }
-  }, [spinning]);
+  }, [spinning, isAnimating, handleWheelSpin]);
 
-  const handleWheelSpin = () => {
+  const handleWheelSpin = useCallback(() => {
     if (isAnimating || disabled) return;
 
     setIsAnimating(true);
@@ -67,7 +66,7 @@ const SpinWheel_improved = ({
     setTimeout(() => {
       setIsAnimating(false);
     }, 4000);
-  };
+  }, [isAnimating, disabled, rotation, onSpin]);
 
   const getSegmentIcon = (voucherType) => {
     switch (voucherType) {

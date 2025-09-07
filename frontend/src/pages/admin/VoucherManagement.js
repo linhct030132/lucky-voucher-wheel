@@ -318,18 +318,18 @@ const VoucherManagement = () => {
     <AdminLayout title="Quản Lý Voucher">
       <div className="space-y-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Gift className="w-8 h-8 mr-3 text-indigo-600" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <Gift className="w-6 h-6 sm:w-8 sm:h-8 mr-3 text-indigo-600" />
                 Quản Lý Voucher
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
                 Tạo và quản lý voucher cho hệ thống quay số may mắn
               </p>
             </div>
@@ -341,9 +341,9 @@ const VoucherManagement = () => {
                 resetForm();
                 setShowModal(true);
               }}
-              className="mt-4 sm:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl font-medium flex items-center space-x-2 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-medium flex items-center justify-center space-x-2 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Tạo Voucher Mới</span>
             </motion.button>
           </motion.div>
@@ -354,25 +354,27 @@ const VoucherManagement = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"
         >
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100"
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">
                     {stat.label}
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900">
                     {stat.value.toLocaleString()}
                   </p>
                 </div>
-                <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl`}>
-                  {stat.icon}
+                <div
+                  className={`${stat.bg} ${stat.color} p-2 sm:p-3 rounded-xl sm:rounded-2xl flex-shrink-0 ml-2`}
+                >
+                  <div className="w-4 h-4 sm:w-6 sm:h-6">{stat.icon}</div>
                 </div>
               </div>
             </motion.div>
@@ -384,18 +386,18 @@ const VoucherManagement = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8"
+          className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
-            <div className="relative lg:col-span-2">
+            <div className="relative sm:col-span-2 lg:col-span-2">
               <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Tìm kiếm voucher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                className="pl-10 pr-4 py-2 sm:py-3 w-full border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
               />
             </div>
 

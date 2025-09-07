@@ -75,11 +75,56 @@ const AdminDashboard = () => {
         );
 
         if (statsResponse.data.success) {
-          setStats(statsResponse.data.data);
+          const statsData = statsResponse.data.data;
+
+          // Get additional data for topVouchers and recentActivity
+          const [vouchersResponse, auditResponse] = await Promise.all([
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/vouchers`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/logs`, {
+              headers: { Authorization: `Bearer ${token}` },
+              params: { limit: 10 },
+            }),
+          ]);
+
+          const vouchers =
+            vouchersResponse.data.data || vouchersResponse.data.vouchers || [];
+          const auditLogs =
+            auditResponse.data.data || auditResponse.data.logs || [];
+
+          // Calculate top vouchers based on remaining stock or other metrics
+          const topVouchers = vouchers
+            .map((voucher) => ({
+              ...voucher,
+              wins: 0, // Would need spin data to calculate actual wins
+              winRate: 0,
+            }))
+            .sort((a, b) => (b.remaining_stock || 0) - (a.remaining_stock || 0))
+            .slice(0, 5);
+
+          setStats({
+            totalUsers: statsData.totalUsers || 0,
+            totalVouchers: statsData.totalVouchers || 0,
+            totalSpins: statsData.totalSpins || 0,
+            totalWins: statsData.codesIssued || 0,
+            todaySpins: statsData.todaySpins || 0,
+            todayWins: Math.floor(statsData.todaySpins * 0.3) || 0, // Estimate
+            conversionRate: parseFloat(statsData.redemptionRate) || 0,
+            stockValue: vouchers.reduce(
+              (sum, v) => sum + (v.remaining_stock || v.remainingStock || 0),
+              0
+            ),
+            topVouchers,
+            recentActivity: auditLogs.slice(0, 8),
+          });
           return;
         }
       } catch (statsError) {
-        console.log("Stats endpoint not available, using fallback...");
+        console.log(
+          "Stats endpoint not available, using fallback...",
+          statsError.message
+        );
       }
 
       // Fallback to individual API calls
@@ -95,32 +140,55 @@ const AdminDashboard = () => {
             headers: { Authorization: `Bearer ${token}` },
             params: { timeRange },
           }),
-          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/audit-logs`, {
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/logs`, {
             headers: { Authorization: `Bearer ${token}` },
             params: { limit: 10 },
           }),
         ]);
 
-      const users = usersResponse.data.data || [];
-      const vouchers = vouchersResponse.data.data || [];
-      const spins = spinsResponse.data.data || [];
-      const auditLogs = auditResponse.data.data || [];
+      const users = usersResponse.data.data || usersResponse.data.users || [];
+      const vouchers =
+        vouchersResponse.data.data || vouchersResponse.data.vouchers || [];
+      const spins = spinsResponse.data.data || spinsResponse.data.spins || [];
+      const auditLogs =
+        auditResponse.data.data || auditResponse.data.logs || [];
+
+      // Debug logging
+      console.log("Dashboard API Data:", {
+        users: users.length,
+        vouchers: vouchers.length,
+        spins: spins.length,
+        auditLogs: auditLogs.length,
+        sampleVoucher: vouchers[0],
+        sampleSpin: spins[0],
+        sampleLog: auditLogs[0],
+      });
 
       // Calculate wins from spins
-      const wins = spins.filter((spin) => spin.outcome === "win");
-      const today = new Date().toISOString().split("T")[0];
-      const todaySpins = spins.filter((spin) =>
-        spin.created_at?.startsWith(today)
+      const wins = spins.filter(
+        (spin) => spin.outcome === "win" || spin.result === "win"
       );
-      const todayWins = todaySpins.filter((spin) => spin.outcome === "win");
+      const today = new Date().toISOString().split("T")[0];
+      const todaySpins = spins.filter(
+        (spin) =>
+          spin.created_at?.startsWith(today) ||
+          spin.createdAt?.startsWith(today)
+      );
+      const todayWins = todaySpins.filter(
+        (spin) => spin.outcome === "win" || spin.result === "win"
+      );
 
       // Calculate voucher statistics
       const voucherWins = {};
       spins
-        .filter((spin) => spin.outcome === "win" && spin.voucher_id)
+        .filter(
+          (spin) =>
+            (spin.outcome === "win" || spin.result === "win") &&
+            (spin.voucher_id || spin.voucherId)
+        )
         .forEach((spin) => {
-          voucherWins[spin.voucher_id] =
-            (voucherWins[spin.voucher_id] || 0) + 1;
+          const voucherId = spin.voucher_id || spin.voucherId;
+          voucherWins[voucherId] = (voucherWins[voucherId] || 0) + 1;
         });
 
       const topVouchers = vouchers
@@ -128,8 +196,10 @@ const AdminDashboard = () => {
           ...voucher,
           wins: voucherWins[voucher.id] || 0,
           winRate:
-            voucher.initial_stock > 0
-              ? ((voucherWins[voucher.id] || 0) / voucher.initial_stock) * 100
+            (voucher.initial_stock || voucher.initialStock) > 0
+              ? ((voucherWins[voucher.id] || 0) /
+                  (voucher.initial_stock || voucher.initialStock)) *
+                100
               : 0,
         }))
         .sort((a, b) => b.wins - a.wins)
@@ -145,7 +215,7 @@ const AdminDashboard = () => {
         conversionRate:
           spins.length > 0 ? (wins.length / spins.length) * 100 : 0,
         stockValue: vouchers.reduce(
-          (sum, v) => sum + (v.remaining_stock || 0),
+          (sum, v) => sum + (v.remaining_stock || v.remainingStock || 0),
           0
         ),
         topVouchers,
@@ -153,7 +223,19 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      toast.error("Không thể tải dữ liệu dashboard");
+
+      // More specific error handling
+      if (error.response?.status === 404) {
+        toast.error(
+          "Một số endpoint không tồn tại - vui lòng kiểm tra backend"
+        );
+      } else if (error.response?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn");
+      } else {
+        toast.error("Không thể tải dữ liệu dashboard");
+      }
+
+      // Set empty but valid state
       setStats({
         totalUsers: 0,
         totalVouchers: 0,
@@ -343,24 +425,26 @@ const AdminDashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <BarChart3 className="w-8 h-8 mr-3 text-indigo-600" />
-                Bảng Điều Khiển Quản Trị
+            <div className="mb-4 sm:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-indigo-600" />
+                <span className="hidden sm:inline">
+                  Bảng Điều Khiển Quản Trị
+                </span>
+                <span className="sm:hidden">Dashboard</span>
               </h1>
-              <p className="text-gray-600 mt-2">
-                Chào mừng trở lại! Hệ thống đang hoạt động tốt với dữ liệu tích
-                cực.
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                Chào mừng trở lại! Hệ thống đang hoạt động tốt.
               </p>
             </div>
-            <div className="mt-4 sm:mt-0 flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="1d">Hôm nay</option>
                 <option value="7d">7 ngày</option>
@@ -373,39 +457,40 @@ const AdminDashboard = () => {
                   fetchDashboardData();
                 }}
                 disabled={refreshing}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center text-sm disabled:opacity-50"
+                className="bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center text-sm disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
                 />
-                Làm mới
+                <span className="hidden sm:inline">Làm mới</span>
+                <span className="sm:hidden">Refresh</span>
               </button>
             </div>
           </div>
         </motion.div>
 
         {/* Main Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {mainStats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.bg} rounded-lg p-3`}>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className={`${stat.bg} rounded-lg p-2 sm:p-3`}>
                   <div className={stat.color}>{stat.icon}</div>
                 </div>
                 <div className="flex items-center space-x-1">
                   {stat.trend === "up" ? (
-                    <ArrowUpRight className="w-4 h-4 text-green-500" />
+                    <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   ) : (
-                    <ArrowDownRight className="w-4 h-4 text-red-500" />
+                    <ArrowDownRight className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                   )}
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-xs sm:text-sm font-medium ${
                       stat.trend === "up" ? "text-green-600" : "text-red-600"
                     }`}
                   >
@@ -414,7 +499,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                   {typeof stat.value === "number"
                     ? stat.value.toLocaleString("vi-VN")
                     : stat.value}
@@ -422,7 +507,9 @@ const AdminDashboard = () => {
                 <p className="text-gray-600 text-sm font-medium">
                   {stat.label}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                <p className="text-xs text-gray-500 mt-1 hidden sm:block">
+                  {stat.description}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -433,17 +520,18 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl p-6 shadow-lg border border-gray-200"
+          className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-200"
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-            <Star className="w-6 h-6 mr-2 text-yellow-500" />
-            Thống Kê Nổi Bật Hôm Nay
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <Star className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-yellow-500" />
+            <span className="hidden sm:inline">Thống Kê Nổi Bật Hôm Nay</span>
+            <span className="sm:hidden">Hôm Nay</span>
           </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {todayStats.map((stat, index) => (
               <div
                 key={stat.label}
-                className="text-center p-4 bg-gray-50 rounded-lg"
+                className="text-center p-3 sm:p-4 bg-gray-50 rounded-lg"
               >
                 <div className={`${stat.color} mb-2 flex justify-center`}>
                   {stat.icon}
@@ -568,7 +656,10 @@ const AdminDashboard = () => {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">
-                    {voucher?.face_value || "Chưa xác định"}
+                    {voucher?.face_value ||
+                      voucher?.faceValue ||
+                      voucher?.value ||
+                      "Chưa xác định"}
                   </p>
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600 font-medium">

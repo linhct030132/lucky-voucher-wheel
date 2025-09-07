@@ -3,16 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Gift,
-  Star,
   Sparkles,
   Crown,
   Zap,
   Heart,
-  ChevronRight,
   Trophy,
   Target,
   Users,
-  Calendar,
   ArrowRight,
   CheckCircle,
   Play,
@@ -21,11 +18,9 @@ import LogoIcon from "../components/LogoIcon";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    // Component initialization effect
   }, []);
 
   const handleStartSpin = () => {
@@ -67,7 +62,7 @@ const LandingPage = () => {
       {/* Navigation Header */}
       <nav className="z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200 sticky top-0">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-center items-center h-16">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

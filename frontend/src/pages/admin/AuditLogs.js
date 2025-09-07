@@ -74,16 +74,25 @@ const AuditLogs = () => {
       });
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/audit-logs?${params}`,
+        `${process.env.REACT_APP_API_BASE_URL}/admin/logs?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setLogs(response.data.logs || []);
-      setPagination((prev) => ({
-        ...prev,
-        total: response.data.total || 0,
-        totalPages: response.data.totalPages || 0,
-      }));
+      if (response.data.success) {
+        setLogs(response.data.data || []);
+        setPagination((prev) => ({
+          ...prev,
+          total: response.data.pagination?.total || 0,
+          totalPages: response.data.pagination?.pages || 0,
+        }));
+      } else {
+        setLogs([]);
+        setPagination((prev) => ({
+          ...prev,
+          total: 0,
+          totalPages: 0,
+        }));
+      }
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       toast.error("Không thể tải nhật ký hệ thống");
@@ -107,7 +116,7 @@ const AuditLogs = () => {
       });
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/audit-logs/export?${params}`,
+        `${process.env.REACT_APP_API_BASE_URL}/admin/logs/export?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
@@ -192,28 +201,28 @@ const AuditLogs = () => {
     <AdminLayout title="Nhật Ký Hệ Thống">
       <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               Nhật Ký Hệ Thống
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               Theo dõi tất cả hoạt động hệ thống và hành động người dùng để đảm
               bảo bảo mật
             </p>
           </div>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             <button
               onClick={fetchAuditLogs}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 text-sm"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Làm mới</span>
             </button>
             <button
               onClick={exportLogs}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 text-sm"
             >
               <Download className="w-4 h-4" />
               <span>Xuất CSV</span>
@@ -222,23 +231,23 @@ const AuditLogs = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="relative">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
               <input
                 type="text"
                 placeholder="Tìm kiếm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
             </div>
 
             <select
               value={selectedAction}
               onChange={(e) => setSelectedAction(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
               {actionTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -247,27 +256,37 @@ const AuditLogs = () => {
               ))}
             </select>
 
-            <input
-              type="date"
-              value={dateRange.from}
-              onChange={(e) =>
-                setDateRange({ ...dateRange, from: e.target.value })
-              }
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1 sm:hidden">
+                Từ ngày
+              </label>
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, from: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full text-sm"
+              />
+            </div>
 
-            <input
-              type="date"
-              value={dateRange.to}
-              onChange={(e) =>
-                setDateRange({ ...dateRange, to: e.target.value })
-              }
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1 sm:hidden">
+                Đến ngày
+              </label>
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) =>
+                  setDateRange({ ...dateRange, to: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full text-sm"
+              />
+            </div>
 
             <button
               onClick={() => setPagination((prev) => ({ ...prev, page: 1 }))}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 text-sm"
             >
               <Filter className="w-4 h-4" />
               <span>Lọc</span>
@@ -277,7 +296,8 @@ const AuditLogs = () => {
 
         {/* Audit Logs Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -296,17 +316,15 @@ const AuditLogs = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     IP Address
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User Agent
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {logs.map((log) => (
+                {logs.map((log, index) => (
                   <motion.tr
                     key={log.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     className="hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -344,13 +362,69 @@ const AuditLogs = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {log.ip_address}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                      {log.user_agent || "-"}
-                    </td>
                   </motion.tr>
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {logs.map((log, index) => (
+              <motion.div
+                key={log.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-4 hover:bg-gray-50"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900">
+                        {log.user_phone || log.admin_username || "Hệ thống"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {log.user_type === "admin"
+                          ? "Quản trị viên"
+                          : "Người dùng"}
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${getActionColor(
+                      log.action
+                    )}`}
+                  >
+                    {getActionLabel(log.action)}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                    {formatDate(log.created_at)}
+                  </div>
+
+                  {log.details && (
+                    <div className="flex items-start text-sm text-gray-600">
+                      <FileText className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <span className="break-words">{log.details}</span>
+                    </div>
+                  )}
+
+                  {log.ip_address && (
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Shield className="w-3 h-3 mr-2 text-gray-400" />
+                      IP: {log.ip_address}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </div>
 
           {logs.length === 0 && (
@@ -372,16 +446,23 @@ const AuditLogs = () => {
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
                   Trước
                 </button>
+                <div className="flex items-center">
+                  <span className="text-sm text-gray-700">
+                    {pagination.page} / {pagination.totalPages}
+                  </span>
+                </div>
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sau
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
