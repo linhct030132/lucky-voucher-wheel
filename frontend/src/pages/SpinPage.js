@@ -32,7 +32,7 @@ const SpinPage = () => {
     availableVouchers,
   } = useSpin();
 
-  const [currentStep, setCurrentStep] = useState("loading"); // loading, form, spinning, result, participated
+  const [currentStep, setCurrentStep] = useState("loading"); // loading, form, spinning, result, participated, out_of_stock
   const [userProfile, setUserProfile] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -72,7 +72,14 @@ const SpinPage = () => {
         console.log("Device eligibility:", eligibility);
 
         if (!eligibility.eligible) {
-          setCurrentStep("participated");
+          // Differentiate between "already participated" and "no stock"
+          if (eligibility.reason === "ALREADY_PARTICIPATED") {
+            setCurrentStep("participated");
+          } else if (eligibility.reason === "NO_STOCK") {
+            setCurrentStep("out_of_stock");
+          } else {
+            setCurrentStep("participated"); // Default fallback
+          }
           return;
         }
 
@@ -205,6 +212,16 @@ const SpinPage = () => {
                       Đã hoàn thành tham gia
                     </span>
                   </div>
+                ) : currentStep === "out_of_stock" ? (
+                  // Show out of stock status
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-red-600 text-white">
+                      📦
+                    </div>
+                    <span className="text-sm text-red-600 font-medium">
+                      Hết giải thưởng
+                    </span>
+                  </div>
                 ) : (
                   // Show regular progress steps
                   [
@@ -278,6 +295,26 @@ const SpinPage = () => {
                 may mắn.
               </p>
             </>
+          ) : currentStep === "out_of_stock" ? (
+            <>
+              <motion.div
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-600 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Gift className="w-5 h-5" />
+                <span>📦 Hết Giải Thưởng</span>
+              </motion.div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+                <span className="bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                  Chương Trình Đã Kết Thúc
+                </span>
+              </h1>
+
+              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã quan tâm đến chương trình của chúng tôi!
+              </p>
+            </>
           ) : (
             <>
               <motion.div
@@ -301,7 +338,7 @@ const SpinPage = () => {
           )}
 
           {/* Prize Preview */}
-          {currentStep !== "participated" && availableVouchers.length > 0 && (
+          {currentStep !== "participated" && currentStep !== "out_of_stock" && availableVouchers.length > 0 && (
             <motion.div
               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto mb-8"
               initial={{ opacity: 0, y: 20 }}
@@ -496,6 +533,61 @@ const SpinPage = () => {
                     <p className="text-amber-700 text-sm">
                       Để đảm bảo công bằng, mỗi thiết bị chỉ được phép tham gia
                       một lần trong chương trình quay số may mắn này.
+                    </p>
+                  </div>
+
+                  <motion.button
+                    onClick={goHome}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-8 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>Về Trang Chủ</span>
+                      <ChevronRight className="w-5 h-5" />
+                    </div>
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {currentStep === "out_of_stock" && (
+              <motion.div
+                key="out_of_stock"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.5 }}
+                className="text-center"
+              >
+                <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring" }}
+                    className="w-24 h-24 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-8"
+                  >
+                    <Gift className="w-12 h-12 text-white" />
+                  </motion.div>
+
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                    📦 Hết Giải Thưởng Rồi!
+                  </h2>
+
+                  <p className="text-xl text-gray-600 mb-8">
+                    Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã quan tâm đến chương trình của chúng tôi!
+                  </p>
+
+                  <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-6 border border-red-200 mb-8">
+                    <div className="flex items-center justify-center space-x-3 mb-4">
+                      <Gift className="w-6 h-6 text-red-600" />
+                      <span className="text-red-800 font-medium">
+                        Chương trình đã kết thúc
+                      </span>
+                    </div>
+                    <p className="text-red-700 text-sm">
+                      Tất cả giải thưởng trong chương trình quay số may mắn này đã được phát hết. 
+                      Hãy theo dõi để cập nhật các chương trình khuyến mãi mới nhé!
                     </p>
                   </div>
 
