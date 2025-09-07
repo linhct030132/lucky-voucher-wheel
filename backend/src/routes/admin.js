@@ -950,4 +950,120 @@ router.get("/users", async (req, res, next) => {
   }
 });
 
+// ======================
+// DATABASE MANAGEMENT
+// ======================
+
+/**
+ * @route POST /api/admin/migrate
+ * @desc Run database migrations manually
+ * @access Admin only
+ */
+router.post("/migrate", requireRole(["ADMIN"]), async (req, res, next) => {
+  try {
+    console.log("🗃️  Manual migration triggered by admin...");
+
+    // Import migration function and database pool
+    const { runMigrations } = require("../database/migrate");
+    const { pool } = require("../config/database");
+
+    // Run migrations with existing database pool
+    await runMigrations(pool);
+
+    // Log audit trail
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "MANUAL_MIGRATION",
+      entityType: "DATABASE",
+      entityId: null,
+      afterData: { success: true, timestamp: new Date() },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.json({
+      success: true,
+      message: "Database migrations completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Manual migration failed:", error);
+
+    // Log failed migration attempt
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "MANUAL_MIGRATION_FAILED",
+      entityType: "DATABASE",
+      entityId: null,
+      afterData: { error: error.message, timestamp: new Date() },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * @route POST /api/admin/seed
+ * @desc Run database seeding manually
+ * @access Admin only
+ */
+router.post("/seed", requireRole(["ADMIN"]), async (req, res, next) => {
+  try {
+    console.log("🌱 Manual seeding triggered by admin...");
+
+    // Import seeding function and database pool
+    const { seedDatabase } = require("../database/seed");
+    const { pool } = require("../config/database");
+
+    // Run seeding with existing database pool
+    await seedDatabase(pool);
+
+    // Log audit trail
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "MANUAL_SEEDING",
+      entityType: "DATABASE",
+      entityId: null,
+      afterData: { success: true, timestamp: new Date() },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.json({
+      success: true,
+      message: "Database seeding completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Manual seeding failed:", error);
+
+    // Log failed seeding attempt
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "MANUAL_SEEDING_FAILED",
+      entityType: "DATABASE",
+      entityId: null,
+      afterData: { error: error.message, timestamp: new Date() },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 module.exports = router;

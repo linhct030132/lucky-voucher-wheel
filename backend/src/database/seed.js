@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
 
 async function seedDatabase(pool) {
   console.log("🌱 Starting database seeding...");
@@ -6,83 +7,108 @@ async function seedDatabase(pool) {
   const connection = await pool.getConnection();
 
   try {
-    // Create admin user
-    console.log("Creating admin user...");
+    // Create admin staff user
+    console.log("Creating admin staff user...");
     const hashedPassword = await bcrypt.hash("admin123", 10);
+    const adminId = uuidv4();
 
     await connection.execute(
       `
-            INSERT IGNORE INTO users (username, email, password, role, is_email_verified, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT IGNORE INTO staff (id, email, password_hash, full_name, role, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
         `,
-      ["admin", "admin@company.com", hashedPassword, "admin", 1]
+      [
+        adminId,
+        "admin@company.com",
+        hashedPassword,
+        "System Administrator",
+        "ADMIN",
+        true,
+      ]
     );
 
     // Create sample vouchers
     console.log("Creating sample vouchers...");
     const vouchers = [
       {
-        code: "DISCOUNT10",
-        voucher_type: "percentage",
-        discount_value: 10.0,
-        title: "10% Off Any Purchase",
+        id: uuidv4(),
+        name: "10% Discount Voucher",
         description: "Get 10% discount on your purchase",
-        terms_conditions:
-          "Valid for all products. Cannot be combined with other offers.",
-        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        max_usage: 100,
-        current_usage: 0,
-        is_active: 1,
+        face_value: "10% OFF",
+        voucher_type: "discount_percentage",
+        base_probability: 0.3,
+        initial_stock: 100,
+        remaining_stock: 100,
+        max_per_user: 1,
+        valid_from: new Date(),
+        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        status: "active",
+        code_generation: "auto",
+        code_prefix: "DISC10",
       },
       {
-        code: "SAVE20",
-        voucher_type: "fixed",
-        discount_value: 20.0,
-        title: "$20 Off Your Order",
+        id: uuidv4(),
+        name: "$20 Off Voucher",
         description: "Save $20 on orders over $100",
-        terms_conditions:
-          "Minimum purchase of $100 required. One per customer.",
-        expiry_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
-        max_usage: 50,
-        current_usage: 0,
-        is_active: 1,
+        face_value: "$20 OFF",
+        voucher_type: "discount_amount",
+        base_probability: 0.2,
+        initial_stock: 50,
+        remaining_stock: 50,
+        max_per_user: 1,
+        valid_from: new Date(),
+        valid_to: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
+        status: "active",
+        code_generation: "auto",
+        code_prefix: "SAVE20",
       },
       {
-        code: "FREESHIP",
-        voucher_type: "shipping",
-        discount_value: 0.0,
-        title: "Free Shipping",
-        description: "Free shipping on any order",
-        terms_conditions: "Valid for standard shipping only.",
-        expiry_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
-        max_usage: 200,
-        current_usage: 0,
-        is_active: 1,
+        id: uuidv4(),
+        name: "Free Product Voucher",
+        description: "Get a free product with your order",
+        face_value: "FREE ITEM",
+        voucher_type: "free_product",
+        base_probability: 0.1,
+        initial_stock: 25,
+        remaining_stock: 25,
+        max_per_user: 1,
+        valid_from: new Date(),
+        valid_to: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
+        status: "active",
+        code_generation: "auto",
+        code_prefix: "FREE",
       },
       {
-        code: "WELCOME25",
-        voucher_type: "percentage",
-        discount_value: 25.0,
-        title: "25% Welcome Discount",
+        id: uuidv4(),
+        name: "25% Welcome Discount",
         description: "Special welcome offer for new customers",
-        terms_conditions: "First-time customers only. Valid for 7 days.",
-        expiry_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        max_usage: 25,
-        current_usage: 0,
-        is_active: 1,
+        face_value: "25% OFF",
+        voucher_type: "discount_percentage",
+        base_probability: 0.15,
+        initial_stock: 75,
+        remaining_stock: 75,
+        max_per_user: 1,
+        valid_from: new Date(),
+        valid_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        status: "active",
+        code_generation: "auto",
+        code_prefix: "WELCOME",
       },
       {
-        code: "LUCKY50",
-        voucher_type: "fixed",
-        discount_value: 50.0,
-        title: "$50 Lucky Winner",
+        id: uuidv4(),
+        name: "$50 Lucky Winner",
         description: "You are a lucky winner! $50 off",
-        terms_conditions:
-          "Minimum purchase of $200 required. One per customer.",
-        expiry_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-        max_usage: 10,
-        current_usage: 0,
-        is_active: 1,
+        face_value: "$50 OFF",
+        voucher_type: "discount_amount",
+        base_probability: 0.05,
+        initial_stock: 10,
+        remaining_stock: 10,
+        max_per_user: 1,
+        valid_from: new Date(),
+        valid_to: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+        status: "active",
+        code_generation: "auto",
+        code_prefix: "LUCKY50",
       },
     ];
 
@@ -90,28 +116,45 @@ async function seedDatabase(pool) {
       await connection.execute(
         `
                 INSERT IGNORE INTO vouchers (
-                    code, voucher_type, discount_value, title, description, 
-                    terms_conditions, expiry_date, max_usage, current_usage, 
-                    is_active, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    id, name, description, face_value, voucher_type, base_probability,
+                    initial_stock, remaining_stock, max_per_user, valid_from, valid_to,
+                    status, code_generation, code_prefix, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `,
         [
-          voucher.code,
-          voucher.voucher_type,
-          voucher.discount_value,
-          voucher.title,
+          voucher.id,
+          voucher.name,
           voucher.description,
-          voucher.terms_conditions,
-          voucher.expiry_date,
-          voucher.max_usage,
-          voucher.current_usage,
-          voucher.is_active,
+          voucher.face_value,
+          voucher.voucher_type,
+          voucher.base_probability,
+          voucher.initial_stock,
+          voucher.remaining_stock,
+          voucher.max_per_user,
+          voucher.valid_from,
+          voucher.valid_to,
+          voucher.status,
+          voucher.code_generation,
+          voucher.code_prefix,
         ]
       );
+
+      // Generate voucher codes for each voucher
+      console.log(`Generating codes for voucher: ${voucher.name}`);
+      for (let i = 1; i <= voucher.initial_stock; i++) {
+        const codeId = uuidv4();
+        const code = `${voucher.code_prefix}${String(i).padStart(4, "0")}`;
+
+        await connection.execute(
+          `INSERT IGNORE INTO voucher_codes (id, voucher_id, code, status, created_at)
+           VALUES (?, ?, ?, 'available', NOW())`,
+          [codeId, voucher.id, code]
+        );
+      }
     }
 
     console.log("✅ Database seeding completed successfully!");
-    console.log(`Created ${vouchers.length} vouchers`);
+    console.log(`Created ${vouchers.length} vouchers with their codes`);
     console.log("Admin credentials: admin@company.com / admin123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);

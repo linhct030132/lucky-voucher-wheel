@@ -164,15 +164,23 @@ const migrations = [
   },
 ];
 
-async function runMigrations() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "password",
-  });
+async function runMigrations(pool = null) {
+  let connection;
+  let shouldCloseConnection = false;
 
-  try {
+  if (pool) {
+    // Use provided database pool
+    connection = await pool.getConnection();
+  } else {
+    // Create new connection (for standalone usage)
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST || "localhost",
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "password",
+    });
+    shouldCloseConnection = true;
+
     // Create database if it doesn't exist
     await connection.query(
       `CREATE DATABASE IF NOT EXISTS \`${
@@ -180,7 +188,9 @@ async function runMigrations() {
       }\``
     );
     await connection.query(`USE \`${process.env.DB_NAME || "lucky_voucher"}\``);
+  }
 
+  try {
     // Create migrations table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS migrations (
@@ -228,7 +238,11 @@ async function runMigrations() {
     console.error("❌ Migration failed:", error);
     throw error;
   } finally {
-    await connection.end();
+    if (pool) {
+      connection.release();
+    } else if (shouldCloseConnection) {
+      await connection.end();
+    }
   }
 }
 

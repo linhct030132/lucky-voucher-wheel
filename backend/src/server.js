@@ -139,46 +139,6 @@ app.get("/api/debug", (req, res) => {
   });
 });
 
-app.post("/api/migrate", async (req, res) => {
-  try {
-    console.log("🗃️  Manual migration triggered...");
-    const { runMigrations } = require("./database/migrate");
-    await runMigrations();
-    res.json({
-      success: true,
-      message: "Migrations completed successfully",
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("❌ Manual migration failed:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
-
-app.post("/api/seed", async (req, res) => {
-  try {
-    console.log("🌱 Manual seeding triggered...");
-    const { seedDatabase } = require("./database/seed");
-    await seedDatabase();
-    res.json({
-      success: true,
-      message: "Database seeding completed successfully",
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("❌ Manual seeding failed:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
-
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -272,16 +232,17 @@ async function startServer() {
     ) {
       console.log("🗃️  Running database migrations...");
       try {
-        // Import and run migrations
+        // Import and run migrations with database pool
         const { runMigrations } = require("./database/migrate");
-        await runMigrations();
+        const { pool } = require("./config/database");
+        await runMigrations(pool);
         console.log("✅ Database migrations completed successfully");
 
         // Run seeding if this is the first deployment
         if (process.env.AUTO_SEED === "true") {
           console.log("🌱 Running database seeding...");
           const { seedDatabase } = require("./database/seed");
-          await seedDatabase();
+          await seedDatabase(pool);
           console.log("✅ Database seeding completed successfully");
         }
       } catch (migrationError) {
