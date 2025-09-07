@@ -234,7 +234,12 @@ router.post(
       }
 
       const voucherId = uuidv4();
-      const remainingStock = initialStock;
+      
+      // Convert string values to proper types
+      const initialStockNum = parseInt(initialStock);
+      const remainingStockNum = initialStockNum;
+      const maxPerUserNum = parseInt(maxPerUser) || 1;
+      const baseProbabilityNum = parseFloat(baseProbability);
 
       // Create voucher using Prisma transaction
       const createdVoucher = await prisma.$transaction(async (tx) => {
@@ -246,10 +251,10 @@ router.post(
             description,
             faceValue: faceValue,
             voucherType: voucherType,
-            baseProbability: baseProbability,
-            initialStock: initialStock,
-            remainingStock: remainingStock,
-            maxPerUser: maxPerUser,
+            baseProbability: baseProbabilityNum,
+            initialStock: initialStockNum,
+            remainingStock: remainingStockNum,
+            maxPerUser: maxPerUserNum,
             validFrom: validFrom ? new Date(validFrom) : null,
             validTo: validTo ? new Date(validTo) : null,
             status,
@@ -259,9 +264,9 @@ router.post(
         });
 
         // Generate voucher codes if auto generation
-        if (codeGeneration === "auto" && initialStock > 0) {
+        if (codeGeneration === "auto" && initialStockNum > 0) {
           const codes = [];
-          for (let i = 1; i <= initialStock; i++) {
+          for (let i = 1; i <= initialStockNum; i++) {
             const code = SecurityUtils.generateVoucherCode(codePrefix, 8);
             codes.push({
               id: uuidv4(),
@@ -343,6 +348,10 @@ router.put(
           .json({ error: "Valid from date must be before valid to date" });
       }
 
+      // Convert string values to proper types
+      const maxPerUserNum = maxPerUser ? parseInt(maxPerUser) : currentVoucher.maxPerUser;
+      const baseProbabilityNum = baseProbability ? parseFloat(baseProbability) : currentVoucher.baseProbability;
+
       // Update voucher
       const updatedVoucher = await prisma.voucher.update({
         where: { id },
@@ -350,8 +359,8 @@ router.put(
           name,
           description,
           faceValue: faceValue,
-          baseProbability: baseProbability,
-          maxPerUser: maxPerUser,
+          baseProbability: baseProbabilityNum,
+          maxPerUser: maxPerUserNum,
           validFrom: validFrom ? new Date(validFrom) : null,
           validTo: validTo ? new Date(validTo) : null,
           status,
@@ -476,6 +485,9 @@ router.post(
       const { id } = req.params;
       const { delta, reason } = req.body;
 
+      // Convert delta to integer
+      const deltaNum = parseInt(delta);
+
       // Get current voucher
       const voucher = await prisma.voucher.findUnique({
         where: { id },
@@ -486,7 +498,7 @@ router.post(
       }
 
       const previousStock = voucher.remainingStock;
-      const newStock = previousStock + delta;
+      const newStock = previousStock + deltaNum;
 
       if (newStock < 0) {
         return res.status(400).json({ error: "Stock cannot be negative" });
@@ -510,7 +522,7 @@ router.post(
             id: adjustmentId,
             voucherId: id,
             staffId: req.user.id,
-            deltaAmount: delta,
+            deltaAmount: deltaNum,
             reason,
             previousStock: previousStock,
             newStock: newStock,
@@ -518,10 +530,10 @@ router.post(
         });
 
         // If adding stock and code generation is auto, generate new codes
-        if (delta > 0 && voucher.codeGeneration === "auto") {
+        if (deltaNum > 0 && voucher.codeGeneration === "auto") {
           const codes = [];
 
-          for (let i = 0; i < delta; i++) {
+          for (let i = 0; i < deltaNum; i++) {
             const code = SecurityUtils.generateVoucherCode(
               voucher.codePrefix,
               8
@@ -557,7 +569,7 @@ router.post(
         data: {
           previousStock,
           newStock,
-          delta,
+          delta: deltaNum,
           reason,
         },
         message: "Stock adjusted successfully",
