@@ -1,0 +1,44 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wheelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="centerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffaa00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#wheelGradient)" stroke="#fff" stroke-width="8"/>
+  
+  <!-- Wheel segments -->
+  <g transform="translate(256,256)">
+    <!-- Segment 1 -->
+    <path d="M 0,0 L 0,-200 A 200,200 0 0,1 141.42,-141.42 Z" fill="#ff6b6b" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 2 -->
+    <path d="M 0,0 L 141.42,-141.42 A 200,200 0 0,1 200,0 Z" fill="#4ecdc4" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 3 -->
+    <path d="M 0,0 L 200,0 A 200,200 0 0,1 141.42,141.42 Z" fill="#45b7d1" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 4 -->
+    <path d="M 0,0 L 141.42,141.42 A 200,200 0 0,1 0,200 Z" fill="#96ceb4" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 5 -->
+    <path d="M 0,0 L 0,200 A 200,200 0 0,1 -141.42,141.42 Z" fill="#feca57" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 6 -->
+    <path d="M 0,0 L -141.42,141.42 A 200,200 0 0,1 -200,0 Z" fill="#ff9ff3" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 7 -->
+    <path d="M 0,0 L -200,0 A 200,200 0 0,1 -141.42,-141.42 Z" fill="#54a0ff" stroke="#fff" stroke-width="2"/>
+    <!-- Segment 8 -->
+    <path d="M 0,0 L -141.42,-141.42 A 200,200 0 0,1 0,-200 Z" fill="#5f27cd" stroke="#fff" stroke-width="2"/>
+  </g>
+  
+  <!-- Center circle -->
+  <circle cx="256" cy="256" r="40" fill="url(#centerGradient)" stroke="#fff" stroke-width="4"/>
+  
+  <!-- Pointer -->
+  <polygon points="256,20 270,50 242,50" fill="#fff" stroke="#333" stroke-width="2"/>
+  
+  <!-- Lucky text -->
+  <text x="256" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">LUCKY</text>
+</svg>

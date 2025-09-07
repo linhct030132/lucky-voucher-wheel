@@ -91,14 +91,47 @@ if (process.env.NODE_ENV === "production") {
   const staticPath = path.join(__dirname, "../../frontend/build");
   console.log(`📁 Serving static files from: ${staticPath}`);
 
-  // Serve static files with proper MIME types
+  // First, serve static files with proper MIME types and explicit paths
+  app.use(
+    "/static",
+    express.static(path.join(staticPath, "static"), {
+      maxAge: "1y",
+      etag: true,
+      setHeaders: (res, filePath) => {
+        console.log(`📄 Serving static asset: ${filePath}`);
+        // Set correct MIME types based on file extension
+        if (filePath.endsWith(".js")) {
+          res.set("Content-Type", "application/javascript; charset=utf-8");
+        } else if (filePath.endsWith(".css")) {
+          res.set("Content-Type", "text/css; charset=utf-8");
+        }
+      },
+    })
+  );
+
+  // Serve manifest.json and other root-level assets
   app.use(
     express.static(staticPath, {
       maxAge: "1d",
       etag: false,
-      // Add some logging for debugging
-      setHeaders: (res, path) => {
-        console.log(`📄 Serving static file: ${path}`);
+      // Set proper MIME types for different file extensions
+      setHeaders: (res, filePath) => {
+        console.log(`📄 Serving root asset: ${filePath}`);
+
+        // Set correct MIME types based on file extension
+        if (filePath.endsWith(".js")) {
+          res.set("Content-Type", "application/javascript; charset=utf-8");
+        } else if (filePath.endsWith(".css")) {
+          res.set("Content-Type", "text/css; charset=utf-8");
+        } else if (filePath.endsWith(".json")) {
+          res.set("Content-Type", "application/json; charset=utf-8");
+        } else if (filePath.endsWith(".png")) {
+          res.set("Content-Type", "image/png");
+        } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+          res.set("Content-Type", "image/jpeg");
+        } else if (filePath.endsWith(".ico")) {
+          res.set("Content-Type", "image/x-icon");
+        }
       },
     })
   );
@@ -110,8 +143,24 @@ app.use("/api/admin", adminRoutes);
 app.use("/api", publicRoutes);
 
 // Catch all handler for React routing (only in production)
+// This MUST come after static file serving to avoid intercepting asset requests
 if (process.env.NODE_ENV === "production") {
   app.get("*", (req, res) => {
+    // Don't catch static asset requests
+    if (
+      req.path.startsWith("/static/") ||
+      req.path.endsWith(".js") ||
+      req.path.endsWith(".css") ||
+      req.path.endsWith(".map") ||
+      req.path.endsWith(".ico") ||
+      req.path.endsWith(".png") ||
+      req.path.endsWith(".jpg") ||
+      req.path.endsWith(".json")
+    ) {
+      return res.status(404).send("Asset not found");
+    }
+
+    console.log(`🔄 Serving React app for route: ${req.path}`);
     res.sendFile(path.join(__dirname, "../../frontend/build/index.html"));
   });
 }
