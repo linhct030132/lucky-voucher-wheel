@@ -36,7 +36,6 @@ const SpinPage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [hasParticipated, setHasParticipated] = useState(false);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -70,7 +69,6 @@ const SpinPage = () => {
         const eligibility = await checkDeviceEligibility();
 
         if (!eligibility.eligible) {
-          setHasParticipated(true);
           setCurrentStep("participated");
           return;
         }
@@ -118,11 +116,11 @@ const SpinPage = () => {
   };
 
   // Handle spin action
-  const handleSpin = () => {
-    if (userProfile) {
-      performSpin(userProfile);
-    }
-  };
+  // const handleSpin = () => {
+  //   if (userProfile) {
+  //     performSpin(userProfile);
+  //   }
+  // };
 
   // Copy voucher code
   const copyVoucherCode = (code) => {

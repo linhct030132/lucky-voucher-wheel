@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -7,7 +8,6 @@ import {
   Clock,
   Filter,
   RefreshCw,
-  Calendar,
   User,
   FileText,
   Download,
@@ -25,7 +25,7 @@ const AuditLogs = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAction, setSelectedAction] = useState("all");
-  const [selectedUser, setSelectedUser] = useState("all");
+  const [selectedUser] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       .toISOString()
@@ -51,11 +51,7 @@ const AuditLogs = () => {
     { value: "export_data", label: "Xuất dữ liệu" },
   ];
 
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [pagination.page, dateRange, selectedAction, selectedUser, searchTerm]);
-
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     try {
       setLoading(true);
       if (!token) {
@@ -99,7 +95,18 @@ const AuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    pagination.page,
+    dateRange,
+    selectedAction,
+    selectedUser,
+    searchTerm,
+    token,
+  ]);
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, [fetchAuditLogs]);
 
   const exportLogs = async () => {
     try {

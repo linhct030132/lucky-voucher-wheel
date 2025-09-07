@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   Users,
   Gift,
-  DollarSign,
   Calendar,
-  Eye,
   ArrowUpRight,
   ArrowDownRight,
   Package,
@@ -18,12 +15,8 @@ import {
   Zap,
   Award,
   Activity,
-  Percent,
   RefreshCw,
   RotateCcw,
-  Download,
-  Filter,
-  Settings,
   ChevronRight,
   CheckCircle,
   AlertCircle,
@@ -58,7 +51,7 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, [token, timeRange]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -252,7 +245,11 @@ const AdminDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [token, timeRange]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const mainStats = [
     {

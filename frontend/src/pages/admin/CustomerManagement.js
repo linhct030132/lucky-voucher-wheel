@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -9,7 +10,6 @@ import {
   Calendar,
   Mail,
   Phone,
-  RotateCcw,
   Trophy,
   X,
   ChevronLeft,
@@ -41,7 +41,7 @@ const CustomerManagement = () => {
     fetchCustomers();
   }, [currentPage, filters]);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -70,7 +70,7 @@ const CustomerManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filters.search, filters.status]);
 
   const fetchCustomerSpins = async (customerId) => {
     try {

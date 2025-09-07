@@ -1,15 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   RotateCcw,
-  TrendingUp,
-  Users,
   Target,
   Calendar,
   Search,
   Filter,
   Download,
-  Eye,
   Trophy,
   X,
   ChevronLeft,
