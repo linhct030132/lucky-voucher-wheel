@@ -8,9 +8,13 @@ echo "NODE_ENV: ${NODE_ENV:-not set}"
 echo "PORT: ${PORT:-not set}"
 echo "DATABASE_URL: $(if [ -n "$DATABASE_URL" ]; then echo "SET"; else echo "NOT SET"; fi)"
 
-# Set default ports
+# Set ports explicitly for Railway
 export BACKEND_PORT=${BACKEND_PORT:-5000}
-export FRONTEND_PORT=${PORT:-3000}
+export FRONTEND_PORT=${PORT:-8080}
+
+echo "📋 Port Configuration:"
+echo "Frontend Port (Railway main): $FRONTEND_PORT"
+echo "Backend Port (internal): $BACKEND_PORT"
 
 # Create a temporary .env file for the backend with Railway variables
 echo "📝 Creating backend environment file..."
@@ -35,6 +39,9 @@ TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
 EOF
 
 echo "✅ Backend environment file created"
+echo "📋 Port Configuration:"
+echo "Frontend Port: $FRONTEND_PORT"
+echo "Backend Port: $BACKEND_PORT"
 echo "🔄 Starting services..."
 
 # Start both services

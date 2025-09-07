@@ -322,9 +322,7 @@ router.get("/status", async (req, res, next) => {
  */
 router.post(
   "/verify-eligibility",
-  [
-    body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required"),
-  ],
+  [body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required")],
   handleValidationErrors,
   async (req, res, next) => {
     try {
