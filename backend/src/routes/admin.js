@@ -102,14 +102,14 @@ router.get(
           include: {
             _count: {
               select: {
-                voucher_codes: {
+                voucherCodes: {
                   where: { status: "issued" },
                 },
               },
             },
           },
           orderBy: {
-            created_at: "desc",
+            createdAt: "desc",
           },
           skip: offset,
           take: limitNum,
@@ -121,11 +121,11 @@ router.get(
       const transformedVouchers = await Promise.all(
         vouchers.map(async (voucher) => {
           const codes_issued = await prisma.voucherCode.count({
-            where: { voucher_id: voucher.id, status: "issued" },
+            where: { voucherId: voucher.id, status: "issued" },
           });
 
           const codes_redeemed = await prisma.voucherCode.count({
-            where: { voucher_id: voucher.id, status: "redeemed" },
+            where: { voucherId: voucher.id, status: "redeemed" },
           });
 
           return {
@@ -176,13 +176,13 @@ router.get(
       const [codes_issued, codes_redeemed, codes_available] = await Promise.all(
         [
           prisma.voucherCode.count({
-            where: { voucher_id: id, status: "issued" },
+            where: { voucherId: id, status: "issued" },
           }),
           prisma.voucherCode.count({
-            where: { voucher_id: id, status: "redeemed" },
+            where: { voucherId: id, status: "redeemed" },
           }),
           prisma.voucherCode.count({
-            where: { voucher_id: id, status: "available" },
+            where: { voucherId: id, status: "available" },
           }),
         ]
       );
@@ -244,17 +244,17 @@ router.post(
             id: voucherId,
             name,
             description,
-            face_value: faceValue,
-            voucher_type: voucherType,
-            base_probability: baseProbability,
-            initial_stock: initialStock,
-            remaining_stock: remainingStock,
-            max_per_user: maxPerUser,
-            valid_from: validFrom ? new Date(validFrom) : null,
-            valid_to: validTo ? new Date(validTo) : null,
+            faceValue: faceValue,
+            voucherType: voucherType,
+            baseProbability: baseProbability,
+            initialStock: initialStock,
+            remainingStock: remainingStock,
+            maxPerUser: maxPerUser,
+            validFrom: validFrom ? new Date(validFrom) : null,
+            validTo: validTo ? new Date(validTo) : null,
             status,
-            code_generation: codeGeneration,
-            code_prefix: codePrefix,
+            codeGeneration: codeGeneration,
+            codePrefix: codePrefix,
           },
         });
 
@@ -265,7 +265,7 @@ router.post(
             const code = SecurityUtils.generateVoucherCode(codePrefix, 8);
             codes.push({
               id: uuidv4(),
-              voucher_id: voucherId,
+              voucherId: voucherId,
               code,
               status: "available",
             });
@@ -349,15 +349,15 @@ router.put(
         data: {
           name,
           description,
-          face_value: faceValue,
-          base_probability: baseProbability,
-          max_per_user: maxPerUser,
-          valid_from: validFrom ? new Date(validFrom) : null,
-          valid_to: validTo ? new Date(validTo) : null,
+          faceValue: faceValue,
+          baseProbability: baseProbability,
+          maxPerUser: maxPerUser,
+          validFrom: validFrom ? new Date(validFrom) : null,
+          validTo: validTo ? new Date(validTo) : null,
           status,
-          code_generation: codeGeneration,
-          code_prefix: codePrefix,
-          updated_at: new Date(),
+          codeGeneration: codeGeneration,
+          codePrefix: codePrefix,
+          updatedAt: new Date(),
         },
       });
 
@@ -406,7 +406,7 @@ router.delete(
       // Check if voucher has issued codes
       const issuedCount = await prisma.voucherCode.count({
         where: {
-          voucher_id: id,
+          voucherId: id,
           status: { in: ["issued", "redeemed"] },
         },
       });
@@ -417,7 +417,7 @@ router.delete(
           where: { id },
           data: {
             status: "inactive",
-            updated_at: new Date(),
+            updatedAt: new Date(),
           },
         });
 
@@ -432,7 +432,7 @@ router.delete(
           where: { id },
           data: {
             status: "inactive",
-            updated_at: new Date(),
+            updatedAt: new Date(),
           },
         });
 
@@ -485,7 +485,7 @@ router.post(
         return res.status(404).json({ error: "Voucher not found" });
       }
 
-      const previousStock = voucher.remaining_stock;
+      const previousStock = voucher.remainingStock;
       const newStock = previousStock + delta;
 
       if (newStock < 0) {
@@ -499,8 +499,8 @@ router.post(
         await tx.voucher.update({
           where: { id },
           data: {
-            remaining_stock: newStock,
-            updated_at: new Date(),
+            remainingStock: newStock,
+            updatedAt: new Date(),
           },
         });
 
@@ -508,27 +508,27 @@ router.post(
         const adjustment = await tx.stockAdjustment.create({
           data: {
             id: adjustmentId,
-            voucher_id: id,
-            staff_id: req.user.id,
-            delta_amount: delta,
+            voucherId: id,
+            staffId: req.user.id,
+            deltaAmount: delta,
             reason,
-            previous_stock: previousStock,
-            new_stock: newStock,
+            previousStock: previousStock,
+            newStock: newStock,
           },
         });
 
         // If adding stock and code generation is auto, generate new codes
-        if (delta > 0 && voucher.code_generation === "auto") {
+        if (delta > 0 && voucher.codeGeneration === "auto") {
           const codes = [];
 
           for (let i = 0; i < delta; i++) {
             const code = SecurityUtils.generateVoucherCode(
-              voucher.code_prefix,
+              voucher.codePrefix,
               8
             );
             codes.push({
               id: uuidv4(),
-              voucher_id: id,
+              voucherId: id,
               code,
               status: "available",
             });

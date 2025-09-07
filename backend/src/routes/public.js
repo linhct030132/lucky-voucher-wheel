@@ -112,10 +112,10 @@ router.post(
         await prisma.userProfile.create({
           data: {
             id: userId,
-            full_name: sanitizedProfile.fullName,
+            fullName: sanitizedProfile.fullName,
             email: sanitizedProfile.email,
             phone: sanitizedProfile.phone,
-            consent_at: new Date(),
+            consentAt: new Date(),
           },
         });
       }
@@ -123,7 +123,7 @@ router.post(
       // Create or get device record
       let deviceRecordId;
       const existingDevice = await prisma.device.findUnique({
-        where: { device_fp_hash: combinedDeviceId },
+        where: { deviceFpHash: combinedDeviceId },
         select: { id: true },
       });
 
@@ -132,7 +132,7 @@ router.post(
         // Update last seen
         await prisma.device.update({
           where: { id: deviceRecordId },
-          data: { last_seen_at: new Date() },
+          data: { lastSeenAt: new Date() },
         });
       } else {
         // Create new device record
@@ -140,9 +140,9 @@ router.post(
         await prisma.device.create({
           data: {
             id: deviceRecordId,
-            device_fp_hash: combinedDeviceId,
-            first_seen_at: new Date(),
-            last_seen_at: new Date(),
+            deviceFpHash: combinedDeviceId,
+            firstSeenAt: new Date(),
+            lastSeenAt: new Date(),
           },
         });
       }
@@ -163,8 +163,8 @@ router.post(
       // Enhanced fraud detection - check for recent attempts from same IP/User-Agent
       const recentAttemptsCount = await prisma.spinAttempt.count({
         where: {
-          ip_address: req.ip,
-          created_at: {
+          ipAddress: req.ip,
+          createdAt: {
             gt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
           },
         },
@@ -261,21 +261,21 @@ router.get("/vouchers", async (req, res, next) => {
     const vouchers = await prisma.voucher.findMany({
       where: {
         status: "active",
-        remaining_stock: { gt: 0 },
-        OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+        remainingStock: { gt: 0 },
+        OR: [{ validFrom: null }, { validFrom: { lte: new Date() } }],
         AND: [
           {
-            OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+            OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
           },
         ],
       },
       select: {
         name: true,
-        face_value: true,
+        faceValue: true,
         description: true,
       },
       orderBy: {
-        base_probability: "desc",
+        baseProbability: "desc",
       },
     });
 
@@ -299,19 +299,19 @@ router.get("/status", async (req, res, next) => {
     const voucherData = await prisma.voucher.aggregate({
       where: {
         status: "active",
-        remaining_stock: { gt: 0 },
-        OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+        remainingStock: { gt: 0 },
+        OR: [{ validFrom: null }, { validFrom: { lte: new Date() } }],
         AND: [
           {
-            OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+            OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
           },
         ],
       },
       _count: { id: true },
-      _sum: { remaining_stock: true },
+      _sum: { remainingStock: true },
     });
 
-    const totalRemainingStock = Number(voucherData._sum.remaining_stock || 0);
+    const totalRemainingStock = Number(voucherData._sum.remainingStock || 0);
     const activeVouchers = Number(voucherData._count.id || 0);
     const hasStock = totalRemainingStock > 0;
 
@@ -349,14 +349,14 @@ router.post(
 
       // Get device record
       const device = await prisma.device.findUnique({
-        where: { device_fp_hash: combinedDeviceId },
+        where: { deviceFpHash: combinedDeviceId },
         select: { id: true },
       });
 
       if (device) {
         // Check if already spun
         const existingAttempt = await prisma.spinAttempt.findFirst({
-          where: { device_id: device.id },
+          where: { deviceId: device.id },
           select: { id: true },
         });
 
@@ -373,20 +373,18 @@ router.post(
       const availableStockSum = await prisma.voucher.aggregate({
         where: {
           status: "active",
-          remaining_stock: { gt: 0 },
-          OR: [{ valid_from: null }, { valid_from: { lte: new Date() } }],
+          remainingStock: { gt: 0 },
+          OR: [{ validFrom: null }, { validFrom: { lte: new Date() } }],
           AND: [
             {
-              OR: [{ valid_to: null }, { valid_to: { gte: new Date() } }],
+              OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
             },
           ],
         },
-        _sum: { remaining_stock: true },
+        _sum: { remainingStock: true },
       });
 
-      const availableStock = Number(
-        availableStockSum._sum.remaining_stock || 0
-      );
+      const availableStock = Number(availableStockSum._sum.remainingStock || 0);
 
       if (!availableStock || availableStock === 0) {
         return res.json({

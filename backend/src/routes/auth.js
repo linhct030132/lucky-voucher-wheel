@@ -62,11 +62,11 @@ router.post(
         select: {
           id: true,
           email: true,
-          password_hash: true,
-          full_name: true,
+          passwordHash: true,
+          fullName: true,
           role: true,
-          is_active: true,
-          mfa_enabled: true,
+          isActive: true,
+          mfaEnabled: true,
         },
       });
 
@@ -76,14 +76,14 @@ router.post(
           .json({ error: "Thông tin đăng nhập không đúng" });
       }
 
-      if (!staff.is_active) {
+      if (!staff.isActive) {
         return res.status(401).json({ error: "Tài khoản đã bị vô hiệu hóa" });
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(
         password,
-        staff.password_hash
+        staff.passwordHash
       );
       if (!isValidPassword) {
         return res
@@ -111,7 +111,7 @@ router.post(
       // Update last login
       await prisma.staff.update({
         where: { id: staff.id },
-        data: { last_login_at: new Date() },
+        data: { lastLoginAt: new Date() },
       });
 
       // Log authentication
@@ -133,9 +133,9 @@ router.post(
         user: {
           id: staff.id,
           email: staff.email,
-          fullName: staff.full_name,
+          fullName: staff.fullName,
           role: staff.role,
-          mfaEnabled: staff.mfa_enabled,
+          mfaEnabled: staff.mfaEnabled,
         },
       });
     } catch (error) {
@@ -178,10 +178,10 @@ router.post(
         data: {
           id: staffId,
           email,
-          password_hash: passwordHash,
-          full_name: fullName,
+          passwordHash: passwordHash,
+          fullName: fullName,
           role,
-          is_active: true,
+          isActive: true,
         },
       });
 
@@ -223,14 +223,14 @@ router.post("/refresh", async (req, res, next) => {
     const staff = await prisma.staff.findFirst({
       where: {
         id: decoded.userId,
-        is_active: true,
+        isActive: true,
       },
       select: {
         id: true,
         email: true,
-        full_name: true,
+        fullName: true,
         role: true,
-        is_active: true,
+        isActive: true,
       },
     });
 
@@ -255,7 +255,7 @@ router.post("/refresh", async (req, res, next) => {
       user: {
         id: staff.id,
         email: staff.email,
-        fullName: staff.full_name,
+        fullName: staff.fullName,
         role: staff.role,
       },
     });
@@ -304,16 +304,16 @@ router.get("/me", async (req, res, next) => {
     const staff = await prisma.staff.findFirst({
       where: {
         id: decoded.userId,
-        is_active: true,
+        isActive: true,
       },
       select: {
         id: true,
         email: true,
-        full_name: true,
+        fullName: true,
         role: true,
-        is_active: true,
-        mfa_enabled: true,
-        last_login_at: true,
+        isActive: true,
+        mfaEnabled: true,
+        lastLoginAt: true,
       },
     });
 
@@ -326,10 +326,10 @@ router.get("/me", async (req, res, next) => {
       user: {
         id: staff.id,
         email: staff.email,
-        fullName: staff.full_name,
+        fullName: staff.fullName,
         role: staff.role,
-        mfaEnabled: staff.mfa_enabled,
-        lastLoginAt: staff.last_login_at,
+        mfaEnabled: staff.mfaEnabled,
+        lastLoginAt: staff.lastLoginAt,
       },
     });
   } catch (error) {
