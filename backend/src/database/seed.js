@@ -1,167 +1,326 @@
-const bcrypt = require("bcrypt");
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 
-async function seedDatabase(pool) {
-  console.log("🌱 Starting database seeding...");
+const prisma = new PrismaClient();
 
-  const connection = await pool.getConnection();
+/**
+ * Seed data definitions
+ */
+const seedData = {
+  staff: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      email: "admin@vouchersystem.com",
+      password: "admin123",
+      fullName: "System Administrator",
+      role: "ADMIN",
+      isActive: true,
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440999",
+      email: "staff@vouchersystem.com",
+      password: "staff123",
+      fullName: "Staff Member",
+      role: "STAFF",
+      isActive: true,
+    },
+  ],
+
+  vouchers: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      name: "10% Discount Voucher",
+      description: "Get 10% off your next purchase",
+      faceValue: "10%",
+      voucherType: "discount_percentage",
+      baseProbability: 0.15,
+      initialStock: 100,
+      remainingStock: 100,
+      maxPerUser: 1,
+      validFrom: new Date(),
+      validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      status: "active",
+      codeGeneration: "auto",
+      codePrefix: "SAVE10",
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "$5 Off Voucher",
+      description: "Get $5 off your next purchase",
+      faceValue: "$5",
+      voucherType: "discount_amount",
+      baseProbability: 0.1,
+      initialStock: 50,
+      remainingStock: 50,
+      maxPerUser: 1,
+      validFrom: new Date(),
+      validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      status: "active",
+      codeGeneration: "auto",
+      codePrefix: "SAVE5",
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      name: "Free Coffee",
+      description: "Get a free coffee on us!",
+      faceValue: "Free Coffee",
+      voucherType: "free_product",
+      baseProbability: 0.05,
+      initialStock: 25,
+      remainingStock: 25,
+      maxPerUser: 1,
+      validFrom: new Date(),
+      validTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      status: "active",
+      codeGeneration: "auto",
+      codePrefix: "FREE",
+    },
+  ],
+};
+
+/**
+ * Seed the database with initial data
+ */
+async function seedDatabase() {
+  console.log("🌱 Starting database seeding with Prisma...");
 
   try {
-    // Create admin staff user
-    console.log("Creating admin staff user...");
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-    const adminId = uuidv4();
+    await prisma.$connect();
+    console.log("✅ Connected to database successfully");
 
-    await connection.execute(
-      `
-            INSERT IGNORE INTO staff (id, email, password_hash, full_name, role, is_active, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-        `,
-      [
-        adminId,
-        "admin@company.com",
-        hashedPassword,
-        "System Administrator",
-        "ADMIN",
-        true,
-      ]
-    );
+    // Seed staff members
+    console.log("\n👥 Seeding staff members...");
+    for (const staffData of seedData.staff) {
+      const hashedPassword = await bcrypt.hash(staffData.password, 12);
 
-    // Create sample vouchers
-    console.log("Creating sample vouchers...");
-    const vouchers = [
-      {
-        id: uuidv4(),
-        name: "10% Discount Voucher",
-        description: "Get 10% discount on your purchase",
-        face_value: "10% OFF",
-        voucher_type: "discount_percentage",
-        base_probability: 0.3,
-        initial_stock: 100,
-        remaining_stock: 100,
-        max_per_user: 1,
-        valid_from: new Date(),
-        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        status: "active",
-        code_generation: "auto",
-        code_prefix: "DISC10",
-      },
-      {
-        id: uuidv4(),
-        name: "$20 Off Voucher",
-        description: "Save $20 on orders over $100",
-        face_value: "$20 OFF",
-        voucher_type: "discount_amount",
-        base_probability: 0.2,
-        initial_stock: 50,
-        remaining_stock: 50,
-        max_per_user: 1,
-        valid_from: new Date(),
-        valid_to: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
-        status: "active",
-        code_generation: "auto",
-        code_prefix: "SAVE20",
-      },
-      {
-        id: uuidv4(),
-        name: "Free Product Voucher",
-        description: "Get a free product with your order",
-        face_value: "FREE ITEM",
-        voucher_type: "free_product",
-        base_probability: 0.1,
-        initial_stock: 25,
-        remaining_stock: 25,
-        max_per_user: 1,
-        valid_from: new Date(),
-        valid_to: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
-        status: "active",
-        code_generation: "auto",
-        code_prefix: "FREE",
-      },
-      {
-        id: uuidv4(),
-        name: "25% Welcome Discount",
-        description: "Special welcome offer for new customers",
-        face_value: "25% OFF",
-        voucher_type: "discount_percentage",
-        base_probability: 0.15,
-        initial_stock: 75,
-        remaining_stock: 75,
-        max_per_user: 1,
-        valid_from: new Date(),
-        valid_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        status: "active",
-        code_generation: "auto",
-        code_prefix: "WELCOME",
-      },
-      {
-        id: uuidv4(),
-        name: "$50 Lucky Winner",
-        description: "You are a lucky winner! $50 off",
-        face_value: "$50 OFF",
-        voucher_type: "discount_amount",
-        base_probability: 0.05,
-        initial_stock: 10,
-        remaining_stock: 10,
-        max_per_user: 1,
-        valid_from: new Date(),
-        valid_to: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-        status: "active",
-        code_generation: "auto",
-        code_prefix: "LUCKY50",
-      },
-    ];
+      const staff = await prisma.staff.upsert({
+        where: { email: staffData.email },
+        update: {
+          fullName: staffData.fullName,
+          role: staffData.role,
+          isActive: staffData.isActive,
+        },
+        create: {
+          id: staffData.id,
+          email: staffData.email,
+          passwordHash: hashedPassword,
+          fullName: staffData.fullName,
+          role: staffData.role,
+          isActive: staffData.isActive,
+        },
+      });
 
-    for (const voucher of vouchers) {
-      await connection.execute(
-        `
-                INSERT IGNORE INTO vouchers (
-                    id, name, description, face_value, voucher_type, base_probability,
-                    initial_stock, remaining_stock, max_per_user, valid_from, valid_to,
-                    status, code_generation, code_prefix, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            `,
-        [
-          voucher.id,
-          voucher.name,
-          voucher.description,
-          voucher.face_value,
-          voucher.voucher_type,
-          voucher.base_probability,
-          voucher.initial_stock,
-          voucher.remaining_stock,
-          voucher.max_per_user,
-          voucher.valid_from,
-          voucher.valid_to,
-          voucher.status,
-          voucher.code_generation,
-          voucher.code_prefix,
-        ]
+      console.log(`  ✅ Created/updated staff: ${staff.email} (${staff.role})`);
+    }
+
+    // Seed vouchers
+    console.log("\n🎫 Seeding vouchers...");
+    for (const voucherData of seedData.vouchers) {
+      const voucher = await prisma.voucher.upsert({
+        where: { id: voucherData.id },
+        update: {
+          name: voucherData.name,
+          description: voucherData.description,
+          faceValue: voucherData.faceValue,
+          voucherType: voucherData.voucherType,
+          baseProbability: voucherData.baseProbability,
+          remainingStock: voucherData.remainingStock,
+          maxPerUser: voucherData.maxPerUser,
+          validFrom: voucherData.validFrom,
+          validTo: voucherData.validTo,
+          status: voucherData.status,
+        },
+        create: voucherData,
+      });
+
+      console.log(
+        `  ✅ Created/updated voucher: ${voucher.name} (${voucher.status})`
       );
+    }
 
-      // Generate voucher codes for each voucher
-      console.log(`Generating codes for voucher: ${voucher.name}`);
-      for (let i = 1; i <= voucher.initial_stock; i++) {
-        const codeId = uuidv4();
-        const code = `${voucher.code_prefix}${String(i).padStart(4, "0")}`;
+    // Generate voucher codes for each voucher
+    console.log("\n🔢 Generating voucher codes...");
+    for (const voucherData of seedData.vouchers) {
+      // Check how many codes already exist
+      const existingCodes = await prisma.voucherCode.count({
+        where: { voucherId: voucherData.id },
+      });
 
-        await connection.execute(
-          `INSERT IGNORE INTO voucher_codes (id, voucher_id, code, status, created_at)
-           VALUES (?, ?, ?, 'available', NOW())`,
-          [codeId, voucher.id, code]
+      const codesNeeded = Math.min(
+        voucherData.initialStock - existingCodes,
+        10
+      ); // Generate up to 10 codes
+
+      if (codesNeeded > 0) {
+        const codes = [];
+        for (let i = 1; i <= codesNeeded; i++) {
+          codes.push({
+            id: uuidv4(),
+            voucherId: voucherData.id,
+            code: `${voucherData.codePrefix}-${Date.now()
+              .toString()
+              .slice(-6)}-${i.toString().padStart(2, "0")}`,
+            status: "available",
+          });
+        }
+
+        await prisma.voucherCode.createMany({
+          data: codes,
+          skipDuplicates: true,
+        });
+
+        console.log(
+          `  ✅ Generated ${codesNeeded} codes for ${voucherData.name}`
+        );
+      } else {
+        console.log(
+          `  ℹ️  Voucher ${voucherData.name} already has sufficient codes`
         );
       }
     }
 
-    console.log("✅ Database seeding completed successfully!");
-    console.log(`Created ${vouchers.length} vouchers with their codes`);
-    console.log("Admin credentials: admin@company.com / admin123");
+    // Create sample user profiles
+    console.log("\n👤 Creating sample user profiles...");
+    const sampleUsers = [
+      {
+        id: "550e8400-e29b-41d4-a716-446655440100",
+        fullName: "John Doe",
+        email: "john.doe@example.com",
+        phone: "+1234567890",
+      },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440101",
+        fullName: "Jane Smith",
+        email: "jane.smith@example.com",
+        phone: "+1234567891",
+      },
+    ];
+
+    for (const userData of sampleUsers) {
+      const user = await prisma.userProfile.upsert({
+        where: { id: userData.id },
+        update: userData,
+        create: userData,
+      });
+
+      console.log(`  ✅ Created/updated user: ${user.fullName}`);
+    }
+
+    // Create sample devices
+    console.log("\n📱 Creating sample devices...");
+    const sampleDevices = [
+      {
+        id: "550e8400-e29b-41d4-a716-446655440200",
+        deviceFpHash: "device_hash_sample_1_" + Date.now(),
+      },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440201",
+        deviceFpHash: "device_hash_sample_2_" + Date.now(),
+      },
+    ];
+
+    for (const deviceData of sampleDevices) {
+      const device = await prisma.device.upsert({
+        where: { id: deviceData.id },
+        update: deviceData,
+        create: deviceData,
+      });
+
+      console.log(`  ✅ Created/updated device: ${device.deviceFpHash}`);
+    }
+
+    console.log("\n📊 Seed Summary:");
+    console.log("================");
+
+    const counts = await Promise.all([
+      prisma.staff.count(),
+      prisma.voucher.count(),
+      prisma.voucherCode.count(),
+      prisma.userProfile.count(),
+      prisma.device.count(),
+    ]);
+
+    console.log(`👥 Staff members: ${counts[0]}`);
+    console.log(`🎫 Vouchers: ${counts[1]}`);
+    console.log(`🔢 Voucher codes: ${counts[2]}`);
+    console.log(`👤 User profiles: ${counts[3]}`);
+    console.log(`📱 Devices: ${counts[4]}`);
+
+    console.log("\n🎉 Database seeding completed successfully!");
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    console.error("\n❌ Seeding failed:", error);
     throw error;
   } finally {
-    connection.release();
+    await prisma.$disconnect();
   }
 }
 
-module.exports = { seedDatabase };
+/**
+ * Clear all data (for testing purposes)
+ */
+async function clearDatabase() {
+  console.log("🧹 Clearing database...");
+
+  try {
+    await prisma.$connect();
+
+    // Delete in correct order to avoid foreign key constraints
+    await prisma.stockAdjustment.deleteMany();
+    await prisma.auditLog.deleteMany();
+    await prisma.spinAttempt.deleteMany();
+    await prisma.voucherCode.deleteMany();
+    await prisma.voucher.deleteMany();
+    await prisma.device.deleteMany();
+    await prisma.userProfile.deleteMany();
+    await prisma.staff.deleteMany();
+
+    console.log("✅ Database cleared successfully");
+  } catch (error) {
+    console.error("❌ Failed to clear database:", error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Reset database (clear + seed)
+ */
+async function resetDatabase() {
+  console.log("🔄 Resetting database...");
+  await clearDatabase();
+  await seedDatabase();
+  console.log("✅ Database reset completed");
+}
+
+// CLI interface
+if (require.main === module) {
+  const command = process.argv[2];
+
+  switch (command) {
+    case "clear":
+      clearDatabase()
+        .then(() => process.exit(0))
+        .catch(() => process.exit(1));
+      break;
+
+    case "reset":
+      resetDatabase()
+        .then(() => process.exit(0))
+        .catch(() => process.exit(1));
+      break;
+
+    default:
+      seedDatabase()
+        .then(() => process.exit(0))
+        .catch(() => process.exit(1));
+  }
+}
+
+module.exports = {
+  seedDatabase,
+  clearDatabase,
+  resetDatabase,
+  seedData,
+};
