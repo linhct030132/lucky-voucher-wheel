@@ -139,7 +139,7 @@ app.get("/api/debug", (req, res) => {
   });
 });
 
-app.post("/api/admin/migrate", async (req, res) => {
+app.post("/api/migrate", async (req, res) => {
   try {
     console.log("🗃️  Manual migration triggered...");
     const { runMigrations } = require("./database/migrate");
@@ -159,7 +159,7 @@ app.post("/api/admin/migrate", async (req, res) => {
   }
 });
 
-app.post("/api/admin/seed", async (req, res) => {
+app.post("/api/seed", async (req, res) => {
   try {
     console.log("🌱 Manual seeding triggered...");
     const { seedDatabase } = require("./database/seed");
