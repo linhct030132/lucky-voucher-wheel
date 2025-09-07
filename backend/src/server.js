@@ -10,11 +10,19 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-// For production/Railway: use PORT directly since we're serving both API and static files
+
+// Debug environment variables
+console.log("🔧 Environment Debug:");
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`PORT (raw): ${process.env.PORT}`);
+console.log(`BACKEND_PORT (raw): ${process.env.BACKEND_PORT}`);
+
+// For Railway/production: Always use Railway's PORT if available
 // For development: use BACKEND_PORT to avoid conflicts with frontend dev server
-const PORT = process.env.NODE_ENV === 'production' 
-  ? (process.env.PORT || 8080)
-  : (process.env.BACKEND_PORT || 3001);
+const PORT = process.env.PORT || 
+  (process.env.NODE_ENV === "production" ? 8080 : (process.env.BACKEND_PORT || 3001));
+
+console.log(`Final resolved PORT: ${PORT}`);
 
 // Import database and utilities
 const { testConnection } = require("./config/database");
@@ -61,15 +69,15 @@ app.use(
 const corsOptions = {
   origin: function (origin, callback) {
     // In production, allow same origin (since frontend is served by the same server)
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       // Allow same origin and the Railway URL
       const allowedOrigins = [
         process.env.RAILWAY_STATIC_URL,
         process.env.FRONTEND_URL,
         // Allow same origin (null when serving static files)
-        null
+        null,
       ].filter(Boolean);
-      
+
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -164,9 +172,9 @@ async function startServer() {
       process.exit(1);
     }
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 Lucky Voucher System Backend Started");
-      console.log(`📍 Server running on port ${PORT}`);
+      console.log(`📍 Server running on 0.0.0.0:${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(
         `🔗 Frontend URL: ${

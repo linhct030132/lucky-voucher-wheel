@@ -48,7 +48,7 @@ services:
   # Remove the separate frontend and backend services
   backend:
     profiles: ["disabled"]
-  
+
   frontend:
     profiles: ["disabled"]
 

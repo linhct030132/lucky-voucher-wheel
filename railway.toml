@@ -3,13 +3,9 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "./railway-start.sh"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-[env]
-PORT = "8080"
-NODE_ENV = "production"
 
 [build.env]
 CI = "false"

@@ -5,6 +5,7 @@ This guide explains how to deploy the Lucky Voucher System on a single port for 
 ## 🏗️ Architecture
 
 The application now uses a unified architecture where:
+
 - **Frontend**: React app built as static files
 - **Backend**: Express.js server that serves both API endpoints and static files
 - **Single Port**: Everything runs on one port (8080 for Railway, configurable for other platforms)
@@ -23,6 +24,7 @@ The app is configured to automatically deploy on Railway using the unified Docke
 ```
 
 **Railway Configuration:**
+
 - Uses `Dockerfile` for building
 - Serves on `$PORT` (typically 8080)
 - Backend serves both API (`/api/*`) and frontend (`/*`)
@@ -58,6 +60,7 @@ docker run -p 8080:8080 \
 ### Environment Variables
 
 **Required for Production:**
+
 ```env
 NODE_ENV=production
 PORT=8080
@@ -69,6 +72,7 @@ DEVICE_HMAC_SECRET=your-device-secret
 ```
 
 **Optional:**
+
 ```env
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
@@ -81,11 +85,13 @@ TWILIO_AUTH_TOKEN=your-twilio-token
 ### Railway-Specific Variables
 
 Railway automatically sets:
+
 - `PORT` - The port your app should listen on
 - `RAILWAY_STATIC_URL` - Your app's public URL
 - `NODE_ENV=production`
 
 You need to add:
+
 - Database credentials (Railway MySQL addon or external)
 - JWT secrets
 - Email/SMS service credentials
@@ -118,11 +124,13 @@ All endpoints are served from the same domain/port:
 ## 🛠️ Development vs Production
 
 ### Development (2 ports)
+
 ```bash
 npm run dev  # Frontend: 3000, Backend: 3001
 ```
 
 ### Production (1 port)
+
 ```bash
 npm run start  # Everything: 8080 (or $PORT)
 ```
@@ -152,10 +160,12 @@ npm run test-db
 ## 📊 Monitoring
 
 The application includes health check endpoints:
+
 - `GET /health` - Basic health status
 - `GET /api/health` - Detailed API health status
 
 Health checks include:
+
 - Database connectivity
 - Server uptime
 - Environment information
@@ -171,6 +181,7 @@ Health checks include:
 ## 📈 Performance
 
 The unified deployment provides:
+
 - **Reduced Latency**: No cross-origin requests
 - **Simplified Infrastructure**: Single container/service
 - **Better Caching**: Static files served directly
