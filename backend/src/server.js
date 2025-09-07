@@ -10,8 +10,8 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-// Use BACKEND_PORT if available (for Railway deployment), otherwise fallback to PORT
-const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
+// For Railway: use PORT directly since we're serving both API and static files
+const PORT = process.env.PORT || 3001;
 
 // Import database and utilities
 const { testConnection } = require("./config/database");
@@ -126,10 +126,14 @@ async function startServer() {
   try {
     // Debug port configuration
     console.log("🔧 Port Configuration Debug:");
-    console.log(`BACKEND_PORT: ${process.env.BACKEND_PORT}`);
     console.log(`PORT: ${process.env.PORT}`);
     console.log(`Resolved PORT: ${PORT}`);
-
+    console.log(
+      `Serving static files from: ${path.join(
+        __dirname,
+        "../../frontend/build"
+      )}`
+    );
     // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {

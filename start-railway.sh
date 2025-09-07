@@ -8,13 +8,13 @@ echo "NODE_ENV: ${NODE_ENV:-not set}"
 echo "PORT: ${PORT:-not set}"
 echo "DATABASE_URL: $(if [ -n "$DATABASE_URL" ]; then echo "SET"; else echo "NOT SET"; fi)"
 
-# Set ports explicitly for Railway
-export BACKEND_PORT=${BACKEND_PORT:-5000}
+# Set ports for Railway deployment
+# Since we're only running the backend (which serves static files), 
+# it should use the main Railway PORT
 export FRONTEND_PORT=${PORT:-8080}
 
 echo "📋 Port Configuration:"
-echo "Frontend Port (Railway main): $FRONTEND_PORT"
-echo "Backend Port (internal): $BACKEND_PORT"
+echo "Backend serving on Railway Port: $FRONTEND_PORT"
 
 # Create a temporary .env file for the backend with Railway variables
 echo "📝 Creating backend environment file..."
@@ -39,14 +39,16 @@ EOF
 
 echo "✅ Backend environment file created"
 echo "📋 Port Configuration:"
+echo "Backend serving on Railway Port: $FRONTEND_PORT"
+
+echo "✅ Backend environment file created"
+echo "📋 Port Configuration:"
 echo "Frontend Port: $FRONTEND_PORT"
 echo "Backend Port: $BACKEND_PORT"
 echo "🔄 Starting services..."
 
-# Start both services
-npx concurrently \
-  --names "BACKEND,FRONTEND" \
-  --prefix-colors "blue,green" \
-  --kill-others-on-fail \
-  "cd backend && BACKEND_PORT=$BACKEND_PORT node -r dotenv/config src/server.js dotenv_config_path=.env.railway" \
-  "serve -s frontend/build -p $FRONTEND_PORT"
+# For Railway deployment, only run the backend server
+# The backend will serve both API and static files
+echo "🔄 Starting backend server (will serve both API and static files)..."
+
+cd backend && PORT=$FRONTEND_PORT node -r dotenv/config src/server.js dotenv_config_path=.env.railway
