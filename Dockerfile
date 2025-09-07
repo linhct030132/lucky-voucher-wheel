@@ -20,16 +20,15 @@ WORKDIR /app
 
 # Copy backend package files
 COPY backend/package*.json ./
-RUN npm ci --only=production
 
-# Copy Prisma schema
+# Copy Prisma schema BEFORE installing dependencies
 COPY backend/prisma ./prisma
+
+# Install dependencies (this will also run postinstall script)
+RUN npm ci --only=production
 
 # Copy backend source code
 COPY backend/src ./src
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Copy built frontend files to serve as static files
 COPY --from=frontend-builder /app/frontend/build ./frontend/build

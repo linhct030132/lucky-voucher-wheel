@@ -7,18 +7,15 @@ WORKDIR /app
 # Copy backend package files
 COPY backend/package*.json ./
 
-# Install dependencies (including Prisma CLI)
-RUN npm ci --only=production
-
-# Copy Prisma schema first
+# Copy Prisma schema first (before installing dependencies)
 COPY backend/prisma ./prisma
+
+# Install dependencies (this will run postinstall script)
+RUN npm ci --only=production
 
 # Copy backend source code
 COPY backend/src ./src
 COPY backend/.env.example ./.env.example
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Create logs directory
 RUN mkdir -p logs
