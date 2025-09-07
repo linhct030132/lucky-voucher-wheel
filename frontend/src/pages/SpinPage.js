@@ -312,7 +312,8 @@ const SpinPage = () => {
               </h1>
 
               <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã quan tâm đến chương trình của chúng tôi!
+                Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã
+                quan tâm đến chương trình của chúng tôi!
               </p>
             </>
           ) : (
@@ -338,36 +339,38 @@ const SpinPage = () => {
           )}
 
           {/* Prize Preview */}
-          {currentStep !== "participated" && currentStep !== "out_of_stock" && availableVouchers.length > 0 && (
-            <motion.div
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {availableVouchers.slice(0, 6).map((voucher, index) => (
-                <motion.div
-                  key={voucher.id}
-                  className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <div className="text-indigo-600 mb-3 flex justify-center">
-                    <Gift className="w-8 h-8" />
-                  </div>
-                  <div className="text-gray-900 text-sm font-bold mb-2 line-clamp-2">
-                    {voucher.name}
-                  </div>
-                  <div className="text-indigo-600 text-xs font-medium">
-                    {voucher.face_value}
-                    {voucher.voucher_type === "discount_percentage"
-                      ? "% OFF"
-                      : ""}
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+          {currentStep !== "participated" &&
+            currentStep !== "out_of_stock" &&
+            availableVouchers.length > 0 && (
+              <motion.div
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {availableVouchers.slice(0, 6).map((voucher, index) => (
+                  <motion.div
+                    key={voucher.id}
+                    className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <div className="text-indigo-600 mb-3 flex justify-center">
+                      <Gift className="w-8 h-8" />
+                    </div>
+                    <div className="text-gray-900 text-sm font-bold mb-2 line-clamp-2">
+                      {voucher.name}
+                    </div>
+                    <div className="text-indigo-600 text-xs font-medium">
+                      {voucher.face_value}
+                      {voucher.voucher_type === "discount_percentage"
+                        ? "% OFF"
+                        : ""}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
         </motion.div>
 
         {/* Step Content */}
@@ -575,7 +578,8 @@ const SpinPage = () => {
                   </h2>
 
                   <p className="text-xl text-gray-600 mb-8">
-                    Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã quan tâm đến chương trình của chúng tôi!
+                    Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã
+                    quan tâm đến chương trình của chúng tôi!
                   </p>
 
                   <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-6 border border-red-200 mb-8">
@@ -586,8 +590,9 @@ const SpinPage = () => {
                       </span>
                     </div>
                     <p className="text-red-700 text-sm">
-                      Tất cả giải thưởng trong chương trình quay số may mắn này đã được phát hết. 
-                      Hãy theo dõi để cập nhật các chương trình khuyến mãi mới nhé!
+                      Tất cả giải thưởng trong chương trình quay số may mắn này
+                      đã được phát hết. Hãy theo dõi để cập nhật các chương
+                      trình khuyến mãi mới nhé!
                     </p>
                   </div>
 
