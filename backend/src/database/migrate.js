@@ -39,25 +39,13 @@ const migrations = [
         INDEX idx_device_fp (device_fp_hash)
       );
 
-      -- Create Campaign table
-      CREATE TABLE IF NOT EXISTS campaigns (
-        id VARCHAR(36) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        status ENUM('draft', 'active', 'inactive', 'ended') DEFAULT 'draft',
-        start_at TIMESTAMP NULL,
-        end_at TIMESTAMP NULL,
-        no_win_weight DECIMAL(10,4) DEFAULT 0.1000,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-
-      -- Create Voucher table
+      -- Create Voucher table (without campaign dependencies)
       CREATE TABLE IF NOT EXISTS vouchers (
         id VARCHAR(36) PRIMARY KEY,
-        campaign_id VARCHAR(36),
         name VARCHAR(255) NOT NULL,
         description TEXT,
         face_value VARCHAR(255) NOT NULL,
+        voucher_type ENUM('discount_percentage', 'discount_amount', 'free_product') DEFAULT 'discount_percentage',
         base_probability DECIMAL(10,4) NOT NULL DEFAULT 0.1000,
         initial_stock INT NOT NULL DEFAULT 0,
         remaining_stock INT NOT NULL DEFAULT 0,
@@ -69,10 +57,9 @@ const migrations = [
         code_prefix VARCHAR(10) DEFAULT 'LV',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
         INDEX idx_status (status),
-        INDEX idx_campaign (campaign_id),
-        INDEX idx_valid_period (valid_from, valid_to)
+        INDEX idx_valid_period (valid_from, valid_to),
+        INDEX idx_voucher_type (voucher_type)
       );
 
       -- Create VoucherCode table
@@ -97,19 +84,17 @@ const migrations = [
         id VARCHAR(36) PRIMARY KEY,
         user_id VARCHAR(36) NOT NULL,
         device_id VARCHAR(36) NOT NULL,
-        campaign_id VARCHAR(36) NOT NULL,
         outcome ENUM('win', 'lose') NOT NULL,
-        voucher_id VARCHAR(36) NULL,
+        voucher_id VARCHAR(36) NOT NULL,
         voucher_code_id VARCHAR(36) NULL,
         ip_address VARCHAR(45),
         user_agent TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE,
         FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE,
-        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
-        FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE SET NULL,
+        FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE CASCADE,
         FOREIGN KEY (voucher_code_id) REFERENCES voucher_codes(id) ON DELETE SET NULL,
-        UNIQUE KEY unique_user_device_campaign (user_id, device_id, campaign_id),
+        UNIQUE KEY unique_user_device_voucher (user_id, device_id, voucher_id),
         INDEX idx_outcome (outcome),
         INDEX idx_created_at (created_at)
       );
@@ -172,7 +157,6 @@ const migrations = [
       DROP TABLE IF EXISTS spin_attempts;
       DROP TABLE IF EXISTS voucher_codes;
       DROP TABLE IF EXISTS vouchers;
-      DROP TABLE IF EXISTS campaigns;
       DROP TABLE IF EXISTS devices;
       DROP TABLE IF EXISTS user_profiles;
       DROP TABLE IF EXISTS staff;

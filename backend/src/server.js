@@ -139,6 +139,46 @@ app.get("/api/debug", (req, res) => {
   });
 });
 
+app.post("/api/admin/migrate", async (req, res) => {
+  try {
+    console.log("🗃️  Manual migration triggered...");
+    const { runMigrations } = require("./database/migrate");
+    await runMigrations();
+    res.json({
+      success: true,
+      message: "Migrations completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Manual migration failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+app.post("/api/admin/seed", async (req, res) => {
+  try {
+    console.log("🌱 Manual seeding triggered...");
+    const { seedDatabase } = require("./database/seed");
+    await seedDatabase();
+    res.json({
+      success: true,
+      message: "Database seeding completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Manual seeding failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -217,11 +257,38 @@ async function startServer() {
         "../../frontend/build"
       )}`
     );
+
     // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {
       console.error("Failed to connect to database. Exiting...");
       process.exit(1);
+    }
+
+    // Run database migrations automatically in production
+    if (
+      process.env.NODE_ENV === "production" ||
+      process.env.AUTO_MIGRATE === "true"
+    ) {
+      console.log("🗃️  Running database migrations...");
+      try {
+        // Import and run migrations
+        const { runMigrations } = require("./database/migrate");
+        await runMigrations();
+        console.log("✅ Database migrations completed successfully");
+
+        // Run seeding if this is the first deployment
+        if (process.env.AUTO_SEED === "true") {
+          console.log("🌱 Running database seeding...");
+          const { seedDatabase } = require("./database/seed");
+          await seedDatabase();
+          console.log("✅ Database seeding completed successfully");
+        }
+      } catch (migrationError) {
+        console.error("❌ Migration failed:", migrationError);
+        // Don't exit - let the app continue but log the error
+        console.warn("⚠️  Continuing without migrations...");
+      }
     }
 
     const server = app.listen(PORT, "0.0.0.0", () => {
