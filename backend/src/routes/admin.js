@@ -411,7 +411,7 @@ router.delete(
         },
       });
 
-      if (issuedCount > 0) {
+      if (Number(issuedCount) > 0) {
         // Cannot delete if codes are issued, just set to inactive
         await prisma.voucher.update({
           where: { id },
@@ -605,7 +605,16 @@ router.get(
     queryValidator("entityType")
       .optional()
       .isIn(["voucher", "staff", "spin_attempt"]),
-    queryValidator("action").optional().isAlpha(),
+    queryValidator("action")
+      .optional()
+      .custom((value) => {
+        // Allow empty string or alphabetic values
+        if (value === "" || value === undefined || value === null) {
+          return true;
+        }
+        return /^[a-zA-Z_]+$/.test(value);
+      })
+      .withMessage("Action must be alphabetic or empty"),
     queryValidator("dateFrom").optional().isISO8601(),
     queryValidator("dateTo").optional().isISO8601(),
     queryValidator("page").optional().isInt({ min: 1 }),
@@ -683,7 +692,7 @@ router.get(
           page: pageNum,
           limit: safeLimitNum,
           total: parseInt(total),
-          pages: Math.ceil(total / safeLimitNum),
+          pages: Math.ceil(parseInt(total) / safeLimitNum),
         },
       });
     } catch (error) {
@@ -772,6 +781,14 @@ router.get("/spins", async (req, res, next) => {
       FROM spin_attempts
     `);
 
+    // Convert BigInt values to numbers
+    const numericStats = {
+      total_spins: Number(stats.total_spins),
+      total_wins: Number(stats.total_wins),
+      total_losses: Number(stats.total_losses),
+      today_spins: Number(stats.today_spins),
+    };
+
     res.json({
       success: true,
       data: spins,
@@ -782,13 +799,16 @@ router.get("/spins", async (req, res, next) => {
         pages: Math.ceil((parseInt(total) || 0) / safeLimitNum),
       },
       stats: {
-        totalSpins: parseInt(stats.total_spins) || 0,
-        totalWins: parseInt(stats.total_wins) || 0,
-        totalLosses: parseInt(stats.total_losses) || 0,
-        todaySpins: parseInt(stats.today_spins) || 0,
+        totalSpins: numericStats.total_spins || 0,
+        totalWins: numericStats.total_wins || 0,
+        totalLosses: numericStats.total_losses || 0,
+        todaySpins: numericStats.today_spins || 0,
         winRate:
-          stats.total_spins > 0
-            ? ((stats.total_wins / stats.total_spins) * 100).toFixed(1)
+          numericStats.total_spins > 0
+            ? (
+                (numericStats.total_wins / numericStats.total_spins) *
+                100
+              ).toFixed(1)
             : 0,
       },
     });
@@ -850,8 +870,11 @@ router.get("/stats", async (req, res, next) => {
         codesIssued: parseInt(codes_issued) || 0,
         codesRedeemed: parseInt(codes_redeemed) || 0,
         redemptionRate:
-          codes_issued > 0
-            ? ((codes_redeemed / codes_issued) * 100).toFixed(1)
+          parseInt(codes_issued) > 0
+            ? (
+                (parseInt(codes_redeemed) / parseInt(codes_issued)) *
+                100
+              ).toFixed(1)
             : 0,
       },
     });
@@ -915,6 +938,12 @@ router.get("/users", async (req, res, next) => {
       params
     );
 
+    // Convert BigInt values to numbers
+    const processedUsers = users.map((user) => ({
+      ...user,
+      activity_count: Number(user.activity_count),
+    }));
+
     // Get total count
     const [{ total }] = await query(
       `SELECT COUNT(*) as total FROM user_profiles up ${whereClause}`,
@@ -923,7 +952,7 @@ router.get("/users", async (req, res, next) => {
 
     res.json({
       success: true,
-      data: users,
+      data: processedUsers,
       pagination: {
         page: pageNum,
         limit: limitNum,

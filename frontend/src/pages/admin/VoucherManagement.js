@@ -123,16 +123,16 @@ const VoucherManagement = () => {
     setFormData({
       name: voucher.name,
       description: voucher.description,
-      faceValue: voucher.face_value,
-      voucherType: voucher.voucher_type || "discount_percentage",
-      baseProbability: voucher.base_probability,
-      initialStock: voucher.initial_stock || voucher.remaining_stock,
-      maxPerUser: voucher.max_per_user || 1,
-      validFrom: voucher.valid_from ? voucher.valid_from.split("T")[0] : "",
-      validTo: voucher.valid_to ? voucher.valid_to.split("T")[0] : "",
+      faceValue: voucher.faceValue,
+      voucherType: voucher.voucherType || "discount_percentage",
+      baseProbability: voucher.baseProbability,
+      initialStock: voucher.initialStock || voucher.remainingStock,
+      maxPerUser: voucher.maxPerUser || 1,
+      validFrom: voucher.validFrom ? voucher.validFrom.split("T")[0] : "",
+      validTo: voucher.validTo ? voucher.validTo.split("T")[0] : "",
       status: voucher.status,
-      codeGeneration: voucher.code_generation || "auto",
-      codePrefix: voucher.code_prefix || "LV",
+      codeGeneration: voucher.codeGeneration || "auto",
+      codePrefix: voucher.codePrefix || "LV",
     });
     setShowModal(true);
   };
@@ -189,13 +189,11 @@ const VoucherManagement = () => {
       let aVal = a[sortBy];
       let bVal = b[sortBy];
 
-      if (sortBy === "remaining_stock_percentage") {
+      if (sortBy === "remainingStock_percentage") {
         aVal =
-          (a.remaining_stock / (a.initial_stock || a.remaining_stock || 1)) *
-          100;
+          (a.remainingStock / (a.initialStock || a.remainingStock || 1)) * 100;
         bVal =
-          (b.remaining_stock / (b.initial_stock || b.remaining_stock || 1)) *
-          100;
+          (b.remainingStock / (b.initialStock || b.remainingStock || 1)) * 100;
       }
 
       if (sortOrder === "asc") {
@@ -248,9 +246,10 @@ const VoucherManagement = () => {
   };
 
   const getStockPercentage = (voucher) => {
-    const total = voucher.initial_stock || voucher.remaining_stock;
+    const total = voucher.initialStock || voucher.remainingStock;
+
     if (total === 0) return 0;
-    return Math.round((voucher.remaining_stock / total) * 100);
+    return Math.round((voucher.remainingStock / total) * 100);
   };
 
   const getStockColor = (percentage) => {
@@ -278,7 +277,7 @@ const VoucherManagement = () => {
     {
       label: "Tổng Kho",
       value: vouchers.reduce(
-        (sum, v) => sum + (v.initial_stock || v.remaining_stock || 0),
+        (sum, v) => sum + (v.initialStock || v.remainingStock || 0),
         0
       ),
       icon: <Package className="w-6 h-6" />,
@@ -287,7 +286,7 @@ const VoucherManagement = () => {
     },
     {
       label: "Còn Lại",
-      value: vouchers.reduce((sum, v) => sum + (v.remaining_stock || 0), 0),
+      value: vouchers.reduce((sum, v) => sum + (v.remainingStock || 0), 0),
       icon: <TrendingUp className="w-6 h-6" />,
       color: "text-orange-600",
       bg: "bg-orange-100",
@@ -420,7 +419,7 @@ const VoucherManagement = () => {
               >
                 <option value="created_at">Ngày Tạo</option>
                 <option value="name">Tên</option>
-                <option value="remaining_stock">Kho</option>
+                <option value="remainingStock">Kho</option>
                 <option value="base_probability">Xác Suất</option>
               </select>
             </div>
@@ -445,7 +444,7 @@ const VoucherManagement = () => {
             </span>
             <span>
               Tổng kho:{" "}
-              {vouchers.reduce((sum, v) => sum + (v.remaining_stock || 0), 0)}
+              {vouchers.reduce((sum, v) => sum + (v.remainingStock || 0), 0)}
             </span>
           </div>
         </motion.div>
@@ -472,7 +471,7 @@ const VoucherManagement = () => {
                 <div className="p-6 pb-4">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      {getTypeIcon(voucher.voucher_type)}
+                      {getTypeIcon(voucher.voucherType)}
                       <div>
                         <h3 className="font-bold text-gray-900 text-lg line-clamp-1">
                           {voucher.name}
@@ -496,10 +495,10 @@ const VoucherManagement = () => {
                   <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-indigo-600">
-                        {voucher.voucher_type === "discount_percentage"
-                          ? `${voucher.face_value}% OFF`
-                          : voucher.voucher_type === "discount_amount"
-                          ? `$${voucher.face_value}`
+                        {voucher.voucherType === "discount_percentage"
+                          ? `${voucher.faceValue}% OFF`
+                          : voucher.voucherType === "discount_amount"
+                          ? `$${voucher.faceValue}`
                           : "Free Product"}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
@@ -515,8 +514,8 @@ const VoucherManagement = () => {
                         Kho
                       </span>
                       <span className="text-sm text-gray-600">
-                        {voucher.remaining_stock}/
-                        {voucher.initial_stock || voucher.remaining_stock}
+                        {voucher.remainingStock}/
+                        {voucher.initialStock || voucher.remainingStock}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -533,15 +532,15 @@ const VoucherManagement = () => {
                   </div>
 
                   {/* Validity */}
-                  {(voucher.valid_from || voucher.valid_to) && (
+                  {(voucher.validFrom || voucher.validTo) && (
                     <div className="text-xs text-gray-500 mb-4 flex items-center">
                       <Calendar className="w-4 h-4 mr-1" />
                       <span>
-                        {voucher.valid_from &&
-                          new Date(voucher.valid_from).toLocaleDateString()}
-                        {voucher.valid_from && voucher.valid_to && " - "}
-                        {voucher.valid_to &&
-                          new Date(voucher.valid_to).toLocaleDateString()}
+                        {voucher.validFrom &&
+                          new Date(voucher.validFrom).toLocaleDateString()}
+                        {voucher.validFrom && voucher.validTo && " - "}
+                        {voucher.validTo &&
+                          new Date(voucher.validTo).toLocaleDateString()}
                       </span>
                     </div>
                   )}
@@ -550,7 +549,7 @@ const VoucherManagement = () => {
                 {/* Card Actions */}
                 <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
                   <div className="text-xs text-gray-500">
-                    Tối đa mỗi người: {voucher.max_per_user || 1}
+                    Tối đa mỗi người: {voucher.maxPerUser || 1}
                   </div>
                   <div className="flex space-x-2">
                     <motion.button

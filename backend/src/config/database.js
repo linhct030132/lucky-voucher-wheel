@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const { processDatabaseResult } = require("../utils/bigintUtils");
 
 // Create a single instance of Prisma Client with error handling
 let prisma;
@@ -39,7 +40,8 @@ const legacyPool = {
     // Return a mock connection object that can be used for raw queries if needed
     return {
       query: async (sql, params) => {
-        return await prisma.$queryRawUnsafe(sql, ...(params || []));
+        const result = await prisma.$queryRawUnsafe(sql, ...(params || []));
+        return processDatabaseResult(result);
       },
       release: () => {
         // No-op for Prisma
@@ -50,7 +52,8 @@ const legacyPool = {
     };
   },
   query: async (sql, params) => {
-    return await prisma.$queryRawUnsafe(sql, ...(params || []));
+    const result = await prisma.$queryRawUnsafe(sql, ...(params || []));
+    return processDatabaseResult(result);
   },
   end: async () => {
     await prisma.$disconnect();
@@ -73,7 +76,8 @@ async function testConnection() {
 async function query(sql, params = []) {
   try {
     const result = await prisma.$queryRawUnsafe(sql, ...(params || []));
-    return result;
+    // Convert BigInt values to numbers to prevent serialization issues
+    return processDatabaseResult(result);
   } catch (error) {
     console.error("Database query error:", error);
     throw error;
@@ -86,7 +90,8 @@ async function transaction(queries) {
     const results = [];
     for (const { sql, params } of queries) {
       const result = await tx.$queryRawUnsafe(sql, ...(params || []));
-      results.push(result);
+      // Convert BigInt values to numbers
+      results.push(processDatabaseResult(result));
     }
     return results;
   });
