@@ -20,7 +20,6 @@ echo "Backend Port (internal): $BACKEND_PORT"
 echo "📝 Creating backend environment file..."
 cat > backend/.env.railway << EOF
 NODE_ENV=${NODE_ENV:-production}
-PORT=${BACKEND_PORT}
 DATABASE_URL=${DATABASE_URL}
 JWT_SECRET=${JWT_SECRET}
 JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
@@ -49,5 +48,5 @@ npx concurrently \
   --names "BACKEND,FRONTEND" \
   --prefix-colors "blue,green" \
   --kill-others-on-fail \
-  "cd backend && node -r dotenv/config src/server.js dotenv_config_path=.env.railway" \
+  "cd backend && BACKEND_PORT=$BACKEND_PORT node -r dotenv/config src/server.js dotenv_config_path=.env.railway" \
   "serve -s frontend/build -p $FRONTEND_PORT"
