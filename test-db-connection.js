@@ -68,7 +68,7 @@ async function testDatabaseConnection() {
     // Test a simple query
     console.log("⏳ Testing query execution...");
     const [rows] = await connection.execute(
-      "SELECT 1 as test, NOW() as current_time"
+      "SELECT 1 as test_value, NOW() as timestamp_now"
     );
     console.log("✅ Query successful!");
     console.log("📊 Result:", rows[0]);

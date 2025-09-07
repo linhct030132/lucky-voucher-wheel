@@ -324,13 +324,11 @@ router.post(
   "/verify-eligibility",
   [
     body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required"),
-    body("email").optional().isEmail().normalizeEmail(),
-    body("phone").optional().isMobilePhone(),
   ],
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { deviceId, email, phone } = req.body;
+      const { deviceId } = req.body;
 
       // Generate device fingerprint
       const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
@@ -359,27 +357,6 @@ router.post(
             eligible: false,
             reason: "ALREADY_PARTICIPATED",
             message: "You have already participated",
-          });
-        }
-      }
-
-      // Check if user (by email/phone) already participated
-      if (email || phone) {
-        const [userAttempt] = await query(
-          `
-        SELECT sa.id 
-        FROM spin_attempts sa
-        JOIN user_profiles up ON sa.user_id = up.id
-        WHERE (up.email = ? OR up.phone = ?)
-      `,
-          [email, phone]
-        );
-
-        if (userAttempt) {
-          return res.json({
-            eligible: false,
-            reason: "USER_ALREADY_PARTICIPATED",
-            message: "This email/phone has already participated",
           });
         }
       }

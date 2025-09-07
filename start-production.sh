@@ -57,5 +57,5 @@ npx concurrently \
   --names "BACKEND,FRONTEND" \
   --prefix-colors "blue,green" \
   --kill-others-on-fail \
-  "cd backend && PORT=$BACKEND_PORT npm start" \
+  "cd backend && DATABASE_URL=\"$DATABASE_URL\" PORT=$BACKEND_PORT JWT_SECRET=\"$JWT_SECRET\" JWT_REFRESH_SECRET=\"$JWT_REFRESH_SECRET\" COOKIE_SECRET=\"$COOKIE_SECRET\" DEVICE_HMAC_SECRET=\"$DEVICE_HMAC_SECRET\" FRONTEND_URL=\"$FRONTEND_URL\" NODE_ENV=\"$NODE_ENV\" npm start" \
   "serve -s frontend/build -p $FRONTEND_PORT"

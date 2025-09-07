@@ -53,12 +53,9 @@ const CustomerManagement = () => {
         ...(filters.dateTo && { dateTo: filters.dateTo }),
       });
 
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/users?${queryParams}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`/api/admin/users?${queryParams}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data.success) {
         setCustomers(response.data.data || []);
@@ -77,7 +74,7 @@ const CustomerManagement = () => {
       setSpinLoading(true);
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/spins?userId=${customerId}`,
+        `/api/admin/spins?userId=${customerId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

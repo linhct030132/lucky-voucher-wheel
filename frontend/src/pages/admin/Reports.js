@@ -55,19 +55,19 @@ const Reports = () => {
 
       // Fetch statistics
       const statsResponse = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/reports/stats?from=${dateRange.from}&to=${dateRange.to}`,
+        `/api/admin/reports/stats?from=${dateRange.from}&to=${dateRange.to}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Fetch top performing vouchers
       const vouchersResponse = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/reports/top-vouchers?from=${dateRange.from}&to=${dateRange.to}`,
+        `/api/admin/reports/top-vouchers?from=${dateRange.from}&to=${dateRange.to}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Fetch recent activity
       const activityResponse = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/reports/recent-activity?limit=10`,
+        `/api/admin/reports/recent-activity?limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -89,7 +89,7 @@ const Reports = () => {
         return;
       }
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/reports/export?format=${format}&from=${dateRange.from}&to=${dateRange.to}`,
+        `/api/admin/reports/export?format=${format}&from=${dateRange.from}&to=${dateRange.to}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",

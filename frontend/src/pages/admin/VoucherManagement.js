@@ -64,12 +64,9 @@ const VoucherManagement = () => {
         toast.error("Không có token xác thực");
         return;
       }
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/vouchers`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`/api/admin/vouchers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       console.log("API Response:", response.data); // Debug log
       // Handle both old and new response structures
       const vouchersData = response.data.data || response.data.vouchers || [];
@@ -92,8 +89,8 @@ const VoucherManagement = () => {
       }
 
       const url = editingVoucher
-        ? `${process.env.REACT_APP_API_BASE_URL}/admin/vouchers/${editingVoucher.id}`
-        : `${process.env.REACT_APP_API_BASE_URL}/admin/vouchers`;
+        ? `/api/admin/vouchers/${editingVoucher.id}`
+        : `/api/admin/vouchers`;
 
       const method = editingVoucher ? "PUT" : "POST";
 
@@ -147,12 +144,9 @@ const VoucherManagement = () => {
           toast.error("Không có token xác thực");
           return;
         }
-        await axios.delete(
-          `${process.env.REACT_APP_API_BASE_URL}/admin/vouchers/${voucherId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await axios.delete(`/api/admin/vouchers/${voucherId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Xóa voucher thành công");
         fetchVouchers();
       } catch (error) {

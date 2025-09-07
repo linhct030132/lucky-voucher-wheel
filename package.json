@@ -9,21 +9,29 @@
         "install-frontend": "cd frontend && npm install",
         "setup-env": "if [ ! -f .env ]; then cp .env.example .env; echo 'Created .env file from .env.example. Please update with your values.'; fi",
         "test-db": "node test-db-connection.js",
+        "debug-env": "node -e \"console.log('Environment Variables:'); console.log('NODE_ENV:', process.env.NODE_ENV); console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET'); console.log('PORT:', process.env.PORT); console.log('All env keys:', Object.keys(process.env).filter(k => k.includes('DB') || k.includes('DATABASE')).join(', '));\"",
+        "docker-db": "docker-compose up database -d",
+        "docker-db-stop": "docker-compose stop database",
+        "docker-db-logs": "docker-compose logs database",
+        "setup-local": "npm run setup-env && npm run install-all && npm run docker-db",
         "build": "npm run setup-env && npm run install-all && npm run build-frontend",
         "build-frontend": "cd frontend && npm run build",
         "start": "npm run start-production",
         "start-production": "./start-production.sh",
+        "start-railway": "./start-railway.sh",
         "start-backend": "cd backend && npm start",
         "start-frontend": "serve -s frontend/build -p ${PORT:-3000}",
         "dev": "npm run setup-env && concurrently \"npm run dev-backend\" \"npm run dev-frontend\"",
         "dev-backend": "cd backend && npm run dev",
         "dev-frontend": "cd frontend && npm start",
         "railway-build": "npm run build",
-        "railway-start": "npm run start-production"
+        "railway-start": "npm run start-railway"
     },
     "dependencies": {
         "concurrently": "^8.2.2",
-        "serve": "^14.2.1"
+        "serve": "^14.2.1",
+        "dotenv": "^16.3.1",
+        "mysql2": "^3.6.3"
     },
     "engines": {
         "node": ">=18.0.0"

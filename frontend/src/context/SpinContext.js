@@ -88,7 +88,7 @@ export const SpinProvider = ({ children }) => {
       } catch (error) {
         console.error("Eligibility check failed:", error);
         const errorData = {
-          eligible: false,
+          eligible: true,
           reason: "NETWORK_ERROR",
           message: "Unable to check eligibility. Please try again.",
         };

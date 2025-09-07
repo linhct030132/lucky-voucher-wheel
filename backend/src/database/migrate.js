@@ -1,7 +1,17 @@
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
+const path = require("path");
 
+// Load environment variables from multiple locations
 dotenv.config();
+dotenv.config({ path: path.join(__dirname, "../../../.env") });
+
+console.log("🔧 Migration Configuration:");
+console.log(`DB_HOST: ${process.env.DB_HOST || "localhost"}`);
+console.log(`DB_PORT: ${process.env.DB_PORT || 3306}`);
+console.log(`DB_USER: ${process.env.DB_USER || "root"}`);
+console.log(`DB_NAME: ${process.env.DB_NAME || "lucky_voucher"}`);
+console.log("");
 
 const migrations = [
   {

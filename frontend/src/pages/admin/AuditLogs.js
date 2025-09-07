@@ -69,10 +69,9 @@ const AuditLogs = () => {
         search: searchTerm,
       });
 
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/logs?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`/api/admin/logs?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data.success) {
         setLogs(response.data.data || []);
@@ -122,13 +121,10 @@ const AuditLogs = () => {
         search: searchTerm,
       });
 
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/logs/export?${params}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob",
-        }
-      );
+      const response = await axios.get(`/api/admin/logs/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");

@@ -1,15 +1,23 @@
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 
-dotenv.config();
+// Load environment variables from multiple possible locations
+dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.production" });
+dotenv.config({ path: "../.env" });
+dotenv.config({ path: "../.env.production" });
 
 // Parse DATABASE_URL for Railway deployment
 function parseConnectionConfig() {
+  console.log("🔍 Checking for DATABASE_URL...");
+  console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+
   // If DATABASE_URL is provided (Railway), parse it
   if (process.env.DATABASE_URL) {
+    console.log("✅ Using DATABASE_URL for connection");
     try {
       const url = new URL(process.env.DATABASE_URL);
-      return {
+      const config = {
         host: url.hostname,
         port: parseInt(url.port) || 3306,
         user: url.username,
@@ -19,22 +27,41 @@ function parseConnectionConfig() {
           rejectUnauthorized: false, // Railway requires SSL
         },
       };
+      console.log("✅ DATABASE_URL parsed successfully");
+      return config;
     } catch (error) {
-      console.error("Failed to parse DATABASE_URL:", error.message);
+      console.error("❌ Failed to parse DATABASE_URL:", error.message);
       console.log(
         "DATABASE_URL format should be: mysql://user:password@host:port/database"
       );
+      console.log("Falling back to individual environment variables...");
     }
+  } else {
+    console.log(
+      "⚠️  DATABASE_URL not found, using individual environment variables"
+    );
   }
 
   // Fallback to individual environment variables
-  return {
+  const config = {
     host: process.env.DB_HOST || "localhost",
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "password",
     database: process.env.DB_NAME || "lucky_voucher",
   };
+
+  console.log("📋 Using individual environment variables:");
+  console.log(
+    `   DB_HOST: ${process.env.DB_HOST || "not set (using localhost)"}`
+  );
+  console.log(`   DB_PORT: ${process.env.DB_PORT || "not set (using 3306)"}`);
+  console.log(`   DB_USER: ${process.env.DB_USER || "not set (using root)"}`);
+  console.log(
+    `   DB_NAME: ${process.env.DB_NAME || "not set (using lucky_voucher)"}`
+  );
+
+  return config;
 }
 
 const dbConfig = parseConnectionConfig();
@@ -44,10 +71,9 @@ const config = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true,
   charset: "utf8mb4",
+  // Remove deprecated options that cause warnings in MySQL2:
+  // acquireTimeout, timeout, reconnect are not valid for connection pools
 };
 
 console.log("Database configuration:", {

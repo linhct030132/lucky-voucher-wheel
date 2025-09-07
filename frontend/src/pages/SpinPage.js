@@ -54,6 +54,8 @@ const SpinPage = () => {
   const checkDeviceEligibility = useCallback(async () => {
     try {
       const eligibility = await checkEligibility();
+      console.log("Device eligibility:", eligibility);
+
       return eligibility;
     } catch (error) {
       console.error("Error checking device eligibility:", error);
@@ -67,6 +69,7 @@ const SpinPage = () => {
       try {
         // Check device eligibility first
         const eligibility = await checkDeviceEligibility();
+        console.log("Device eligibility:", eligibility);
 
         if (!eligibility.eligible) {
           setCurrentStep("participated");

@@ -59,23 +59,20 @@ const AdminDashboard = () => {
 
       // Try to get stats from the dedicated stats endpoint first
       try {
-        const statsResponse = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/admin/stats`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { timeRange },
-          }
-        );
+        const statsResponse = await axios.get(`/api/admin/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { timeRange },
+        });
 
         if (statsResponse.data.success) {
           const statsData = statsResponse.data.data;
 
           // Get additional data for topVouchers and recentActivity
           const [vouchersResponse, auditResponse] = await Promise.all([
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/vouchers`, {
+            axios.get(`/api/admin/vouchers`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/logs`, {
+            axios.get(`/api/admin/logs`, {
               headers: { Authorization: `Bearer ${token}` },
               params: { limit: 10 },
             }),
@@ -123,17 +120,17 @@ const AdminDashboard = () => {
       // Fallback to individual API calls
       const [usersResponse, vouchersResponse, spinsResponse, auditResponse] =
         await Promise.all([
-          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/users`, {
+          axios.get(`/api/admin/users`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/vouchers`, {
+          axios.get(`/api/admin/vouchers`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/spins`, {
+          axios.get(`/api/admin/spins`, {
             headers: { Authorization: `Bearer ${token}` },
             params: { timeRange },
           }),
-          axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/logs`, {
+          axios.get(`/api/admin/logs`, {
             headers: { Authorization: `Bearer ${token}` },
             params: { limit: 10 },
           }),

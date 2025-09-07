@@ -54,12 +54,9 @@ const SpinManagement = () => {
         ...(filters.dateTo && { dateTo: filters.dateTo }),
       });
 
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/spins?${queryParams}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`/api/admin/spins?${queryParams}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data.success) {
         setSpins(response.data.data || []);
