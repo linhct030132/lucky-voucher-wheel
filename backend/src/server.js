@@ -19,8 +19,11 @@ console.log(`BACKEND_PORT (raw): ${process.env.BACKEND_PORT}`);
 
 // For Railway/production: Always use Railway's PORT if available
 // For development: use BACKEND_PORT to avoid conflicts with frontend dev server
-const PORT = process.env.PORT || 
-  (process.env.NODE_ENV === "production" ? 8080 : (process.env.BACKEND_PORT || 3001));
+const PORT =
+  process.env.PORT ||
+  (process.env.NODE_ENV === "production"
+    ? 8080
+    : process.env.BACKEND_PORT || 3001);
 
 console.log(`Final resolved PORT: ${PORT}`);
 

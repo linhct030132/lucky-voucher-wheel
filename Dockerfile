@@ -18,14 +18,14 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Copy backend package files and install dependencies
+# Copy backend files
 COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # Copy backend source code
 COPY backend/src ./src
 
-# Copy built frontend files to backend's static directory
+# Copy built frontend files to serve as static files
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
 # Create necessary directories
@@ -38,5 +38,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Start the application (backend serves both API and static files)
-CMD ["npm", "start"]
+# Start the backend server directly
+CMD ["node", "src/server.js"]

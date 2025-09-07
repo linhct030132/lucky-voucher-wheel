@@ -1,9 +1,8 @@
 [build]
-# Build both frontend and backend using the unified Dockerfile
 builder = "dockerfile"
 
 [deploy]
-startCommand = "./railway-start.sh"
+startCommand = "node src/server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
