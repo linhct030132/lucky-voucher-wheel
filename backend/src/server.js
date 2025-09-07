@@ -46,8 +46,11 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -70,7 +73,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// Rate limiting
+// Rate limiting for API routes
 app.use("/api", apiLimiter);
 
 // Health check endpoint
@@ -83,16 +86,31 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === "production") {
+  const staticPath = path.join(__dirname, "../../frontend/build");
+  console.log(`📁 Serving static files from: ${staticPath}`);
+
+  // Serve static files with proper MIME types
+  app.use(
+    express.static(staticPath, {
+      maxAge: "1d",
+      etag: false,
+      // Add some logging for debugging
+      setHeaders: (res, path) => {
+        console.log(`📄 Serving static file: ${path}`);
+      },
+    })
+  );
+}
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", publicRoutes);
 
-// Serve static files from the React app in production
+// Catch all handler for React routing (only in production)
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/build")));
-
-  // Catch all handler: send back React's index.html file for client-side routing
   app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../../frontend/build/index.html"));
   });
