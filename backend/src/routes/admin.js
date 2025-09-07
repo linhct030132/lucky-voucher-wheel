@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, query: queryValidator, param } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
-const { prisma } = require("../config/database");
+const { prisma, query } = require("../config/database");
 const { authenticateToken, requireRole } = require("../middleware/auth");
 const { handleValidationErrors } = require("../middleware/errorHandler");
 const AuditLogger = require("../utils/auditLogger");
