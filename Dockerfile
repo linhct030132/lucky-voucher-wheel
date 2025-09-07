@@ -18,12 +18,18 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Copy backend files
+# Copy backend package files
 COPY backend/package*.json ./
 RUN npm ci --only=production
 
+# Copy Prisma schema
+COPY backend/prisma ./prisma
+
 # Copy backend source code
 COPY backend/src ./src
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Copy built frontend files to serve as static files
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
@@ -42,5 +48,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Start the backend server directly
-CMD ["node", "src/server.js"]
+# Start the backend server
+CMD ["npm", "run", "start:prod"]

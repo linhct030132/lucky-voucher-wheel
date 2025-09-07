@@ -1,12 +1,31 @@
 const { PrismaClient } = require("@prisma/client");
 
-// Create a single instance of Prisma Client
-const prisma = new PrismaClient({
-  log:
-    process.env.NODE_ENV === "development"
-      ? ["query", "error", "warn"]
-      : ["error"],
-});
+// Create a single instance of Prisma Client with error handling
+let prisma;
+
+try {
+  prisma = new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
+} catch (error) {
+  console.error("❌ Failed to initialize Prisma Client:", error.message);
+  console.log("💡 Please run 'npx prisma generate' to generate the client");
+
+  // Create a mock prisma client that throws helpful errors
+  prisma = new Proxy(
+    {},
+    {
+      get: function (target, property) {
+        throw new Error(
+          `Prisma client not initialized. Please run 'npx prisma generate' first.`
+        );
+      },
+    }
+  );
+}
 
 // Handle graceful shutdown
 process.on("beforeExit", async () => {

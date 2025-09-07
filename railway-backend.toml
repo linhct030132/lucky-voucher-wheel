@@ -1,11 +1,11 @@
 # Railway Backend Deployment Configuration
 # This file configures the backend Node.js service for Railway
 
-# Build command
-build = "cd backend && npm install"
+# Build command - includes Prisma client generation
+build = "cd backend && npm install && npx prisma generate"
 
 # Start command  
-start = "cd backend && npm start"
+start = "cd backend && npm run start:prod"
 
 # Environment variables needed
 [env]
