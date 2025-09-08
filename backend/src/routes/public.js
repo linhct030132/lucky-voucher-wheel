@@ -86,41 +86,7 @@ router.post(
         `${deviceId}:${serverDeviceId}`
       );
 
-      // Create or get user profile
-      const userHash = SecurityUtils.hashUserIdentity(
-        sanitizedProfile.email,
-        sanitizedProfile.phone
-      );
-      let userId;
-
-      // Check if user already exists
-      const existingUser = await prisma.userProfile.findFirst({
-        where: {
-          OR: [
-            { email: sanitizedProfile.email, email: { not: null } },
-            { phone: sanitizedProfile.phone, phone: { not: null } },
-          ],
-        },
-        select: { id: true },
-      });
-
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        // Create new user profile
-        userId = uuidv4();
-        await prisma.userProfile.create({
-          data: {
-            id: userId,
-            fullName: sanitizedProfile.fullName,
-            email: sanitizedProfile.email,
-            phone: sanitizedProfile.phone,
-            consentAt: new Date(),
-          },
-        });
-      }
-
-      // Create or get device record
+      // Create or get device record first
       let deviceRecordId;
       const existingDevice = await prisma.device.findUnique({
         where: { deviceFpHash: combinedDeviceId },
@@ -143,6 +109,80 @@ router.post(
             deviceFpHash: combinedDeviceId,
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
+          },
+        });
+      }
+
+      // Check if user info is already stored for this device
+      const deviceSession = await prisma.deviceSession.findUnique({
+        where: { deviceId: deviceRecordId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      let userId;
+
+      if (deviceSession && deviceSession.user) {
+        // Use existing stored user info
+        userId = deviceSession.user.id;
+        // Update user profile with any new info provided
+        await prisma.userProfile.update({
+          where: { id: userId },
+          data: {
+            fullName: sanitizedProfile.fullName,
+            email: sanitizedProfile.email || deviceSession.user.email,
+            phone: sanitizedProfile.phone || deviceSession.user.phone,
+            consentAt: new Date(),
+          },
+        });
+      } else {
+        // Create or get user profile
+        const userHash = SecurityUtils.hashUserIdentity(
+          sanitizedProfile.email,
+          sanitizedProfile.phone
+        );
+
+        // Check if user already exists
+        const existingUser = await prisma.userProfile.findFirst({
+          where: {
+            OR: [
+              { email: sanitizedProfile.email, email: { not: null } },
+              { phone: sanitizedProfile.phone, phone: { not: null } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (existingUser) {
+          userId = existingUser.id;
+        } else {
+          // Create new user profile
+          userId = uuidv4();
+          await prisma.userProfile.create({
+            data: {
+              id: userId,
+              fullName: sanitizedProfile.fullName,
+              email: sanitizedProfile.email,
+              phone: sanitizedProfile.phone,
+              consentAt: new Date(),
+            },
+          });
+        }
+
+        // Create device session
+        await prisma.deviceSession.create({
+          data: {
+            id: uuidv4(),
+            deviceId: deviceRecordId,
+            userId: userId,
           },
         });
       }
@@ -328,6 +368,260 @@ router.get("/status", async (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * POST /api/store-user-info
+ * Store user information for later spinning (pre-spin storage)
+ */
+router.post(
+  "/store-user-info",
+  [
+    body("fullName")
+      .isLength({ min: 2, max: 100 })
+      .trim()
+      .withMessage("Họ và tên phải từ 2 đến 100 ký tự"),
+    body("email")
+      .optional()
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Email không đúng định dạng"),
+    body("phone")
+      .optional()
+      .isMobilePhone()
+      .withMessage("Số điện thoại không đúng định dạng"),
+    body("consent")
+      .isBoolean()
+      .custom((value) => value === true)
+      .withMessage("Bạn cần đồng ý với điều khoản để tham gia"),
+    body("deviceId")
+      .isLength({ min: 10 })
+      .withMessage("Mã thiết bị không hợp lệ"),
+  ],
+  handleValidationErrors,
+  async (req, res, next) => {
+    try {
+      const { fullName, email, phone, consent, deviceId } = req.body;
+
+      // Validate at least one contact method
+      if (!email && !phone) {
+        return res.status(400).json({
+          error:
+            "Vui lòng cung cấp ít nhất một phương thức liên hệ (email hoặc số điện thoại)",
+        });
+      }
+
+      // Sanitize inputs
+      const sanitizedProfile = {
+        fullName: SecurityUtils.sanitizeInput(fullName),
+        email: email ? SecurityUtils.sanitizeInput(email) : null,
+        phone: phone ? SecurityUtils.sanitizeInput(phone) : null,
+      };
+
+      // Additional validation
+      if (
+        sanitizedProfile.email &&
+        !SecurityUtils.isValidEmail(sanitizedProfile.email)
+      ) {
+        return res.status(400).json({ error: "Định dạng email không hợp lệ" });
+      }
+
+      if (
+        sanitizedProfile.phone &&
+        !SecurityUtils.isValidPhone(sanitizedProfile.phone)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Định dạng số điện thoại không hợp lệ" });
+      }
+
+      // Generate device fingerprint hash
+      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
+      const combinedDeviceId = DeviceFingerprint.generateHMAC(
+        `${deviceId}:${serverDeviceId}`
+      );
+
+      // Create or get device record
+      let deviceRecordId;
+      const existingDevice = await prisma.device.findUnique({
+        where: { deviceFpHash: combinedDeviceId },
+        select: { id: true },
+      });
+
+      if (existingDevice) {
+        deviceRecordId = existingDevice.id;
+        // Update last seen
+        await prisma.device.update({
+          where: { id: deviceRecordId },
+          data: { lastSeenAt: new Date() },
+        });
+      } else {
+        // Create new device record
+        deviceRecordId = uuidv4();
+        await prisma.device.create({
+          data: {
+            id: deviceRecordId,
+            deviceFpHash: combinedDeviceId,
+            firstSeenAt: new Date(),
+            lastSeenAt: new Date(),
+          },
+        });
+      }
+
+      // Create or update user profile
+      const userHash = SecurityUtils.hashUserIdentity(
+        sanitizedProfile.email,
+        sanitizedProfile.phone
+      );
+      let userId;
+
+      // Check if user already exists
+      const existingUser = await prisma.userProfile.findFirst({
+        where: {
+          OR: [
+            { email: sanitizedProfile.email, email: { not: null } },
+            { phone: sanitizedProfile.phone, phone: { not: null } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (existingUser) {
+        userId = existingUser.id;
+        // Update user profile
+        await prisma.userProfile.update({
+          where: { id: userId },
+          data: {
+            fullName: sanitizedProfile.fullName,
+            email: sanitizedProfile.email,
+            phone: sanitizedProfile.phone,
+            consentAt: new Date(),
+          },
+        });
+      } else {
+        // Create new user profile
+        userId = uuidv4();
+        await prisma.userProfile.create({
+          data: {
+            id: userId,
+            fullName: sanitizedProfile.fullName,
+            email: sanitizedProfile.email,
+            phone: sanitizedProfile.phone,
+            consentAt: new Date(),
+          },
+        });
+      }
+
+      // Create or update device session
+      await prisma.deviceSession.upsert({
+        where: { deviceId: deviceRecordId },
+        update: {
+          userId: userId,
+          updatedAt: new Date(),
+        },
+        create: {
+          id: uuidv4(),
+          deviceId: deviceRecordId,
+          userId: userId,
+        },
+      });
+
+      res.json({
+        success: true,
+        message: "User information stored successfully",
+        data: {
+          userId,
+          deviceId: deviceRecordId,
+          userProfile: sanitizedProfile,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/get-stored-user-info
+ * Get stored user information for device
+ */
+router.post(
+  "/get-stored-user-info",
+  [body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required")],
+  handleValidationErrors,
+  async (req, res, next) => {
+    try {
+      const { deviceId } = req.body;
+
+      // Generate device fingerprint
+      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
+      const combinedDeviceId = DeviceFingerprint.generateHMAC(
+        `${deviceId}:${serverDeviceId}`
+      );
+
+      // Get device record
+      const device = await prisma.device.findUnique({
+        where: { deviceFpHash: combinedDeviceId },
+        select: { id: true },
+      });
+
+      if (!device) {
+        return res.json({
+          hasStoredInfo: false,
+          message: "No device record found",
+        });
+      }
+
+      // Check if already spun
+      const existingAttempt = await prisma.spinAttempt.findFirst({
+        where: { deviceId: device.id },
+        select: { id: true, outcome: true },
+      });
+
+      if (existingAttempt) {
+        return res.json({
+          hasStoredInfo: false,
+          alreadyParticipated: true,
+          message: "Device has already participated",
+        });
+      }
+
+      // Get stored user information from device session
+      const deviceSession = await prisma.deviceSession.findUnique({
+        where: { deviceId: device.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      if (deviceSession && deviceSession.user) {
+        return res.json({
+          hasStoredInfo: true,
+          alreadyParticipated: false,
+          userProfile: {
+            fullName: deviceSession.user.fullName,
+            email: deviceSession.user.email,
+            phone: deviceSession.user.phone,
+          },
+        });
+      }
+
+      res.json({
+        hasStoredInfo: false,
+        alreadyParticipated: false,
+        message: "No stored user information found",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /**
  * POST /api/verify-eligibility

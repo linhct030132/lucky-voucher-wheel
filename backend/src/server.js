@@ -6,7 +6,9 @@ const dotenv = require("dotenv");
 const path = require("path");
 
 // Load environment variables
-dotenv.config();
+dotenv.config({
+  path: process.env.NODE_ENV === "production" ? "../.env" : "../.env",
+});
 
 // Create Express app
 const app = express();

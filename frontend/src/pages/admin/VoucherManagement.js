@@ -502,7 +502,7 @@ const VoucherManagement = () => {
                           : "Free Product"}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {voucher.base_probability * 100}% xác suất trúng
+                        {voucher.baseProbability * 100}% xác suất trúng
                       </div>
                     </div>
                   </div>

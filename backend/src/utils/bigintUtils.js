@@ -16,6 +16,10 @@ function convertBigIntToNumber(obj) {
     return Number(obj);
   }
 
+  if (obj instanceof Date) {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
     return obj.map(convertBigIntToNumber);
   }
@@ -46,9 +50,15 @@ function processDatabaseResult(result) {
  * @returns {string} JSON string
  */
 function safeStringify(obj) {
-  return JSON.stringify(obj, (key, value) =>
-    typeof value === "bigint" ? Number(value) : value
-  );
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === "bigint") {
+      return Number(value);
+    }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    return value;
+  });
 }
 
 module.exports = {

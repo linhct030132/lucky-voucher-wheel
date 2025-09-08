@@ -8,14 +8,15 @@ datasource db {
 }
 
 model UserProfile {
-  id           String        @id @default(uuid()) @db.VarChar(36)
-  fullName     String        @map("full_name") @db.VarChar(255)
-  email        String?       @db.VarChar(255)
-  phone        String?       @db.VarChar(20)
-  createdAt    DateTime?     @default(now()) @map("created_at") @db.Timestamp(0)
-  consentAt    DateTime?     @default(now()) @map("consent_at") @db.Timestamp(0)
-  spinAttempts SpinAttempt[]
-  voucherCodes VoucherCode[]
+  id             String          @id @default(uuid()) @db.VarChar(36)
+  fullName       String          @map("full_name") @db.VarChar(255)
+  email          String?         @db.VarChar(255)
+  phone          String?         @db.VarChar(20)
+  createdAt      DateTime?       @default(now()) @map("created_at") @db.Timestamp(0)
+  consentAt      DateTime?       @default(now()) @map("consent_at") @db.Timestamp(0)
+  spinAttempts   SpinAttempt[]
+  voucherCodes   VoucherCode[]
+  deviceSessions DeviceSession[]
 
   @@index([email], map: "idx_email")
   @@index([phone], map: "idx_phone")
@@ -23,14 +24,30 @@ model UserProfile {
 }
 
 model Device {
-  id           String        @id @default(uuid()) @db.VarChar(36)
-  deviceFpHash String        @unique(map: "device_fp_hash") @map("device_fp_hash") @db.VarChar(255)
-  firstSeenAt  DateTime?     @default(now()) @map("first_seen_at") @db.Timestamp(0)
-  lastSeenAt   DateTime?     @default(now()) @updatedAt @map("last_seen_at") @db.Timestamp(0)
-  spinAttempts SpinAttempt[]
+  id              String            @id @default(uuid()) @db.VarChar(36)
+  deviceFpHash    String            @unique(map: "device_fp_hash") @map("device_fp_hash") @db.VarChar(255)
+  firstSeenAt     DateTime?         @default(now()) @map("first_seen_at") @db.Timestamp(0)
+  lastSeenAt      DateTime?         @default(now()) @updatedAt @map("last_seen_at") @db.Timestamp(0)
+  spinAttempts    SpinAttempt[]
+  deviceSessions  DeviceSession[]
 
   @@index([deviceFpHash], map: "idx_device_fp")
   @@map("devices")
+}
+
+model DeviceSession {
+  id          String       @id @default(uuid()) @db.VarChar(36)
+  deviceId    String       @map("device_id") @db.VarChar(36)
+  userId      String       @map("user_id") @db.VarChar(36)
+  createdAt   DateTime?    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  device      Device       @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user        UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId], map: "unique_device_session")
+  @@index([deviceId], map: "idx_device_id")
+  @@index([userId], map: "idx_user_id")
+  @@map("device_sessions")
 }
 
 model Voucher {

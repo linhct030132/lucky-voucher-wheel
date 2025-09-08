@@ -25,6 +25,8 @@ const SpinPage = () => {
   const {
     getAvailableVouchers,
     checkEligibility,
+    storeUserInfo,
+    getStoredUserInfo,
     performSpin,
     isSpinning,
     spinResult,
@@ -32,10 +34,11 @@ const SpinPage = () => {
     availableVouchers,
   } = useSpin();
 
-  const [currentStep, setCurrentStep] = useState("loading"); // loading, form, spinning, result, participated, out_of_stock
+  const [currentStep, setCurrentStep] = useState("loading"); // loading, form, stored_info, spinning, result, participated, out_of_stock
   const [userProfile, setUserProfile] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [storedUserInfo, setStoredUserInfo] = useState(null);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -83,8 +86,18 @@ const SpinPage = () => {
           return;
         }
 
-        await getAvailableVouchers();
-        setCurrentStep("form");
+        // Check if user info is already stored
+        const storedInfo = await getStoredUserInfo();
+        console.log("Stored user info:", storedInfo);
+
+        if (storedInfo.hasStoredInfo && storedInfo.userProfile) {
+          setStoredUserInfo(storedInfo.userProfile);
+          setUserProfile(storedInfo.userProfile);
+          setCurrentStep("stored_info");
+        } else {
+          await getAvailableVouchers();
+          setCurrentStep("form");
+        }
       } catch (error) {
         console.error("Failed to initialize system:", error);
         toast.error("Không thể tải hệ thống. Vui lòng thử lại.");
@@ -93,44 +106,67 @@ const SpinPage = () => {
     };
 
     initializeSystem();
-  }, [getAvailableVouchers, navigate, checkDeviceEligibility]);
+  }, [
+    getAvailableVouchers,
+    navigate,
+    checkDeviceEligibility,
+    getStoredUserInfo,
+  ]);
 
   // Handle form submission
   const handleFormSubmit = async (formData) => {
-    setUserProfile(formData);
+    try {
+      // Store user information first
+      await storeUserInfo(formData);
+      setUserProfile(formData);
+      setStoredUserInfo(formData);
 
-    // Check eligibility first
-    const eligibility = await checkEligibility(formData.email, formData.phone);
+      // Check eligibility with the submitted data
+      const eligibility = await checkEligibility(
+        formData.email,
+        formData.phone
+      );
 
-    if (!eligibility.eligible) {
-      toast.error(eligibility.message || "Bạn không đủ điều kiện tham gia");
-      return;
-    }
-
-    setCurrentStep("spinning");
-
-    // Perform the spin
-    const result = await performSpin(formData);
-
-    if (result && result.outcome !== "error") {
-      setCurrentStep("result");
-      if (result.outcome === "win") {
-        setShowConfetti(true);
-        // Hide confetti after 5 seconds
-        setTimeout(() => setShowConfetti(false), 5000);
+      if (!eligibility.eligible) {
+        toast.error(eligibility.message || "Bạn không đủ điều kiện tham gia");
+        return;
       }
-    } else {
-      setCurrentStep("form");
-      toast.error(result?.error || "Quay thất bại. Vui lòng thử lại.");
+
+      // Move to stored info step to show spin button
+      setCurrentStep("stored_info");
+    } catch (error) {
+      console.error("Error storing user info:", error);
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 
   // Handle spin action
-  // const handleSpin = () => {
-  //   if (userProfile) {
-  //     performSpin(userProfile);
-  //   }
-  // };
+  const handleSpin = async () => {
+    if (!userProfile) return;
+
+    setCurrentStep("spinning");
+
+    try {
+      // Perform the spin
+      const result = await performSpin(userProfile);
+
+      if (result && result.outcome !== "error") {
+        setCurrentStep("result");
+        if (result.outcome === "win") {
+          setShowConfetti(true);
+          // Hide confetti after 5 seconds
+          setTimeout(() => setShowConfetti(false), 5000);
+        }
+      } else {
+        setCurrentStep("stored_info"); // Go back to stored info instead of form
+        toast.error(result?.error || "Quay thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Spin error:", error);
+      setCurrentStep("stored_info");
+      toast.error("Có lỗi xảy ra khi quay. Vui lòng thử lại.");
+    }
+  };
 
   // Copy voucher code
   const copyVoucherCode = (code) => {
@@ -145,10 +181,19 @@ const SpinPage = () => {
     navigate("/");
   };
 
+  // Handle editing user info
+  const handleEditUserInfo = () => {
+    setCurrentStep("form");
+    setStoredUserInfo(null);
+  };
+
   // Try again
   const handleTryAgain = () => {
-    setCurrentStep("form");
-    setUserProfile(null);
+    if (storedUserInfo) {
+      setCurrentStep("stored_info"); // Go back to stored info if we have it
+    } else {
+      setCurrentStep("form"); // Go to form if no stored info
+    }
     setShowConfetti(false);
   };
 
@@ -228,7 +273,8 @@ const SpinPage = () => {
                     {
                       step: 1,
                       label: "Thông tin của bạn",
-                      active: currentStep === "form",
+                      active:
+                        currentStep === "form" || currentStep === "stored_info",
                     },
                     {
                       step: 2,
@@ -341,6 +387,7 @@ const SpinPage = () => {
           {/* Prize Preview */}
           {currentStep !== "participated" &&
             currentStep !== "out_of_stock" &&
+            availableVouchers &&
             availableVouchers.length > 0 && (
               <motion.div
                 className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto mb-8"
@@ -439,6 +486,106 @@ const SpinPage = () => {
                     onSubmit={handleFormSubmit}
                     loading={isSpinning}
                   />
+                </div>
+              </motion.div>
+            )}
+
+            {currentStep === "stored_info" && storedUserInfo && (
+              <motion.div
+                key="stored_info"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.5 }}
+                className="text-center"
+              >
+                <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring" }}
+                    className="w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8"
+                  >
+                    <Check className="w-12 h-12 text-white" />
+                  </motion.div>
+
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                    🎯 Sẵn Sàng Quay Thưởng!
+                  </h2>
+
+                  <p className="text-xl text-gray-600 mb-8">
+                    Thông tin của bạn đã được lưu. Bây giờ hãy quay bánh xe để
+                    nhận giải thưởng!
+                  </p>
+
+                  {/* User Info Display */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200 mb-8">
+                    <h3 className="text-lg font-semibold text-green-800 mb-4">
+                      Thông tin của bạn:
+                    </h3>
+                    <div className="space-y-2 text-left">
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-700 font-medium">
+                          Họ và tên:
+                        </span>
+                        <span className="text-green-800">
+                          {storedUserInfo.fullName}
+                        </span>
+                      </div>
+                      {storedUserInfo.email && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-700 font-medium">
+                            Email:
+                          </span>
+                          <span className="text-green-800">
+                            {storedUserInfo.email}
+                          </span>
+                        </div>
+                      )}
+                      {storedUserInfo.phone && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-700 font-medium">
+                            Số điện thoại:
+                          </span>
+                          <span className="text-green-800">
+                            {storedUserInfo.phone}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <motion.button
+                      onClick={handleSpin}
+                      disabled={isSpinning}
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className="flex items-center justify-center space-x-3">
+                        <Target className="w-6 h-6" />
+                        <span className="text-lg">
+                          {isSpinning
+                            ? "Đang quay..."
+                            : "🎰 Quay Bánh Xe Ngay!"}
+                        </span>
+                      </div>
+                    </motion.button>
+
+                    <motion.button
+                      onClick={handleEditUserInfo}
+                      className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        <RefreshCw className="w-5 h-5" />
+                        <span>Sửa thông tin</span>
+                      </div>
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             )}

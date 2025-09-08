@@ -234,7 +234,7 @@ router.post(
       }
 
       const voucherId = uuidv4();
-      
+
       // Convert string values to proper types
       const initialStockNum = parseInt(initialStock);
       const remainingStockNum = initialStockNum;
@@ -349,8 +349,12 @@ router.put(
       }
 
       // Convert string values to proper types
-      const maxPerUserNum = maxPerUser ? parseInt(maxPerUser) : currentVoucher.maxPerUser;
-      const baseProbabilityNum = baseProbability ? parseFloat(baseProbability) : currentVoucher.baseProbability;
+      const maxPerUserNum = maxPerUser
+        ? parseInt(maxPerUser)
+        : currentVoucher.maxPerUser;
+      const baseProbabilityNum = baseProbability
+        ? parseFloat(baseProbability)
+        : currentVoucher.baseProbability;
 
       // Update voucher
       const updatedVoucher = await prisma.voucher.update({

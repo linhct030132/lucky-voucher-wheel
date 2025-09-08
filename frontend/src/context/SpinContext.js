@@ -71,6 +71,45 @@ export const SpinProvider = ({ children }) => {
     }
   }, []);
 
+  // Store user information for later spinning
+  const storeUserInfo = useCallback(
+    async (userProfile) => {
+      try {
+        const currentDeviceId = await initializeDevice();
+
+        const response = await axios.post("/api/store-user-info", {
+          fullName: userProfile.fullName,
+          email: userProfile.email,
+          phone: userProfile.phone,
+          consent: Boolean(userProfile.consent),
+          deviceId: currentDeviceId,
+        });
+
+        return response.data;
+      } catch (error) {
+        console.error("Failed to store user info:", error);
+        throw error;
+      }
+    },
+    [initializeDevice]
+  );
+
+  // Get stored user information
+  const getStoredUserInfo = useCallback(async () => {
+    try {
+      const currentDeviceId = await initializeDevice();
+
+      const response = await axios.post("/api/get-stored-user-info", {
+        deviceId: currentDeviceId,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Failed to get stored user info:", error);
+      return { hasStoredInfo: false };
+    }
+  }, [initializeDevice]);
+
   // Check eligibility for spin
   const checkEligibility = useCallback(
     async (email = null, phone = null) => {
@@ -186,6 +225,8 @@ export const SpinProvider = ({ children }) => {
     // Actions
     initializeDevice,
     getAvailableVouchers,
+    storeUserInfo,
+    getStoredUserInfo,
     checkEligibility,
     performSpin,
     resetSpin,
