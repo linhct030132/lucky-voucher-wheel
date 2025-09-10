@@ -136,10 +136,7 @@ const SpinPage = () => {
       setStoredUserInfo(formData);
 
       // Check eligibility with the submitted data
-      const eligibility = await checkEligibility(
-        formData.email,
-        formData.phone
-      );
+      const eligibility = await checkEligibility(formData);
 
       if (!eligibility.eligible) {
         toast.error(eligibility.message || "Bạn không đủ điều kiện tham gia");
@@ -200,7 +197,7 @@ const SpinPage = () => {
   // Handle editing user info
   const handleEditUserInfo = () => {
     setCurrentStep("form");
-    setStoredUserInfo(null);
+    // Keep storedUserInfo so form can be pre-filled
   };
 
   // Try again
@@ -257,8 +254,11 @@ const SpinPage = () => {
               <ArrowLeft className="w-5 h-5" />
               <div className="flex items-center space-x-2">
                 <Crown className="w-6 h-6" style={{ color: "#74070E" }} />
-                <span className="font-bold text-lg">
-                  Vòng Quay Thời Trang Dezus
+                <span
+                  className="font-bold text-lg"
+                  style={{ color: "#74070E" }}
+                >
+                  Secret Bill
                 </span>
               </div>
             </motion.button>
@@ -400,31 +400,18 @@ const SpinPage = () => {
             </>
           ) : (
             <>
-              <motion.div
-                className="inline-flex items-center space-x-2 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
-                style={{ background: "#74070E" }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <Target className="w-5 h-5" />
-                <span>🎯 Chương Trình Ưu Đãi Đang Diễn Ra</span>
-              </motion.div>
-
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
                 <span
                   className="bg-clip-text text-transparent"
                   style={{
-                    background: "linear-gradient(to right, #74070E, #1F2937)",
+                    background: "#74070E",
                     WebkitBackgroundClip: "text",
                     backgroundClip: "text",
                   }}
                 >
-                  Voucher Thời Trang Đang Chờ Bạn
+                  Secret Bill
                 </span>
               </h1>
-
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                {availableVouchers.length} ưu đãi thời trang Dezus đang chờ bạn!
-              </p>
             </>
           )}
 
@@ -566,6 +553,7 @@ const SpinPage = () => {
                   <UserInfoForm
                     onSubmit={handleFormSubmit}
                     loading={isSpinning}
+                    initialData={storedUserInfo || userProfile}
                   />
                 </div>
               </motion.div>
@@ -581,22 +569,13 @@ const SpinPage = () => {
                 className="text-center"
               >
                 <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8"
-                  >
-                    <Check className="w-12 h-12 text-white" />
-                  </motion.div>
-
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    🎯 Sẵn Sàng Nhận Voucher Thời Trang!
+                    Vòng quay voucher đã sẵn sàng!
                   </h2>
 
                   <p className="text-xl text-gray-600 mb-8">
-                    Thông tin của bạn đã được lưu. Bây giờ hãy quay vòng thời
-                    trang để nhận voucher giảm giá!
+                    Thông tin của bạn đã được lưu. Hãy bắt đầu quay để nhận được
+                    voucher hấp dẫn!
                   </p>
 
                   {/* User Info Display */}
@@ -626,19 +605,6 @@ const SpinPage = () => {
                           {storedUserInfo.fullName}
                         </span>
                       </div>
-                      {storedUserInfo.email && (
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="font-medium"
-                            style={{ color: "#B91C1C" }}
-                          >
-                            Email:
-                          </span>
-                          <span style={{ color: "#7F1D1D" }}>
-                            {storedUserInfo.email}
-                          </span>
-                        </div>
-                      )}
                       {storedUserInfo.phone && (
                         <div className="flex items-center justify-between">
                           <span
@@ -652,6 +618,32 @@ const SpinPage = () => {
                           </span>
                         </div>
                       )}
+                      {storedUserInfo.address && (
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="font-medium"
+                            style={{ color: "#B91C1C" }}
+                          >
+                            Địa chỉ:
+                          </span>
+                          <span style={{ color: "#7F1D1D" }}>
+                            {storedUserInfo.address}
+                          </span>
+                        </div>
+                      )}
+                      {storedUserInfo.referralSource && (
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="font-medium"
+                            style={{ color: "#B91C1C" }}
+                          >
+                            Kênh biết đến:
+                          </span>
+                          <span style={{ color: "#7F1D1D" }}>
+                            {storedUserInfo.referralSource}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -662,8 +654,7 @@ const SpinPage = () => {
                       disabled={isSpinning}
                       className="disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                       style={{
-                        background:
-                          "linear-gradient(to right, #74070E, #8A080F)",
+                        background: "#74070E",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -680,8 +671,7 @@ const SpinPage = () => {
                       onClick={handleEditUserInfo}
                       className="text-white font-medium py-3 px-6 rounded-xl transition-colors"
                       style={{
-                        background:
-                          "linear-gradient(to right, #6B7280, #4B5563)",
+                        background: "#6B7280",
                       }}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -907,22 +897,9 @@ const SpinPage = () => {
                             "linear-gradient(to right, #74070E, #8A080F)",
                         }}
                       >
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2, type: "spring" }}
-                          className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
-                        >
-                          <Trophy className="w-10 h-10" />
-                        </motion.div>
                         <h2 className="text-4xl font-bold mb-2">
                           🎉 Chúc Mừng!
                         </h2>
-                        <p className="text-xl" style={{ color: "#FEE2E2" }}>
-                          {previousResult
-                            ? "Bạn đã chiến thắng!"
-                            : "Bạn đã chiến thắng!"}
-                        </p>
                       </div>
 
                       {/* Prize Details */}
@@ -1028,29 +1005,10 @@ const SpinPage = () => {
                         <div
                           className={`grid gap-4 ${
                             previousResult
-                              ? "grid-cols-1 sm:grid-cols-2"
-                              : "grid-cols-1 sm:grid-cols-2"
+                              ? "grid-cols-1 sm:grid-cols-1"
+                              : "grid-cols-1 sm:grid-cols-1"
                           }`}
                         >
-                          {/* Shop Now Button */}
-                          <motion.button
-                            onClick={() =>
-                              window.open("https://dezus.com/", "_blank")
-                            }
-                            className="text-white font-medium py-3 px-6 rounded-xl transition-colors"
-                            style={{
-                              background:
-                                "linear-gradient(to right, #059669, #047857)",
-                            }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <div className="flex items-center justify-center space-x-2">
-                              <ShoppingBag className="w-5 h-5" />
-                              <span>Mua Sắm Ngay</span>
-                            </div>
-                          </motion.button>
-
                           <motion.button
                             onClick={goHome}
                             className="text-white font-medium py-3 px-6 rounded-xl transition-colors"

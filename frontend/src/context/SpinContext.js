@@ -81,6 +81,8 @@ export const SpinProvider = ({ children }) => {
           fullName: userProfile.fullName,
           email: userProfile.email,
           phone: userProfile.phone,
+          address: userProfile.address,
+          referralSource: userProfile.referralSource,
           consent: Boolean(userProfile.consent),
           deviceId: currentDeviceId,
         });
@@ -112,15 +114,25 @@ export const SpinProvider = ({ children }) => {
 
   // Check eligibility for spin
   const checkEligibility = useCallback(
-    async (email = null, phone = null) => {
+    async (userProfile = null) => {
       try {
         const currentDeviceId = await initializeDevice();
 
-        const response = await axios.post("/api/verify-eligibility", {
+        const payload = {
           deviceId: currentDeviceId,
-          email,
-          phone,
-        });
+        };
+
+        // Add user profile data if provided
+        if (userProfile) {
+          payload.fullName = userProfile.fullName;
+          payload.email = userProfile.email;
+          payload.phone = userProfile.phone;
+          payload.address = userProfile.address;
+          payload.referralSource = userProfile.referralSource;
+          payload.consent = Boolean(userProfile.consent);
+        }
+
+        const response = await axios.post("/api/verify-eligibility", payload);
 
         setEligibilityStatus(response.data);
         return response.data;
@@ -153,6 +165,8 @@ export const SpinProvider = ({ children }) => {
           fullName: userProfile.fullName,
           email: userProfile.email,
           phone: userProfile.phone,
+          address: userProfile.address,
+          referralSource: userProfile.referralSource,
           consent: Boolean(userProfile.consent),
           deviceId: currentDeviceId,
         };

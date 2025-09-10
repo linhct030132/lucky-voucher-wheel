@@ -17,15 +17,19 @@ const spinValidation = [
     .isLength({ min: 2, max: 100 })
     .trim()
     .withMessage("Họ và tên phải từ 2 đến 100 ký tự"),
-  body("email")
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage("Email không đúng định dạng"),
   body("phone")
-    .optional()
     .isMobilePhone()
-    .withMessage("Số điện thoại không đúng định dạng"),
+    .withMessage("Vui lòng nhập số điện thoại hợp lệ"),
+  body("address")
+    .optional()
+    .isLength({ max: 500 })
+    .trim()
+    .withMessage("Địa chỉ không được quá 500 ký tự"),
+  body("referralSource")
+    .optional()
+    .isLength({ max: 100 })
+    .trim()
+    .withMessage("Kênh biết đến không được quá 100 ký tự"),
   body("consent")
     .isBoolean()
     .custom((value) => value === true)
@@ -46,67 +50,55 @@ router.post(
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { fullName, email, phone, consent, deviceId } = req.body;
+      const { fullName, phone, address, referralSource, consent, deviceId } =
+        req.body;
 
-      // Validate at least one contact method
-      if (!email && !phone) {
-        return res.status(400).json({
-          error:
-            "Vui lòng cung cấp ít nhất một phương thức liên hệ (email hoặc số điện thoại)",
-        });
-      }
+      // Phone is required (validated by express-validator)
 
       // Sanitize inputs
       const sanitizedProfile = {
         fullName: SecurityUtils.sanitizeInput(fullName),
-        email: email ? SecurityUtils.sanitizeInput(email) : null,
-        phone: phone ? SecurityUtils.sanitizeInput(phone) : null,
+        phone: SecurityUtils.sanitizeInput(phone),
+        address: address ? SecurityUtils.sanitizeInput(address) : null,
+        referralSource: referralSource
+          ? SecurityUtils.sanitizeInput(referralSource)
+          : null,
       };
 
       // Additional validation
-      if (
-        sanitizedProfile.email &&
-        !SecurityUtils.isValidEmail(sanitizedProfile.email)
-      ) {
-        return res.status(400).json({ error: "Định dạng email không hợp lệ" });
-      }
-
-      if (
-        sanitizedProfile.phone &&
-        !SecurityUtils.isValidPhone(sanitizedProfile.phone)
-      ) {
+      if (!SecurityUtils.isValidPhone(sanitizedProfile.phone)) {
         return res
           .status(400)
           .json({ error: "Định dạng số điện thoại không hợp lệ" });
       }
 
-      // Generate device fingerprint hash
-      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
-      const combinedDeviceId = DeviceFingerprint.generateHMAC(
-        `${deviceId}:${serverDeviceId}`
-      );
+      // Generate IP-only fingerprint for cross-browser detection
+      const ipOnlyFingerprint =
+        DeviceFingerprint.generateIPOnlyFingerprint(req);
 
-      // Create or get device record first
-      let deviceRecordId;
-      const existingDevice = await prisma.device.findUnique({
-        where: { deviceFpHash: combinedDeviceId },
+      // Check for existing IP-based device first
+      const ipBasedDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: ipOnlyFingerprint },
         select: { id: true },
       });
 
-      if (existingDevice) {
-        deviceRecordId = existingDevice.id;
+      // Create or get IP-based device record first
+      let deviceRecordId;
+
+      if (ipBasedDevice) {
+        deviceRecordId = ipBasedDevice.id;
         // Update last seen
         await prisma.device.update({
           where: { id: deviceRecordId },
           data: { lastSeenAt: new Date() },
         });
       } else {
-        // Create new device record
+        // Create new IP-based device record
         deviceRecordId = uuidv4();
         await prisma.device.create({
           data: {
             id: deviceRecordId,
-            deviceFpHash: combinedDeviceId,
+            deviceFpHash: ipOnlyFingerprint,
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -138,25 +130,23 @@ router.post(
           where: { id: userId },
           data: {
             fullName: sanitizedProfile.fullName,
-            email: sanitizedProfile.email || deviceSession.user.email,
-            phone: sanitizedProfile.phone || deviceSession.user.phone,
+            phone: sanitizedProfile.phone,
+            address: sanitizedProfile.address || null,
+            referralSource: sanitizedProfile.referralSource || null,
             consentAt: new Date(),
           },
         });
       } else {
         // Create or get user profile
         const userHash = SecurityUtils.hashUserIdentity(
-          sanitizedProfile.email,
+          null,
           sanitizedProfile.phone
         );
 
         // Check if user already exists
         const existingUser = await prisma.userProfile.findFirst({
           where: {
-            OR: [
-              { email: sanitizedProfile.email, email: { not: null } },
-              { phone: sanitizedProfile.phone, phone: { not: null } },
-            ],
+            phone: sanitizedProfile.phone,
           },
           select: { id: true },
         });
@@ -170,8 +160,9 @@ router.post(
             data: {
               id: userId,
               fullName: sanitizedProfile.fullName,
-              email: sanitizedProfile.email,
               phone: sanitizedProfile.phone,
+              address: sanitizedProfile.address,
+              referralSource: sanitizedProfile.referralSource,
               consentAt: new Date(),
             },
           });
@@ -380,15 +371,19 @@ router.post(
       .isLength({ min: 2, max: 100 })
       .trim()
       .withMessage("Họ và tên phải từ 2 đến 100 ký tự"),
-    body("email")
-      .optional()
-      .isEmail()
-      .normalizeEmail()
-      .withMessage("Email không đúng định dạng"),
     body("phone")
-      .optional()
       .isMobilePhone()
-      .withMessage("Số điện thoại không đúng định dạng"),
+      .withMessage("Vui lòng nhập số điện thoại hợp lệ"),
+    body("address")
+      .optional()
+      .isLength({ max: 500 })
+      .trim()
+      .withMessage("Địa chỉ không được quá 500 ký tự"),
+    body("referralSource")
+      .optional()
+      .isLength({ max: 100 })
+      .trim()
+      .withMessage("Kênh biết đến không được quá 100 ký tự"),
     body("consent")
       .isBoolean()
       .custom((value) => value === true)
@@ -400,52 +395,41 @@ router.post(
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { fullName, email, phone, consent, deviceId } = req.body;
+      const { fullName, phone, address, referralSource, consent, deviceId } =
+        req.body;
 
-      // Validate at least one contact method
-      if (!email && !phone) {
-        return res.status(400).json({
-          error:
-            "Vui lòng cung cấp ít nhất một phương thức liên hệ (email hoặc số điện thoại)",
-        });
-      }
+      // Phone is required (validated by express-validator)
 
       // Sanitize inputs
       const sanitizedProfile = {
         fullName: SecurityUtils.sanitizeInput(fullName),
-        email: email ? SecurityUtils.sanitizeInput(email) : null,
-        phone: phone ? SecurityUtils.sanitizeInput(phone) : null,
+        phone: SecurityUtils.sanitizeInput(phone),
+        address: address ? SecurityUtils.sanitizeInput(address) : null,
+        referralSource: referralSource
+          ? SecurityUtils.sanitizeInput(referralSource)
+          : null,
       };
 
       // Additional validation
-      if (
-        sanitizedProfile.email &&
-        !SecurityUtils.isValidEmail(sanitizedProfile.email)
-      ) {
-        return res.status(400).json({ error: "Định dạng email không hợp lệ" });
-      }
-
-      if (
-        sanitizedProfile.phone &&
-        !SecurityUtils.isValidPhone(sanitizedProfile.phone)
-      ) {
+      if (!SecurityUtils.isValidPhone(sanitizedProfile.phone)) {
         return res
           .status(400)
           .json({ error: "Định dạng số điện thoại không hợp lệ" });
       }
 
-      // Generate device fingerprint hash
-      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
-      const combinedDeviceId = DeviceFingerprint.generateHMAC(
-        `${deviceId}:${serverDeviceId}`
-      );
+      // Generate IP-only fingerprint for cross-browser detection
+      const ipOnlyFingerprint =
+        DeviceFingerprint.generateIPOnlyFingerprint(req);
 
-      // Create or get device record
-      let deviceRecordId;
-      const existingDevice = await prisma.device.findUnique({
-        where: { deviceFpHash: combinedDeviceId },
+      // Check for existing IP-based device first
+      const ipBasedDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: ipOnlyFingerprint },
         select: { id: true },
       });
+
+      // Create or get IP-based device record
+      let deviceRecordId;
+      const existingDevice = ipBasedDevice;
 
       if (existingDevice) {
         deviceRecordId = existingDevice.id;
@@ -455,12 +439,12 @@ router.post(
           data: { lastSeenAt: new Date() },
         });
       } else {
-        // Create new device record
+        // Create new IP-based device record
         deviceRecordId = uuidv4();
         await prisma.device.create({
           data: {
             id: deviceRecordId,
-            deviceFpHash: combinedDeviceId,
+            deviceFpHash: ipOnlyFingerprint,
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -492,8 +476,9 @@ router.post(
           where: { id: userId },
           data: {
             fullName: sanitizedProfile.fullName,
-            email: sanitizedProfile.email,
             phone: sanitizedProfile.phone,
+            address: sanitizedProfile.address,
+            referralSource: sanitizedProfile.referralSource,
             consentAt: new Date(),
           },
         });
@@ -506,6 +491,8 @@ router.post(
             fullName: sanitizedProfile.fullName,
             email: sanitizedProfile.email,
             phone: sanitizedProfile.phone,
+            address: sanitizedProfile.address,
+            referralSource: sanitizedProfile.referralSource,
             consentAt: new Date(),
           },
         });
@@ -556,15 +543,13 @@ router.post(
     try {
       const { deviceId } = req.body;
 
-      // Generate device fingerprint
-      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
-      const combinedDeviceId = DeviceFingerprint.generateHMAC(
-        `${deviceId}:${serverDeviceId}`
-      );
+      // Generate IP-only fingerprint for cross-browser detection
+      const ipOnlyFingerprint =
+        DeviceFingerprint.generateIPOnlyFingerprint(req);
 
-      // Get device record
-      const device = await prisma.device.findUnique({
-        where: { deviceFpHash: combinedDeviceId },
+      // Check for existing IP-based device first
+      const device = await prisma.device.findFirst({
+        where: { deviceFpHash: ipOnlyFingerprint },
         select: { id: true },
       });
 
@@ -584,6 +569,8 @@ router.post(
               fullName: true,
               email: true,
               phone: true,
+              address: true,
+              referralSource: true,
             },
           },
           voucherCode: {
@@ -634,6 +621,8 @@ router.post(
               fullName: true,
               email: true,
               phone: true,
+              address: true,
+              referralSource: true,
             },
           },
         },
@@ -647,6 +636,8 @@ router.post(
             fullName: deviceSession.user.fullName,
             email: deviceSession.user.email,
             phone: deviceSession.user.phone,
+            address: deviceSession.user.address,
+            referralSource: deviceSession.user.referralSource,
           },
         });
       }
@@ -678,17 +669,82 @@ router.post(
     try {
       const { deviceId } = req.body;
 
-      // Generate device fingerprint
+      // Generate IP-only fingerprint for cross-browser detection
+      const ipOnlyFingerprint =
+        DeviceFingerprint.generateIPOnlyFingerprint(req);
+
+      // Check for existing participation by IP first (cross-browser)
+      const ipBasedDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: ipOnlyFingerprint },
+        select: { id: true },
+      });
+
+      if (ipBasedDevice) {
+        // Check if this IP has already participated
+        const existingAttempt = await prisma.spinAttempt.findFirst({
+          where: { deviceId: ipBasedDevice.id },
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phone: true,
+                address: true,
+                referralSource: true,
+              },
+            },
+            voucherCode: {
+              include: {
+                voucher: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    faceValue: true,
+                    voucherType: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (existingAttempt) {
+          const spinResult = {
+            outcome: existingAttempt.outcome,
+            participatedAt: existingAttempt.createdAt,
+            userProfile: existingAttempt.user,
+            voucher:
+              existingAttempt.outcome === "win"
+                ? {
+                    ...existingAttempt.voucherCode?.voucher,
+                    code: existingAttempt.voucherCode?.code,
+                  }
+                : null,
+          };
+
+          return res.json({
+            eligible: false,
+            reason: "ALREADY_PARTICIPATED",
+            spinResult: spinResult,
+            message: "Địa chỉ IP này đã tham gia trước đó",
+          });
+        }
+      }
+
+      // Also check the exact client+server combination for fallback
       const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
       const combinedDeviceId = DeviceFingerprint.generateHMAC(
         `${deviceId}:${serverDeviceId}`
       );
 
-      // Get device record
-      const device = await prisma.device.findUnique({
+      const exactDevice = await prisma.device.findUnique({
         where: { deviceFpHash: combinedDeviceId },
         select: { id: true },
       });
+
+      // Use IP-based device if found, otherwise use exact device
+      const device = ipBasedDevice || exactDevice;
 
       if (device) {
         // Check if already spun and get result details
@@ -736,7 +792,7 @@ router.post(
             eligible: false,
             reason: "ALREADY_PARTICIPATED",
             spinResult: spinResult,
-            message: "Bạn đã tham gia trước đó",
+            message: "Thiết bị này đã tham gia trước đó",
           });
         }
       }

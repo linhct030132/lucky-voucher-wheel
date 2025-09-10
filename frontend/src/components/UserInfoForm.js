@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
-  Mail,
   Phone,
+  MapPin,
+  Users,
   Check,
   AlertTriangle,
   Shield,
@@ -11,16 +12,30 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const UserInfoForm = ({ onSubmit, loading = false }) => {
+const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    consent: false,
+    fullName: initialData?.fullName || "",
+    phone: initialData?.phone || "",
+    address: initialData?.address || "",
+    referralSource: initialData?.referralSource || "",
+    consent: initialData?.consent || false,
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        fullName: initialData.fullName || "",
+        phone: initialData.phone || "",
+        address: initialData.address || "",
+        referralSource: initialData.referralSource || "",
+        consent: initialData.consent || false,
+      });
+    }
+  }, [initialData]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -32,21 +47,10 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
       newErrors.fullName = "Họ và tên phải có ít nhất 2 ký tự";
     }
 
-    // Contact method validation (at least one required)
-    if (!formData.email.trim() && !formData.phone.trim()) {
-      newErrors.contact = "Vui lòng cung cấp email hoặc số điện thoại";
-    }
-
-    // Email validation
-    if (formData.email.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email = "Vui lòng nhập địa chỉ email hợp lệ";
-      }
-    }
-
-    // Phone validation
-    if (formData.phone.trim()) {
+    // Phone validation (required)
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Vui lòng nhập số điện thoại";
+    } else {
       const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
       if (!phoneRegex.test(formData.phone)) {
         newErrors.phone = "Vui lòng nhập số điện thoại hợp lệ";
@@ -91,13 +95,9 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
 
-    // Clear contact error if user provides contact info
-    if (
-      (field === "email" || field === "phone") &&
-      value.trim() &&
-      errors.contact
-    ) {
-      setErrors((prev) => ({ ...prev, contact: "" }));
+    // Clear phone error if user starts typing
+    if (field === "phone" && value.trim() && errors.phone) {
+      setErrors((prev) => ({ ...prev, phone: "" }));
     }
   };
 
@@ -127,7 +127,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             <User className="w-8 h-8" />
           </motion.div>
           <h2 className="text-xl sm:text-2xl font-bold mb-2">
-            Nhận Ưu Đãi Thời Trang Dezus!
+            Thông tin liên hệ
           </h2>
           <p style={{ color: "#FEE2E2" }}>
             Điền thông tin để nhận voucher thời trang
@@ -194,87 +194,13 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             )}
           </motion.div>
 
-          {/* Contact Information Notice */}
-          <div
-            className="rounded-xl p-4"
-            style={{
-              backgroundColor: "#FEF2F2",
-              borderColor: "#FCA5A5",
-              borderWidth: "1px",
-            }}
-          >
-            <div
-              className="flex items-center space-x-2"
-              style={{ color: "#991B1B" }}
-            >
-              <Info className="w-5 h-5" />
-              <p className="text-sm font-medium">Thông Tin Liên Lạc</p>
-            </div>
-            <p className="text-sm mt-1" style={{ color: "#B91C1C" }}>
-              Cung cấp ít nhất một phương thức liên lạc (email hoặc điện thoại)
-            </p>
-          </div>
-
-          {/* Email Field */}
-          <motion.div
-            variants={inputVariants}
-            animate={focusedField === "email" ? "focused" : "unfocused"}
-          >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Địa Chỉ Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail
-                  className={`w-5 h-5 ${
-                    focusedField === "email" ? "" : "text-gray-400"
-                  } transition-colors`}
-                  style={focusedField === "email" ? { color: "#74070E" } : {}}
-                />
-              </div>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                onFocus={() => setFocusedField("email")}
-                onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
-                  errors.email
-                    ? "bg-red-50"
-                    : focusedField === "email"
-                    ? "bg-red-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-                style={{
-                  borderColor:
-                    errors.email || focusedField === "email"
-                      ? "#74070E"
-                      : undefined,
-                }}
-                placeholder="email@example.com"
-                disabled={isSubmitting || loading}
-              />
-            </div>
-            {errors.email && (
-              <motion.p
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
-                style={{ color: "#B91C1C" }}
-              >
-                <AlertTriangle className="w-4 h-4 mr-1" />
-                {errors.email}
-              </motion.p>
-            )}
-          </motion.div>
-
           {/* Phone Field */}
           <motion.div
             variants={inputVariants}
             animate={focusedField === "phone" ? "focused" : "unfocused"}
           >
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Số Điện Thoại
+              Số Điện Thoại <span style={{ color: "#74070E" }}>*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -321,27 +247,126 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             )}
           </motion.div>
 
-          {/* Contact Error */}
-          {errors.contact && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl p-4"
-              style={{
-                backgroundColor: "#FEF2F2",
-                borderColor: "#FCA5A5",
-                borderWidth: "1px",
-              }}
-            >
-              <p
-                className="text-sm flex items-center"
+          {/* Address Field */}
+          <motion.div
+            variants={inputVariants}
+            animate={focusedField === "address" ? "focused" : "unfocused"}
+          >
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Địa Chỉ (Quận/Huyện)
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MapPin
+                  className={`w-5 h-5 ${
+                    focusedField === "address" ? "" : "text-gray-400"
+                  } transition-colors`}
+                  style={focusedField === "address" ? { color: "#74070E" } : {}}
+                />
+              </div>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                onFocus={() => setFocusedField("address")}
+                onBlur={() => setFocusedField(null)}
+                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                  errors.address
+                    ? "bg-red-50"
+                    : focusedField === "address"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                style={{
+                  borderColor:
+                    errors.address || focusedField === "address"
+                      ? "#74070E"
+                      : undefined,
+                }}
+                placeholder="Ví dụ: Cầu Giấy, Đống Đa,..."
+                disabled={isSubmitting || loading}
+              />
+            </div>
+            {errors.address && (
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mt-2 text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                {errors.contact}
-              </p>
-            </motion.div>
-          )}
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                {errors.address}
+              </motion.p>
+            )}
+          </motion.div>
+
+          {/* Referral Source Field */}
+          <motion.div
+            variants={inputVariants}
+            animate={
+              focusedField === "referralSource" ? "focused" : "unfocused"
+            }
+          >
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Bạn biết DEZUS qua kênh nào?
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Users
+                  className={`w-5 h-5 ${
+                    focusedField === "referralSource" ? "" : "text-gray-400"
+                  } transition-colors`}
+                  style={
+                    focusedField === "referralSource"
+                      ? { color: "#74070E" }
+                      : {}
+                  }
+                />
+              </div>
+              <select
+                value={formData.referralSource}
+                onChange={(e) =>
+                  handleInputChange("referralSource", e.target.value)
+                }
+                onFocus={() => setFocusedField("referralSource")}
+                onBlur={() => setFocusedField(null)}
+                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                  errors.referralSource
+                    ? "bg-red-50"
+                    : focusedField === "referralSource"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                style={{
+                  borderColor:
+                    errors.referralSource || focusedField === "referralSource"
+                      ? "#74070E"
+                      : undefined,
+                }}
+                disabled={isSubmitting || loading}
+              >
+                <option value="">Chọn kênh</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Zalo">Zalo</option>
+                <option value="Website">Website</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Bạn bè giới thiệu">Bạn bè giới thiệu</option>
+                <option value="Google">Google</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            {errors.referralSource && (
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mt-2 text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
+              >
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                {errors.referralSource}
+              </motion.p>
+            )}
+          </motion.div>
 
           {/* Privacy and Consent */}
           <div className="space-y-4">

@@ -18,15 +18,30 @@ class DeviceFingerprint {
   }
 
   static generateServerFingerprint(req) {
-    const userAgent = req.get("User-Agent") || "";
-    const acceptLanguage = req.get("Accept-Language") || "";
-    const acceptEncoding = req.get("Accept-Encoding") || "";
+    // Focus on more stable characteristics that don't change between browsers
     const ip = req.ip || "";
+    const forwardedFor = req.get("X-Forwarded-For") || "";
+    const realIp = req.get("X-Real-IP") || "";
 
-    const fingerprint = [userAgent, acceptLanguage, acceptEncoding, ip].join(
-      "|"
-    );
+    // Use primary IP as the main identifier
+    const primaryIp = realIp || forwardedFor.split(",")[0] || ip;
+
+    // Create a stable fingerprint based on network characteristics
+    const fingerprint = primaryIp.trim();
     return this.generateHMAC(fingerprint);
+  }
+
+  static generateIPOnlyFingerprint(req) {
+    // Generate IP-only fingerprint for cross-browser detection
+    const ip = req.ip || "";
+    const forwardedFor = req.get("X-Forwarded-For") || "";
+    const realIp = req.get("X-Real-IP") || "";
+
+    // Use primary IP as the main identifier
+    const primaryIp = realIp || forwardedFor.split(",")[0] || ip;
+
+    // Return raw IP-based fingerprint for direct storage/comparison
+    return this.generateHMAC(`IP_ONLY:${primaryIp.trim()}`);
   }
 }
 

@@ -183,6 +183,59 @@ const migrations = [
       // This is a placeholder for future campaign-related migrations
     },
   },
+  {
+    version: 4,
+    name: "add_address_and_referral_source_to_user_profiles",
+    description:
+      "Add address and referral_source columns to user_profiles table",
+    migrate: async (tx = prisma) => {
+      console.log(
+        "  🔧 Adding address and referral_source columns to user_profiles..."
+      );
+
+      // Check if address column exists
+      const addressColumnExists = await tx.$queryRaw`
+        SELECT COUNT(*) as count
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'user_profiles' 
+          AND COLUMN_NAME = 'address'
+      `;
+
+      if (addressColumnExists[0].count === 0) {
+        await tx.$executeRaw`
+          ALTER TABLE user_profiles ADD COLUMN address VARCHAR(500) NULL
+        `;
+        console.log("  ✅ Added address column to user_profiles");
+      } else {
+        console.log("  ℹ️  address column already exists in user_profiles");
+      }
+
+      // Check if referral_source column exists
+      const referralColumnExists = await tx.$queryRaw`
+        SELECT COUNT(*) as count
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'user_profiles' 
+          AND COLUMN_NAME = 'referral_source'
+      `;
+
+      if (referralColumnExists[0].count === 0) {
+        await tx.$executeRaw`
+          ALTER TABLE user_profiles ADD COLUMN referral_source VARCHAR(100) NULL
+        `;
+        console.log("  ✅ Added referral_source column to user_profiles");
+      } else {
+        console.log(
+          "  ℹ️  referral_source column already exists in user_profiles"
+        );
+      }
+
+      console.log(
+        "  ✅ Address and referral_source migration completed successfully"
+      );
+    },
+  },
 ];
 
 /**
