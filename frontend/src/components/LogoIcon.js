@@ -1,6 +1,6 @@
 import React from "react";
 
-const LogoIcon = ({ className = "h-16 mx-auto" }) => {
+const LogoIcon = ({ className = "h-16 mx-auto", fill = "#000000" }) => {
   return (
     <svg
       version="1.0"
@@ -11,7 +11,7 @@ const LogoIcon = ({ className = "h-16 mx-auto" }) => {
     >
       <g
         transform="translate(0.000000,352.000000) scale(0.100000,-0.100000)"
-        fill="#000000"
+        fill={fill}
         stroke="none"
       >
         <path

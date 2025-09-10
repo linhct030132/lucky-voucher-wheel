@@ -114,7 +114,10 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
         className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden max-w-lg mx-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 sm:p-6 text-white text-center">
+        <div
+          className="p-4 sm:p-6 text-white text-center"
+          style={{ background: "linear-gradient(to right, #74070E, #8A080F)" }}
+        >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -126,7 +129,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
           <h2 className="text-xl sm:text-2xl font-bold mb-2">
             Nhận Ưu Đãi Thời Trang Dezus!
           </h2>
-          <p className="text-red-100">
+          <p style={{ color: "#FEE2E2" }}>
             Điền thông tin để nhận voucher thời trang
           </p>
         </div>
@@ -142,16 +145,17 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             animate={focusedField === "fullName" ? "focused" : "unfocused"}
           >
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Họ và Tên <span className="text-red-500">*</span>
+              Họ và Tên <span style={{ color: "#74070E" }}>*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <User
                   className={`w-5 h-5 ${
-                    focusedField === "fullName"
-                      ? "text-red-500"
-                      : "text-gray-400"
+                    focusedField === "fullName" ? "" : "text-gray-400"
                   } transition-colors`}
+                  style={
+                    focusedField === "fullName" ? { color: "#74070E" } : {}
+                  }
                 />
               </div>
               <input
@@ -162,11 +166,17 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                 onBlur={() => setFocusedField(null)}
                 className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
                   errors.fullName
-                    ? "border-red-300 focus:border-red-500 bg-red-50"
+                    ? "bg-red-50"
                     : focusedField === "fullName"
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
+                style={{
+                  borderColor:
+                    errors.fullName || focusedField === "fullName"
+                      ? "#74070E"
+                      : undefined,
+                }}
                 placeholder="Nhập họ và tên của bạn"
                 disabled={isSubmitting || loading}
               />
@@ -175,7 +185,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm text-red-600 flex items-center"
+                className="mt-2 text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
               >
                 <AlertTriangle className="w-4 h-4 mr-1" />
                 {errors.fullName}
@@ -184,12 +195,22 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
           </motion.div>
 
           {/* Contact Information Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <div className="flex items-center space-x-2 text-blue-700">
+          <div
+            className="rounded-xl p-4"
+            style={{
+              backgroundColor: "#FEF2F2",
+              borderColor: "#FCA5A5",
+              borderWidth: "1px",
+            }}
+          >
+            <div
+              className="flex items-center space-x-2"
+              style={{ color: "#991B1B" }}
+            >
               <Info className="w-5 h-5" />
               <p className="text-sm font-medium">Thông Tin Liên Lạc</p>
             </div>
-            <p className="text-sm text-blue-600 mt-1">
+            <p className="text-sm mt-1" style={{ color: "#B91C1C" }}>
               Cung cấp ít nhất một phương thức liên lạc (email hoặc điện thoại)
             </p>
           </div>
@@ -206,8 +227,9 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail
                   className={`w-5 h-5 ${
-                    focusedField === "email" ? "text-red-500" : "text-gray-400"
+                    focusedField === "email" ? "" : "text-gray-400"
                   } transition-colors`}
+                  style={focusedField === "email" ? { color: "#74070E" } : {}}
                 />
               </div>
               <input
@@ -218,11 +240,17 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                 onBlur={() => setFocusedField(null)}
                 className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
                   errors.email
-                    ? "border-red-300 focus:border-red-500 bg-red-50"
+                    ? "bg-red-50"
                     : focusedField === "email"
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
+                style={{
+                  borderColor:
+                    errors.email || focusedField === "email"
+                      ? "#74070E"
+                      : undefined,
+                }}
                 placeholder="email@example.com"
                 disabled={isSubmitting || loading}
               />
@@ -231,7 +259,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm text-red-600 flex items-center"
+                className="mt-2 text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
               >
                 <AlertTriangle className="w-4 h-4 mr-1" />
                 {errors.email}
@@ -251,8 +280,9 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Phone
                   className={`w-5 h-5 ${
-                    focusedField === "phone" ? "text-red-500" : "text-gray-400"
+                    focusedField === "phone" ? "" : "text-gray-400"
                   } transition-colors`}
+                  style={focusedField === "phone" ? { color: "#74070E" } : {}}
                 />
               </div>
               <input
@@ -263,11 +293,17 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                 onBlur={() => setFocusedField(null)}
                 className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
                   errors.phone
-                    ? "border-red-300 focus:border-red-500 bg-red-50"
+                    ? "bg-red-50"
                     : focusedField === "phone"
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
+                style={{
+                  borderColor:
+                    errors.phone || focusedField === "phone"
+                      ? "#74070E"
+                      : undefined,
+                }}
                 placeholder="0123 456 789"
                 disabled={isSubmitting || loading}
               />
@@ -276,7 +312,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm text-red-600 flex items-center"
+                className="mt-2 text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
               >
                 <AlertTriangle className="w-4 h-4 mr-1" />
                 {errors.phone}
@@ -289,9 +326,17 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 border border-red-200 rounded-xl p-4"
+              className="rounded-xl p-4"
+              style={{
+                backgroundColor: "#FEF2F2",
+                borderColor: "#FCA5A5",
+                borderWidth: "1px",
+              }}
             >
-              <p className="text-sm text-red-700 flex items-center">
+              <p
+                className="text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
+              >
                 <AlertTriangle className="w-4 h-4 mr-2" />
                 {errors.contact}
               </p>
@@ -315,11 +360,14 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             <motion.label
               className={`flex items-start space-x-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${
                 errors.consent
-                  ? "border-red-300 bg-red-50"
+                  ? "bg-red-50"
                   : formData.consent
                   ? "border-green-300 bg-green-50"
                   : "border-gray-200 hover:border-gray-300"
               }`}
+              style={{
+                borderColor: errors.consent ? "#74070E" : undefined,
+              }}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -338,9 +386,15 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                     formData.consent
                       ? "border-green-500 bg-green-500"
                       : errors.consent
-                      ? "border-red-300"
+                      ? ""
                       : "border-gray-300"
                   }`}
+                  style={{
+                    borderColor:
+                      errors.consent && !formData.consent
+                        ? "#74070E"
+                        : undefined,
+                  }}
                 >
                   {formData.consent && (
                     <motion.div
@@ -368,7 +422,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-sm text-red-600 flex items-center"
+                className="text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
               >
                 <AlertTriangle className="w-4 h-4 mr-1" />
                 {errors.consent}
@@ -383,8 +438,13 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 ${
               isSubmitting || loading
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl"
+                : "text-white shadow-lg hover:shadow-xl"
             }`}
+            style={
+              !(isSubmitting || loading)
+                ? { background: "linear-gradient(to right, #74070E, #8A080F)" }
+                : {}
+            }
             whileHover={!(isSubmitting || loading) ? { scale: 1.02 } : {}}
             whileTap={!(isSubmitting || loading) ? { scale: 0.98 } : {}}
           >

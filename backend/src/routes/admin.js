@@ -158,7 +158,7 @@ router.get(
  */
 router.get(
   "/vouchers/:id",
-  [param("id").isUUID().withMessage("Invalid voucher ID")],
+  [param("id").isUUID().withMessage("ID voucher không hợp lệ")],
   handleValidationErrors,
   async (req, res, next) => {
     try {
@@ -169,7 +169,7 @@ router.get(
       });
 
       if (!voucher) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return res.status(404).json({ error: "Không tìm thấy voucher" });
       }
 
       // Get voucher code counts
@@ -230,7 +230,7 @@ router.post(
       if (validFrom && validTo && new Date(validFrom) >= new Date(validTo)) {
         return res
           .status(400)
-          .json({ error: "Valid from date must be before valid to date" });
+          .json({ error: "Ngày bắt đầu phải trước ngày kết thúc" });
       }
 
       const voucherId = uuidv4();
@@ -297,7 +297,7 @@ router.post(
       res.status(201).json({
         success: true,
         data: createdVoucher,
-        message: "Voucher created successfully",
+        message: "Voucher đã được tạo thành công",
       });
     } catch (error) {
       next(error);
@@ -312,7 +312,7 @@ router.post(
 router.put(
   "/vouchers/:id",
   [
-    param("id").isUUID().withMessage("Invalid voucher ID"),
+    param("id").isUUID().withMessage("ID voucher không hợp lệ"),
     ...voucherValidation,
   ],
   handleValidationErrors,
@@ -338,14 +338,14 @@ router.put(
       });
 
       if (!currentVoucher) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return res.status(404).json({ error: "Không tìm thấy voucher" });
       }
 
       // Validate date range
       if (validFrom && validTo && new Date(validFrom) >= new Date(validTo)) {
         return res
           .status(400)
-          .json({ error: "Valid from date must be before valid to date" });
+          .json({ error: "Ngày bắt đầu phải trước ngày kết thúc" });
       }
 
       // Convert string values to proper types
@@ -387,7 +387,7 @@ router.put(
       res.json({
         success: true,
         data: updatedVoucher,
-        message: "Voucher updated successfully",
+        message: "Voucher đã được cập nhật thành công",
       });
     } catch (error) {
       next(error);
@@ -401,7 +401,7 @@ router.put(
  */
 router.delete(
   "/vouchers/:id",
-  [param("id").isUUID().withMessage("Invalid voucher ID")],
+  [param("id").isUUID().withMessage("ID voucher không hợp lệ")],
   handleValidationErrors,
   async (req, res, next) => {
     try {
@@ -413,7 +413,7 @@ router.delete(
       });
 
       if (!voucher) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return res.status(404).json({ error: "Không tìm thấy voucher" });
       }
 
       // Check if voucher has issued codes
@@ -451,7 +451,7 @@ router.delete(
 
         res.json({
           success: true,
-          message: "Voucher deleted successfully",
+          message: "Voucher đã được xóa thành công",
         });
       }
 
@@ -476,12 +476,12 @@ router.delete(
 router.post(
   "/vouchers/:id/stock-adjustments",
   [
-    param("id").isUUID().withMessage("Invalid voucher ID"),
-    body("delta").isInt().withMessage("Delta must be an integer"),
+    param("id").isUUID().withMessage("ID voucher không hợp lệ"),
+    body("delta").isInt().withMessage("Giá trị thay đổi phải là số nguyên"),
     body("reason")
       .isLength({ min: 1, max: 500 })
       .trim()
-      .withMessage("Reason is required and must not exceed 500 characters"),
+      .withMessage("Lý do là bắt buộc và không quá 500 ký tự"),
   ],
   handleValidationErrors,
   async (req, res, next) => {
@@ -498,14 +498,14 @@ router.post(
       });
 
       if (!voucher) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return res.status(404).json({ error: "Không tìm thấy voucher" });
       }
 
       const previousStock = voucher.remainingStock;
       const newStock = previousStock + deltaNum;
 
       if (newStock < 0) {
-        return res.status(400).json({ error: "Stock cannot be negative" });
+        return res.status(400).json({ error: "Số lượng không thể âm" });
       }
 
       // Update stock and create adjustment record in transaction
@@ -576,7 +576,7 @@ router.post(
           delta: deltaNum,
           reason,
         },
-        message: "Stock adjusted successfully",
+        message: "Số lượng đã được điều chỉnh thành công",
       });
     } catch (error) {
       next(error);

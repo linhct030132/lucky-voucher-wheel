@@ -7,7 +7,7 @@ const SpinContext = createContext();
 export const useSpin = () => {
   const context = useContext(SpinContext);
   if (!context) {
-    throw new Error("useSpin must be used within a SpinProvider");
+    throw new Error("useSpin phải được sử dụng trong SpinProvider");
   }
   return context;
 };
@@ -129,7 +129,7 @@ export const SpinProvider = ({ children }) => {
         const errorData = {
           eligible: true,
           reason: "NETWORK_ERROR",
-          message: "Unable to check eligibility. Please try again.",
+          message: "Không thể kiểm tra điều kiện tham gia. Vui lòng thử lại.",
         };
         setEligibilityStatus(errorData);
         return errorData;
@@ -168,14 +168,14 @@ export const SpinProvider = ({ children }) => {
       } catch (error) {
         console.error("Spin failed:", error);
 
-        let errorMessage = "Spin failed. Please try again.";
+        let errorMessage = "Quay thất bại. Vui lòng thử lại.";
         let errorCode = "UNKNOWN_ERROR";
 
         if (error.response?.status === 409) {
-          errorMessage = "You have already participated in this lucky draw.";
+          errorMessage = "Bạn đã tham gia quay số may mắn này rồi.";
           errorCode = "ALREADY_PARTICIPATED";
         } else if (error.response?.status === 429) {
-          errorMessage = "Too many attempts. Please try again later.";
+          errorMessage = "Quá nhiều lần thử. Vui lòng thử lại sau.";
           errorCode = "RATE_LIMITED";
         } else if (error.response?.data?.error) {
           errorMessage = error.response.data.error;

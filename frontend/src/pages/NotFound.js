@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -29,7 +29,12 @@ const NotFound = () => {
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="text-8xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4"
+            className="text-8xl font-bold bg-clip-text text-transparent mb-4"
+            style={{
+              background: "linear-gradient(to right, #74070E, #8A080F)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+            }}
           >
             404
           </motion.div>
@@ -38,9 +43,10 @@ const NotFound = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.4 }}
-            className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto"
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ backgroundColor: "#FEF2F2" }}
           >
-            <AlertCircle className="w-10 h-10 text-red-600" />
+            <AlertCircle className="w-10 h-10" style={{ color: "#74070E" }} />
           </motion.div>
         </motion.div>
 
@@ -92,7 +98,10 @@ const NotFound = () => {
         >
           <Link
             to="/"
-            className="inline-flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+            className="inline-flex items-center justify-center w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+            style={{
+              background: "linear-gradient(to right, #74070E, #8A080F)",
+            }}
           >
             <Home className="w-5 h-5 mr-2" />
             Back to Home
@@ -100,7 +109,10 @@ const NotFound = () => {
 
           <Link
             to="/spin"
-            className="inline-flex items-center justify-center w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105"
+            className="inline-flex items-center justify-center w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+            style={{
+              background: "linear-gradient(to right, #F97316, #74070E)",
+            }}
           >
             <Search className="w-5 h-5 mr-2" />
             Try Lucky Spin

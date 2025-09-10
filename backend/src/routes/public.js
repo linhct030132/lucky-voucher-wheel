@@ -527,7 +527,7 @@ router.post(
 
       res.json({
         success: true,
-        message: "User information stored successfully",
+        message: "Thông tin người dùng đã được lưu thành công",
         data: {
           userId,
           deviceId: deviceRecordId,
@@ -546,7 +546,11 @@ router.post(
  */
 router.post(
   "/get-stored-user-info",
-  [body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required")],
+  [
+    body("deviceId")
+      .isLength({ min: 10 })
+      .withMessage("Mã thiết bị là bắt buộc"),
+  ],
   handleValidationErrors,
   async (req, res, next) => {
     try {
@@ -567,21 +571,56 @@ router.post(
       if (!device) {
         return res.json({
           hasStoredInfo: false,
-          message: "No device record found",
+          message: "Không tìm thấy thiết bị",
         });
       }
 
-      // Check if already spun
+      // Check if already spun and get result details
       const existingAttempt = await prisma.spinAttempt.findFirst({
         where: { deviceId: device.id },
-        select: { id: true, outcome: true },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+              phone: true,
+            },
+          },
+          voucherCode: {
+            include: {
+              voucher: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  faceValue: true,
+                  voucherType: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (existingAttempt) {
+        const spinResult = {
+          outcome: existingAttempt.outcome,
+          participatedAt: existingAttempt.createdAt,
+          userProfile: existingAttempt.user,
+          voucher:
+            existingAttempt.outcome === "win"
+              ? {
+                  ...existingAttempt.voucherCode?.voucher,
+                  code: existingAttempt.voucherCode?.code,
+                }
+              : null,
+        };
+
         return res.json({
           hasStoredInfo: false,
           alreadyParticipated: true,
-          message: "Device has already participated",
+          spinResult: spinResult,
+          message: "Thiết bị đã tham gia trước đó",
         });
       }
 
@@ -615,7 +654,7 @@ router.post(
       res.json({
         hasStoredInfo: false,
         alreadyParticipated: false,
-        message: "No stored user information found",
+        message: "Không tìm thấy thông tin người dùng đã lưu",
       });
     } catch (error) {
       next(error);
@@ -629,7 +668,11 @@ router.post(
  */
 router.post(
   "/verify-eligibility",
-  [body("deviceId").isLength({ min: 10 }).withMessage("Device ID is required")],
+  [
+    body("deviceId")
+      .isLength({ min: 10 })
+      .withMessage("Mã thiết bị là bắt buộc"),
+  ],
   handleValidationErrors,
   async (req, res, next) => {
     try {
@@ -648,17 +691,52 @@ router.post(
       });
 
       if (device) {
-        // Check if already spun
+        // Check if already spun and get result details
         const existingAttempt = await prisma.spinAttempt.findFirst({
           where: { deviceId: device.id },
-          select: { id: true },
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phone: true,
+              },
+            },
+            voucherCode: {
+              include: {
+                voucher: {
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    faceValue: true,
+                    voucherType: true,
+                  },
+                },
+              },
+            },
+          },
         });
 
         if (existingAttempt) {
+          const spinResult = {
+            outcome: existingAttempt.outcome,
+            participatedAt: existingAttempt.createdAt,
+            userProfile: existingAttempt.user,
+            voucher:
+              existingAttempt.outcome === "win"
+                ? {
+                    ...existingAttempt.voucherCode?.voucher,
+                    code: existingAttempt.voucherCode?.code,
+                  }
+                : null,
+          };
+
           return res.json({
             eligible: false,
             reason: "ALREADY_PARTICIPATED",
-            message: "You have already participated",
+            spinResult: spinResult,
+            message: "Bạn đã tham gia trước đó",
           });
         }
       }
@@ -684,13 +762,13 @@ router.post(
         return res.json({
           eligible: false,
           reason: "NO_STOCK",
-          message: "No more vouchers available",
+          message: "Không còn voucher nào khả dụng",
         });
       }
 
       res.json({
         eligible: true,
-        message: "You are eligible to participate",
+        message: "Bạn đủ điều kiện tham gia",
       });
     } catch (error) {
       next(error);

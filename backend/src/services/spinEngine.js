@@ -16,16 +16,8 @@ class SpinEngine {
     // Step 2: Get eligible vouchers
     const eligibleVouchers = await this.getEligibleVouchers();
 
-    // Step 3: Use default no-win weight (10%)
-    const noWinWeight = 0.1;
-
-    // Step 4: Determine outcome using weighted selection
-    const outcome = this.weightedRandomSelection(eligibleVouchers, noWinWeight);
-
-    // Step 5: Process the result atomically
-    if (outcome.type === "win") {
-      return await this.processWin(userProfile, deviceId, outcome.voucher, req);
-    } else {
+    // Step 3: If no vouchers available, return lose
+    if (eligibleVouchers.length === 0) {
       return await this.processLose(
         userProfile,
         deviceId,
@@ -33,6 +25,12 @@ class SpinEngine {
         req
       );
     }
+
+    // Step 4: Guaranteed win - select voucher based on baseProbability
+    const outcome = this.weightedRandomSelection(eligibleVouchers);
+
+    // Step 5: Process the win result atomically
+    return await this.processWin(userProfile, deviceId, outcome.voucher, req);
   }
 
   /**
@@ -56,7 +54,12 @@ class SpinEngine {
   static async getEligibleVouchers() {
     const vouchers = await query(
       `
-      SELECT v.id, v.name, v.face_value, v.base_probability, v.remaining_stock
+      SELECT 
+        v.id, 
+        v.name, 
+        v.face_value, 
+        CAST(v.base_probability AS DOUBLE) as base_probability, 
+        v.remaining_stock
       FROM vouchers v
       WHERE v.status = 'active'
         AND v.remaining_stock > 0
@@ -70,31 +73,31 @@ class SpinEngine {
   }
 
   /**
-   * Weighted random selection algorithm
+   * Weighted random selection algorithm - always returns a win when vouchers available
    */
-  static weightedRandomSelection(vouchers, noWinWeight) {
+  static weightedRandomSelection(vouchers) {
     if (vouchers.length === 0) {
       return { type: "lose" };
     }
 
-    // Calculate total weight
+    // Calculate total weight from voucher probabilities
     const voucherWeights = vouchers.map((v) => parseFloat(v.base_probability));
-    const totalVoucherWeight = voucherWeights.reduce(
-      (sum, weight) => sum + weight,
-      0
-    );
-    const totalWeight = totalVoucherWeight + noWinWeight;
+    const totalWeight = voucherWeights.reduce((sum, weight) => sum + weight, 0);
 
-    // Generate random number
-    const random = Math.random() * totalWeight;
-
-    // Check if it falls in no-win range
-    if (random < noWinWeight) {
-      return { type: "lose" };
+    // If total weight is 0, distribute equally
+    if (totalWeight === 0) {
+      const randomIndex = Math.floor(Math.random() * vouchers.length);
+      return {
+        type: "win",
+        voucher: vouchers[randomIndex],
+      };
     }
 
-    // Find which voucher was selected
-    let cumulativeWeight = noWinWeight;
+    // Generate random number within total weight
+    const random = Math.random() * totalWeight;
+
+    // Find which voucher was selected based on probability
+    let cumulativeWeight = 0;
     for (let i = 0; i < vouchers.length; i++) {
       cumulativeWeight += voucherWeights[i];
       if (random < cumulativeWeight) {
@@ -105,8 +108,11 @@ class SpinEngine {
       }
     }
 
-    // Fallback to lose (should not happen with proper implementation)
-    return { type: "lose" };
+    // Fallback to last voucher (should not happen with proper implementation)
+    return {
+      type: "win",
+      voucher: vouchers[vouchers.length - 1],
+    };
   }
 
   /**
@@ -140,12 +146,12 @@ class SpinEngine {
         console.warn(
           `Voucher ${selectedVoucher.id} stock depleted during transaction`
         );
-        return await this.processLose(userProfile, deviceId, req);
+        return await this.processLose(userProfile, deviceId, [], req);
       }
 
       if (!availableCode) {
         console.warn(`No available codes for voucher ${selectedVoucher.id}`);
-        return await this.processLose(userProfile, deviceId, req);
+        return await this.processLose(userProfile, deviceId, [], req);
       }
 
       // Execute winning transaction
@@ -206,7 +212,7 @@ class SpinEngine {
     } catch (error) {
       console.error("Error processing win:", error);
       // Fall back to lose on any error
-      return await this.processLose(userProfile, deviceId, req);
+      return await this.processLose(userProfile, deviceId, [], req);
     }
   }
 

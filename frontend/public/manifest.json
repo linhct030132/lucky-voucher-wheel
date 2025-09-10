@@ -1,6 +1,6 @@
 {
-    "short_name": "Lucky Voucher",
-    "name": "Lucky Voucher System",
+    "short_name": "Dezus",
+    "name": "Dezus Secret Bill",
     "icons": [
         {
             "src": "favicon.ico",
@@ -12,5 +12,5 @@
     "display": "standalone",
     "theme_color": "#667eea",
     "background_color": "#ffffff",
-    "description": "Spin to win amazing prizes and discount vouchers!"
+    "description": "Dezus Secret Bill - Spin to win amazing prizes and discount vouchers!"
 }

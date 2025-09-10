@@ -163,7 +163,7 @@ router.post(
       });
 
       if (existingStaff) {
-        return res.status(409).json({ error: "Email already registered" });
+        return res.status(409).json({ error: "Email đã được đăng ký" });
       }
 
       // Hash password
@@ -190,7 +190,7 @@ router.post(
 
       res.status(201).json({
         success: true,
-        message: "Staff member registered successfully",
+        message: "Nhân viên đã được đăng ký thành công",
         user: {
           id: staffId,
           email,
@@ -213,7 +213,7 @@ router.post("/refresh", async (req, res, next) => {
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
-      return res.status(401).json({ error: "Refresh token required" });
+      return res.status(401).json({ error: "Yêu cầu refresh token" });
     }
 
     // Verify refresh token
@@ -235,7 +235,7 @@ router.post("/refresh", async (req, res, next) => {
     });
 
     if (!staff) {
-      return res.status(401).json({ error: "Invalid refresh token" });
+      return res.status(401).json({ error: "Refresh token không hợp lệ" });
     }
 
     // Generate new access token
@@ -261,7 +261,7 @@ router.post("/refresh", async (req, res, next) => {
     });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Refresh token expired" });
+      return res.status(401).json({ error: "Refresh token đã hết hạn" });
     }
     next(error);
   }
@@ -280,7 +280,7 @@ router.post("/logout", async (req, res, next) => {
       sameSite: "strict",
     });
 
-    res.json({ success: true, message: "Logged out successfully" });
+    res.json({ success: true, message: "Đăng xuất thành công" });
   } catch (error) {
     next(error);
   }
@@ -296,7 +296,7 @@ router.get("/me", async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ error: "Access token required" });
+      return res.status(401).json({ error: "Yêu cầu access token" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -318,7 +318,7 @@ router.get("/me", async (req, res, next) => {
     });
 
     if (!staff) {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({ error: "Token không hợp lệ" });
     }
 
     res.json({
@@ -334,7 +334,7 @@ router.get("/me", async (req, res, next) => {
     });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Token expired" });
+      return res.status(401).json({ error: "Token đã hết hạn" });
     }
     next(error);
   }

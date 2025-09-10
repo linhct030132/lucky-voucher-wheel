@@ -5,7 +5,7 @@ const apiLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000, // 1 minute
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: {
-    error: "Too many requests from this IP, please try again later.",
+    error: "Quá nhiều yêu cầu từ IP này, vui lòng thử lại sau.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -16,7 +16,7 @@ const spinLimiter = rateLimit({
   windowMs: 60000, // 1 minute
   max: parseInt(process.env.SPIN_RATE_LIMIT_MAX) || 5,
   message: {
-    error: "Too many spin attempts from this IP, please try again later.",
+    error: "Quá nhiều lần quay từ IP này, vui lòng thử lại sau.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -31,7 +31,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per 15 minutes
   message: {
-    error: "Too many authentication attempts, please try again later.",
+    error: "Quá nhiều lần thử xác thực, vui lòng thử lại sau.",
   },
   standardHeaders: true,
   legacyHeaders: false,
