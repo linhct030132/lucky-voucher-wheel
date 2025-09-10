@@ -4,6 +4,8 @@ CREATE TABLE `user_profiles` (
     `full_name` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NULL,
     `phone` VARCHAR(20) NULL,
+    `address` VARCHAR(500) NULL,
+    `referral_source` VARCHAR(100) NULL,
     `created_at` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
     `consent_at` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
 
@@ -21,6 +23,20 @@ CREATE TABLE `devices` (
 
     UNIQUE INDEX `device_fp_hash`(`device_fp_hash`),
     INDEX `idx_device_fp`(`device_fp_hash`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `device_sessions` (
+    `id` VARCHAR(36) NOT NULL,
+    `device_id` VARCHAR(36) NOT NULL,
+    `user_id` VARCHAR(36) NOT NULL,
+    `created_at` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `updated_at` TIMESTAMP(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+
+    INDEX `idx_device_id`(`device_id`),
+    INDEX `idx_user_id`(`user_id`),
+    UNIQUE INDEX `unique_device_session`(`device_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -169,6 +185,12 @@ CREATE TABLE `migrations` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
+ALTER TABLE `device_sessions` ADD CONSTRAINT `device_sessions_device_id_fkey` FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `device_sessions` ADD CONSTRAINT `device_sessions_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `user_profiles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `voucher_codes` ADD CONSTRAINT `voucher_codes_ibfk_1` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
@@ -191,4 +213,3 @@ ALTER TABLE `stock_adjustments` ADD CONSTRAINT `stock_adjustments_ibfk_1` FOREIG
 
 -- AddForeignKey
 ALTER TABLE `stock_adjustments` ADD CONSTRAINT `stock_adjustments_ibfk_2` FOREIGN KEY (`staff_id`) REFERENCES `staff`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
-
