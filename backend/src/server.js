@@ -227,33 +227,6 @@ async function startServer() {
       process.exit(1);
     }
 
-    // Run database migrations automatically in production
-    if (
-      process.env.NODE_ENV === "production" ||
-      process.env.AUTO_MIGRATE === "true"
-    ) {
-      console.log("🗃️  Running database migrations...");
-      try {
-        // Import and run migrations with database pool
-        const { runMigrations } = require("./database/migrate");
-        const { pool } = require("./config/database");
-        await runMigrations(pool);
-        console.log("✅ Database migrations completed successfully");
-
-        // Run seeding if this is the first deployment
-        if (process.env.AUTO_SEED === "true") {
-          console.log("🌱 Running database seeding...");
-          const { seedDatabase } = require("./database/seed");
-          await seedDatabase(pool);
-          console.log("✅ Database seeding completed successfully");
-        }
-      } catch (migrationError) {
-        console.error("❌ Migration failed:", migrationError);
-        // Don't exit - let the app continue but log the error
-        console.warn("⚠️  Continuing without migrations...");
-      }
-    }
-
     const server = app.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 Lucky Voucher System Backend Started");
       console.log(`📍 Server running on 0.0.0.0:${PORT}`);
