@@ -98,12 +98,12 @@ const SpinWheel_improved = ({
       {/* Wheel Container */}
       <div className="relative">
         {/* Outer Glow */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400 to-purple-600 opacity-20 blur-xl animate-pulse"></div>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400 to-gray-600 opacity-20 blur-xl animate-pulse"></div>
 
         {/* Wheel Background */}
         <div className="relative w-80 h-80 sm:w-96 sm:h-96">
           {/* Decorative Ring */}
-          <div className="absolute inset-0 rounded-full border-8 border-gradient-to-r from-indigo-400 to-purple-600 opacity-30"></div>
+          <div className="absolute inset-0 rounded-full border-8 border-gradient-to-r from-red-400 to-gray-600 opacity-30"></div>
           <div className="absolute inset-2 rounded-full border-4 border-white shadow-2xl"></div>
 
           {/* Spinning Wheel */}
@@ -156,11 +156,11 @@ const SpinWheel_improved = ({
                       >
                         <stop
                           offset="0%"
-                          stopColor={index % 2 === 0 ? "#3b82f6" : "#8b5cf6"}
+                          stopColor={index % 2 === 0 ? "#dc2626" : "#6b7280"}
                         />
                         <stop
                           offset="100%"
-                          stopColor={index % 2 === 0 ? "#1d4ed8" : "#7c3aed"}
+                          stopColor={index % 2 === 0 ? "#b91c1c" : "#4b5563"}
                         />
                       </linearGradient>
                     </defs>
@@ -233,8 +233,8 @@ const SpinWheel_improved = ({
 
               <defs>
                 <radialGradient id="center-gradient">
-                  <stop offset="0%" stopColor="#818cf8" />
-                  <stop offset="100%" stopColor="#4f46e5" />
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#dc2626" />
                 </radialGradient>
               </defs>
 
@@ -327,14 +327,14 @@ const SpinWheel_improved = ({
         className={`relative px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all duration-300 ${
           disabled || isAnimating
             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:shadow-2xl active:scale-95"
+            : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 hover:shadow-2xl active:scale-95"
         }`}
         whileHover={!disabled && !isAnimating ? { scale: 1.05, y: -2 } : {}}
         whileTap={!disabled && !isAnimating ? { scale: 0.95 } : {}}
       >
         {/* Button Glow */}
         {!disabled && !isAnimating && (
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 opacity-50 blur-lg animate-pulse"></div>
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 opacity-50 blur-lg animate-pulse"></div>
         )}
 
         <div className="relative flex items-center space-x-3">
@@ -346,12 +346,12 @@ const SpinWheel_improved = ({
               >
                 <Sparkles className="w-6 h-6" />
               </motion.div>
-              <span>Spinning...</span>
+              <span>Đang quay...</span>
             </>
           ) : (
             <>
               <Play className="w-6 h-6" />
-              <span>SPIN TO WIN!</span>
+              <span>QUAY NGAY!</span>
             </>
           )}
         </div>
@@ -395,8 +395,8 @@ const SpinWheel_improved = ({
           className="text-center bg-white rounded-2xl p-6 shadow-lg border border-gray-100 max-w-md"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center justify-center">
-            <Gift className="w-5 h-5 mr-2 text-indigo-600" />
-            Available Prizes
+            <Gift className="w-5 h-5 mr-2 text-red-600" />
+            Ưu Đãi Có Sẵn
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {vouchers.slice(0, 4).map((voucher, index) => (
@@ -404,7 +404,7 @@ const SpinWheel_improved = ({
                 key={voucher.id}
                 className="text-center p-3 bg-gray-50 rounded-xl"
               >
-                <div className="text-lg font-bold text-indigo-600">
+                <div className="text-lg font-bold text-red-600">
                   {formatVoucherValue(voucher)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">{voucher.name}</div>
@@ -413,7 +413,7 @@ const SpinWheel_improved = ({
           </div>
           {vouchers.length > 4 && (
             <p className="text-sm text-gray-500 mt-3">
-              +{vouchers.length - 4} more prizes available
+              +{vouchers.length - 4} ưu đãi khác
             </p>
           )}
         </motion.div>

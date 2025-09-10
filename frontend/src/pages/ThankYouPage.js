@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const ThankYouPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-400 via-red-500 to-red-600 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -48,7 +48,7 @@ const ThankYouPage = () => {
           transition={{ delay: 0.3 }}
           className="text-4xl font-bold text-gray-900 mb-4"
         >
-          cảm ơn! 🎉
+          Cảm Ơn Bạn! 🎉
         </motion.h1>
 
         <motion.p
@@ -57,7 +57,8 @@ const ThankYouPage = () => {
           transition={{ delay: 0.4 }}
           className="text-xl text-gray-600 mb-8"
         >
-          Tham gia của bạn đã được ghi nhận thành công!
+          Cảm ơn bạn đã tham gia chương trình ưu đãi thời trang Dezus! Thông tin
+          của bạn đã được ghi nhận thành công.
         </motion.p>
 
         {/* Features section */}
@@ -69,16 +70,16 @@ const ThankYouPage = () => {
         >
           <div className="flex items-center justify-center space-x-3 text-gray-700">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <Gift className="w-5 h-5 text-blue-600" />
+              <Gift className="w-5 h-5 text-red-600" />
             </div>
-            <span>Thông tin voucher của bạn đã được gửi đến email của bạn</span>
+            <span>Kiểm tra email để biết kết quả ưu đãi thời trang</span>
           </div>
 
           <div className="flex items-center justify-center space-x-3 text-gray-700">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-red-600" />
             </div>
-            <span>Hãy chú ý đến những chương trình khuyến mãi thú vị hơn</span>
+            <span>Theo dõi Dezus để nhận thêm ưu đãi thời trang</span>
           </div>
         </motion.div>
 
@@ -91,14 +92,14 @@ const ThankYouPage = () => {
         >
           <Link
             to="/"
-            className="inline-flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+            className="inline-flex items-center justify-center w-full bg-gradient-to-r from-red-600 to-red-700 text-white font-bold py-4 px-6 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            Quay lại trang chủ
+            Khám Phá Thời Trang Dezus
             <ArrowRight className="w-5 h-5 ml-2" />
           </Link>
 
           <p className="text-sm text-gray-500">
-            Chia sẻ trải nghiệm này với bạn bè và gia đình của bạn!
+            Chia sẻ ưu đãi thời trang này với bạn bè và gia đình!
           </p>
         </motion.div>
 

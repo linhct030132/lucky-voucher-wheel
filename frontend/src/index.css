@@ -11,18 +11,18 @@
   
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 50%, #f3f4f6 100%);
     min-height: 100vh;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+    @apply bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
   
   .btn-secondary {
-    @apply bg-white text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 hover:border-gray-300 transform hover:scale-105 transition-all duration-200;
+    @apply bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl border border-gray-300 hover:border-gray-400 hover:bg-gray-200 transform hover:scale-105 transition-all duration-200;
   }
   
   .card {
@@ -34,18 +34,18 @@
   }
   
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all duration-200 bg-white;
   }
   
   .spin-wheel {
     @apply relative w-80 h-80 rounded-full border-8 border-white shadow-2xl mx-auto;
     background: conic-gradient(
       from 0deg,
-      #ff6b6b 0deg 72deg,
-      #4ecdc4 72deg 144deg,
-      #45b7d1 144deg 216deg,
-      #f9ca24 216deg 288deg,
-      #6c5ce7 288deg 360deg
+      #dc2626 0deg 72deg,
+      #6b7280 72deg 144deg,
+      #f3f4f6 144deg 216deg,
+      #ef4444 216deg 288deg,
+      #374151 288deg 360deg
     );
   }
   
@@ -64,7 +64,7 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-red-600 to-gray-800 bg-clip-text text-transparent;
   }
   
   .animate-spin-slow {
@@ -103,7 +103,7 @@
 /* Loading spinner */
 .loading-spinner {
   border: 4px solid #f3f4f6;
-  border-top: 4px solid #3b82f6;
+  border-top: 4px solid #dc2626;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -137,5 +137,23 @@
   
   .card {
     @apply p-4;
+  }
+  
+  .btn-primary {
+    @apply py-2 px-4 text-base;
+  }
+  
+  .btn-secondary {
+    @apply py-2 px-4 text-base;
+  }
+}
+
+@media (max-width: 480px) {
+  .spin-wheel {
+    @apply w-56 h-56;
+  }
+  
+  .card {
+    @apply p-3 rounded-lg;
   }
 }

@@ -26,7 +26,7 @@ function App() {
     <Router>
       <AuthProvider>
         <SpinProvider>
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
@@ -103,13 +103,13 @@ function App() {
                 },
                 error: {
                   iconTheme: {
-                    primary: "#ef4444",
+                    primary: "#dc2626",
                     secondary: "#fff",
                   },
                 },
                 loading: {
                   iconTheme: {
-                    primary: "#6366f1",
+                    primary: "#6b7280",
                     secondary: "#fff",
                   },
                 },

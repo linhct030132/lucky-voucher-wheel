@@ -200,7 +200,7 @@ const SpinPage = () => {
   // Loading state
   if (currentStep === "loading" || !availableVouchers) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner />
           <motion.p
@@ -208,7 +208,7 @@ const SpinPage = () => {
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            Đang tải những giải thưởng tuyệt vời...
+            Đang tải các ưu đãi thời trang từ Dezus...
           </motion.p>
         </div>
       </div>
@@ -216,7 +216,7 @@ const SpinPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Confetti */}
       {showConfetti && (
         <Confetti
@@ -234,13 +234,15 @@ const SpinPage = () => {
           <div className="flex justify-between items-center h-16">
             <motion.button
               onClick={goHome}
-              className="flex items-center space-x-3 text-gray-700 hover:text-indigo-600 transition-colors"
+              className="flex items-center space-x-3 text-gray-700 hover:text-red-600 transition-colors"
               whileHover={{ x: -5 }}
             >
               <ArrowLeft className="w-5 h-5" />
               <div className="flex items-center space-x-2">
-                <Crown className="w-6 h-6 text-indigo-600" />
-                <span className="font-bold text-lg">Vòng quay may mắn</span>
+                <Crown className="w-6 h-6 text-red-600" />
+                <span className="font-bold text-lg">
+                  Vòng Quay Thời Trang Dezus
+                </span>
               </div>
             </motion.button>
 
@@ -291,7 +293,7 @@ const SpinPage = () => {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                           item.active
-                            ? "bg-indigo-600 text-white"
+                            ? "bg-red-600 text-white"
                             : "bg-gray-200 text-gray-600"
                         }`}
                       >
@@ -365,21 +367,21 @@ const SpinPage = () => {
           ) : (
             <>
               <motion.div
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
                 whileHover={{ scale: 1.05 }}
               >
                 <Target className="w-5 h-5" />
-                <span>🎯 Lucky Draw In Progress</span>
+                <span>🎯 Chương Trình Ưu Đãi Đang Diễn Ra</span>
               </motion.div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Khoảnh Khắc May Mắn Của Bạn
+                <span className="bg-gradient-to-r from-red-600 to-gray-800 bg-clip-text text-transparent">
+                  Voucher Thời Trang Đang Chờ Bạn
                 </span>
               </h1>
 
               <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                {availableVouchers.length} giải thưởng tuyệt vời đang chờ bạn!
+                {availableVouchers.length} ưu đãi thời trang Dezus đang chờ bạn!
               </p>
             </>
           )}
@@ -402,7 +404,7 @@ const SpinPage = () => {
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <div className="text-indigo-600 mb-3 flex justify-center">
+                    <div className="text-red-600 mb-3 flex justify-center">
                       <Gift className="w-8 h-8" />
                     </div>
                     <div className="text-gray-900 text-sm font-bold mb-2 line-clamp-2">
@@ -436,7 +438,7 @@ const SpinPage = () => {
                 <div className="space-y-6">
                   <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
                     <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                      🎊 Sẵn Sàng Chiến Thắng?
+                      🎊 Sẵn Sàng Nhận Ưu Đãi?
                     </h3>
 
                     <div className="space-y-4">
@@ -444,14 +446,8 @@ const SpinPage = () => {
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                           <Check className="w-5 h-5 text-green-600" />
                         </div>
-                        <span className="text-gray-700">Miễn phí tham gia</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Check className="w-5 h-5 text-green-600" />
-                        </div>
                         <span className="text-gray-700">
-                          Kết quả ngay lập tức
+                          100% miễn phí tham gia
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
@@ -459,22 +455,32 @@ const SpinPage = () => {
                           <Check className="w-5 h-5 text-green-600" />
                         </div>
                         <span className="text-gray-700">
-                          Công bằng & minh bạch
+                          Nhận voucher ngay lập tức
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                           <Check className="w-5 h-5 text-green-600" />
                         </div>
-                        <span className="text-gray-700">An toàn & bảo mật</span>
+                        <span className="text-gray-700">
+                          Áp dụng cho tất cả sản phẩm
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <Check className="w-5 h-5 text-green-600" />
+                        </div>
+                        <span className="text-gray-700">
+                          Bảo mật thông tin khách hàng
+                        </span>
                       </div>
                     </div>
 
                     <div className="mt-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl">
                       <p className="text-sm text-gray-700">
                         <strong>Cách thức hoạt động:</strong> Nhập thông tin của
-                        bạn, quay bánh xe và nếu thắng, bạn sẽ nhận được voucher
-                        ngay lập tức!
+                        bạn, quay vòng thời trang và nhận ngay mã giảm giá cho
+                        các sản phẩm thời trang tại Dezus!
                       </p>
                     </div>
                   </div>
@@ -510,12 +516,12 @@ const SpinPage = () => {
                   </motion.div>
 
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    🎯 Sẵn Sàng Quay Thưởng!
+                    🎯 Sẵn Sàng Nhận Voucher Thời Trang!
                   </h2>
 
                   <p className="text-xl text-gray-600 mb-8">
-                    Thông tin của bạn đã được lưu. Bây giờ hãy quay bánh xe để
-                    nhận giải thưởng!
+                    Thông tin của bạn đã được lưu. Bây giờ hãy quay vòng thời
+                    trang để nhận voucher giảm giá!
                   </p>
 
                   {/* User Info Display */}
@@ -560,7 +566,7 @@ const SpinPage = () => {
                     <motion.button
                       onClick={handleSpin}
                       disabled={isSpinning}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
+                      className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -607,13 +613,13 @@ const SpinPage = () => {
                       repeat: Infinity,
                       ease: "linear",
                     }}
-                    className="w-24 h-24 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8"
+                    className="w-24 h-24 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-8"
                   >
                     <Target className="w-12 h-12 text-white" />
                   </motion.div>
 
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    Đang Quay Bánh Xe...
+                    Đang Quay Vòng Thời Trang...
                   </h2>
 
                   <motion.p
@@ -631,14 +637,14 @@ const SpinPage = () => {
                       animate={{ width: "100%" }}
                     >
                       <motion.div
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"
+                        className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full"
                         initial={{ width: "0%" }}
                         animate={{ width: "100%" }}
                         transition={{ duration: 3 }}
                       />
                     </motion.div>
                     <p className="text-sm text-gray-500">
-                      Đang xác định giải thưởng của bạn...
+                      Đang xác định ưu đãi thời trang cho bạn...
                     </p>
                   </div>
                 </div>
@@ -665,12 +671,12 @@ const SpinPage = () => {
                   </motion.div>
 
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    🎯 Bạn Đã Tham Gia Rồi!
+                    🎯 Bạn Đã Nhận Ưu Đãi Rồi!
                   </h2>
 
                   <p className="text-xl text-gray-600 mb-8">
-                    Thiết bị này đã tham gia vòng quay rồi. Mỗi thiết bị chỉ
-                    được tham gia một lần duy nhất!
+                    Thiết bị này đã nhận ưu đãi Dezus rồi. Mỗi thiết bị chỉ được
+                    nhận ưu đãi một lần duy nhất!
                   </p>
 
                   <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200 mb-8">
@@ -681,8 +687,8 @@ const SpinPage = () => {
                       </span>
                     </div>
                     <p className="text-amber-700 text-sm">
-                      Để đảm bảo công bằng, mỗi thiết bị chỉ được phép tham gia
-                      một lần trong chương trình quay số may mắn này.
+                      Để đảm bảo công bằng, mỗi thiết bị chỉ được phép nhận ưu
+                      đãi một lần trong chương trình khuyến mãi thời trang này.
                     </p>
                   </div>
 
@@ -816,7 +822,7 @@ const SpinPage = () => {
                                   onClick={() =>
                                     copyVoucherCode(spinResult.voucher?.code)
                                   }
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors"
+                                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                 >
@@ -854,7 +860,7 @@ const SpinPage = () => {
                           </motion.button>
                           <motion.button
                             onClick={goHome}
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
+                            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3 px-6 rounded-xl transition-colors"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -894,7 +900,7 @@ const SpinPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <motion.button
                             onClick={handleTryAgain}
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
+                            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3 px-6 rounded-xl transition-colors"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >

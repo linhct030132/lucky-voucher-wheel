@@ -111,10 +111,10 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
+        className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden max-w-lg mx-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white text-center">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 sm:p-6 text-white text-center">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -123,12 +123,19 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
           >
             <User className="w-8 h-8" />
           </motion.div>
-          <h2 className="text-2xl font-bold mb-2">Tham Gia Quay Số May Mắn!</h2>
-          <p className="text-indigo-100">Điền thông tin của bạn để tham gia</p>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            Nhận Ưu Đãi Thời Trang Dezus!
+          </h2>
+          <p className="text-red-100">
+            Điền thông tin để nhận voucher thời trang
+          </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+        >
           {/* Full Name Field */}
           <motion.div
             variants={inputVariants}
@@ -142,7 +149,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                 <User
                   className={`w-5 h-5 ${
                     focusedField === "fullName"
-                      ? "text-indigo-500"
+                      ? "text-red-500"
                       : "text-gray-400"
                   } transition-colors`}
                 />
@@ -157,8 +164,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                   errors.fullName
                     ? "border-red-300 focus:border-red-500 bg-red-50"
                     : focusedField === "fullName"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-indigo-500"
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
                 }`}
                 placeholder="Nhập họ và tên của bạn"
                 disabled={isSubmitting || loading}
@@ -199,9 +206,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail
                   className={`w-5 h-5 ${
-                    focusedField === "email"
-                      ? "text-indigo-500"
-                      : "text-gray-400"
+                    focusedField === "email" ? "text-red-500" : "text-gray-400"
                   } transition-colors`}
                 />
               </div>
@@ -215,8 +220,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                   errors.email
                     ? "border-red-300 focus:border-red-500 bg-red-50"
                     : focusedField === "email"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-indigo-500"
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
                 }`}
                 placeholder="email@example.com"
                 disabled={isSubmitting || loading}
@@ -246,9 +251,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Phone
                   className={`w-5 h-5 ${
-                    focusedField === "phone"
-                      ? "text-indigo-500"
-                      : "text-gray-400"
+                    focusedField === "phone" ? "text-red-500" : "text-gray-400"
                   } transition-colors`}
                 />
               </div>
@@ -262,8 +265,8 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
                   errors.phone
                     ? "border-red-300 focus:border-red-500 bg-red-50"
                     : focusedField === "phone"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 hover:border-gray-300 focus:border-indigo-500"
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-200 hover:border-gray-300 focus:border-red-500"
                 }`}
                 placeholder="0123 456 789"
                 disabled={isSubmitting || loading}
@@ -380,7 +383,7 @@ const UserInfoForm = ({ onSubmit, loading = false }) => {
             className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 ${
               isSubmitting || loading
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl"
             }`}
             whileHover={!(isSubmitting || loading) ? { scale: 1.02 } : {}}
             whileTap={!(isSubmitting || loading) ? { scale: 0.98 } : {}}
