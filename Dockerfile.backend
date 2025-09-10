@@ -15,7 +15,11 @@ RUN npm ci --only=production
 
 # Copy backend source code
 COPY backend/src ./src
+COPY backend/scripts ./scripts
 COPY backend/.env.example ./.env.example
+
+# Make scripts executable
+RUN chmod +x ./scripts/*.sh
 
 # Create logs directory
 RUN mkdir -p logs

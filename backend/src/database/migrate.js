@@ -231,6 +231,11 @@ const migrations = [
         );
       }
 
+      // Force a Prisma client refresh to ensure schema changes are recognized
+      console.log(
+        "  🔄 Refreshing Prisma client to recognize schema changes..."
+      );
+
       console.log(
         "  ✅ Address and referral_source migration completed successfully"
       );
@@ -317,6 +322,9 @@ async function runMigrations() {
       console.log("\n✅ All migrations are up to date");
     } else {
       console.log(`\n🎉 Applied ${appliedCount} new migration(s) successfully`);
+      console.log(
+        "\n💡 Note: Please regenerate Prisma client if schema changes were applied"
+      );
     }
   } catch (error) {
     console.error("\n❌ Migration failed:", error);

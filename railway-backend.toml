@@ -4,8 +4,8 @@
 # Build command - includes Prisma client generation
 build = "cd backend && npm install && npx prisma generate"
 
-# Start command  
-start = "cd backend && npm run start:prod"
+# Start command - run migrations, regenerate client, then start
+start = "cd backend && ./scripts/railway-start.sh"
 
 # Environment variables needed
 [env]
