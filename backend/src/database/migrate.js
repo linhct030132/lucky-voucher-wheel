@@ -193,52 +193,96 @@ const migrations = [
         "  🔧 Adding address and referral_source columns to user_profiles..."
       );
 
-      // Check if address column exists
-      const addressColumnExists = await tx.$queryRaw`
-        SELECT COUNT(*) as count
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-          AND TABLE_NAME = 'user_profiles' 
-          AND COLUMN_NAME = 'address'
-      `;
-
-      if (addressColumnExists[0].count === 0) {
-        await tx.$executeRaw`
-          ALTER TABLE user_profiles ADD COLUMN address VARCHAR(500) NULL
+      try {
+        // Get current table structure first
+        const existingColumns = await tx.$queryRaw`
+          SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'user_profiles'
+          ORDER BY ORDINAL_POSITION
         `;
-        console.log("  ✅ Added address column to user_profiles");
-      } else {
-        console.log("  ℹ️  address column already exists in user_profiles");
-      }
 
-      // Check if referral_source column exists
-      const referralColumnExists = await tx.$queryRaw`
-        SELECT COUNT(*) as count
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-          AND TABLE_NAME = 'user_profiles' 
-          AND COLUMN_NAME = 'referral_source'
-      `;
-
-      if (referralColumnExists[0].count === 0) {
-        await tx.$executeRaw`
-          ALTER TABLE user_profiles ADD COLUMN referral_source VARCHAR(100) NULL
-        `;
-        console.log("  ✅ Added referral_source column to user_profiles");
-      } else {
         console.log(
-          "  ℹ️  referral_source column already exists in user_profiles"
+          "  📋 Current columns in user_profiles:",
+          existingColumns.map((c) => c.COLUMN_NAME)
         );
+
+        // Check and add address column
+        const hasAddress = existingColumns.some(
+          (col) => col.COLUMN_NAME === "address"
+        );
+        if (!hasAddress) {
+          console.log("  🔧 Adding address column...");
+          await tx.$executeRaw`
+            ALTER TABLE user_profiles ADD COLUMN address VARCHAR(500) NULL
+          `;
+          console.log("  ✅ Successfully added address column");
+        } else {
+          console.log("  ℹ️  address column already exists");
+        }
+
+        // Check and add referral_source column
+        const hasReferralSource = existingColumns.some(
+          (col) => col.COLUMN_NAME === "referral_source"
+        );
+        if (!hasReferralSource) {
+          console.log("  🔧 Adding referral_source column...");
+          await tx.$executeRaw`
+            ALTER TABLE user_profiles ADD COLUMN referral_source VARCHAR(100) NULL
+          `;
+          console.log("  ✅ Successfully added referral_source column");
+        } else {
+          console.log("  ℹ️  referral_source column already exists");
+        }
+
+        // Verify the columns were added successfully
+        const verifyColumns = await tx.$queryRaw`
+          SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'user_profiles'
+            AND COLUMN_NAME IN ('address', 'referral_source')
+          ORDER BY COLUMN_NAME
+        `;
+
+        console.log("  🔍 Migration verification:", verifyColumns);
+
+        if (verifyColumns.length >= 2) {
+          console.log(
+            "  ✅ Migration verification successful - both columns exist"
+          );
+        } else {
+          console.log(
+            "  ⚠️  Migration verification failed - some columns missing"
+          );
+          console.log("  📊 Expected 2 columns, found:", verifyColumns.length);
+        }
+
+        // Show final table structure
+        const finalStructure = await tx.$queryRaw`
+          SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'user_profiles'
+          ORDER BY ORDINAL_POSITION
+        `;
+
+        console.log("  📋 Final user_profiles structure:");
+        finalStructure.forEach((col) => {
+          const nullable = col.IS_NULLABLE === "YES" ? "NULL" : "NOT NULL";
+          console.log(
+            `     - ${col.COLUMN_NAME}: ${col.DATA_TYPE} ${nullable}`
+          );
+        });
+
+        console.log(
+          "  ✅ Address and referral_source migration completed successfully"
+        );
+      } catch (error) {
+        console.error("  ❌ Migration failed with error:", error);
+        throw error;
       }
-
-      // Force a Prisma client refresh to ensure schema changes are recognized
-      console.log(
-        "  🔄 Refreshing Prisma client to recognize schema changes..."
-      );
-
-      console.log(
-        "  ✅ Address and referral_source migration completed successfully"
-      );
     },
   },
 ];

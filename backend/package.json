@@ -7,7 +7,7 @@
         "build": "npx prisma generate",
         "setup": "./scripts/setup.sh",
         "start": "npm run build && node src/server.js",
-        "start:prod": "npx prisma generate && npm run migrate:status && npm run migrate && node src/server.js",
+        "start:prod": "npm run migrate && npx prisma generate --force && node src/server.js",
         "dev": "npm run build && nodemon src/server.js",
         "postinstall": "node -e \"const fs = require('fs'); if (fs.existsSync('prisma/schema.prisma')) { require('child_process').execSync('npx prisma generate', {stdio: 'inherit'}); } else { console.log('Prisma schema not found, skipping generation'); }\"",
         "db:migrate:status": "node src/database/migrate.js status",
