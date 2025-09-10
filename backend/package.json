@@ -22,7 +22,7 @@
         "migrate": "npx prisma migrate dev",
         "seed": "npx prisma db seed",
         "test": "jest",
-        "db:reset": "prisma migrate reset"
+        "db:reset": "prisma migrate reset --force"
     },
     "dependencies": {
         "@prisma/client": "^6.15.0",
