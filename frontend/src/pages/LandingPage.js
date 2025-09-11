@@ -20,7 +20,7 @@ const LandingPage = () => {
       {/* Navigation Header */}
       <nav className="z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 shadow-lg shadow-gray-200/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center items-center h-18 py-2">
+          <div className="flex justify-center items-center h-12 sm:h-14 py-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -28,43 +28,43 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <LogoIcon className="h-10 ml-0 filter drop-shadow-md group-hover:drop-shadow-lg transition-all duration-300" />
+              <LogoIcon className="h-6 sm:h-8 ml-0 filter drop-shadow-md group-hover:drop-shadow-lg transition-all duration-300" />
             </motion.div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
+      <section className="relative overflow-hidden py-20 sm:py-24 lg:py-28 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
         {/* Enhanced Background Elements */}
         <div className="absolute inset-0">
-          {/* Floating orbs with improved gradients */}
+          {/* Floating orbs with improved gradients - balanced for hero */}
           <div
-            className="absolute top-20 left-10 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
+            className="absolute top-8 left-5 w-40 h-40 sm:w-72 sm:h-72 sm:top-16 sm:left-10 rounded-full mix-blend-multiply filter blur-3xl opacity-20 sm:opacity-30 animate-blob"
             style={{
               background:
                 "radial-gradient(circle, #74070E 0%, #FF6B6B 50%, transparent 70%)",
             }}
           ></div>
           <div
-            className="absolute top-40 right-10 w-80 h-80 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-blob animation-delay-2000"
+            className="absolute top-16 right-5 w-36 h-36 sm:w-64 sm:h-64 sm:top-32 sm:right-10 rounded-full mix-blend-multiply filter blur-3xl opacity-15 sm:opacity-25 animate-blob animation-delay-2000"
             style={{
               background:
                 "radial-gradient(circle, #9CA3AF 0%, #E5E7EB 50%, transparent 70%)",
             }}
           ></div>
           <div
-            className="absolute -bottom-32 left-20 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"
+            className="absolute -bottom-12 left-10 w-40 h-40 sm:w-72 sm:h-72 sm:-bottom-24 sm:left-20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 sm:opacity-30 animate-blob animation-delay-4000"
             style={{
               background:
                 "radial-gradient(circle, #74070E 0%, #8A080F 30%, #9CA3AF 60%, transparent 80%)",
             }}
           ></div>
 
-          {/* Floating particles */}
-          <div className="absolute top-32 left-1/4 w-4 h-4 bg-red-400 rounded-full opacity-40 animate-ping"></div>
-          <div className="absolute top-56 right-1/3 w-3 h-3 bg-gray-400 rounded-full opacity-30 animate-pulse animation-delay-1000"></div>
-          <div className="absolute bottom-40 left-1/3 w-5 h-5 bg-red-300 rounded-full opacity-50 animate-bounce animation-delay-3000"></div>
+          {/* Floating particles - adjusted for balanced hero */}
+          <div className="absolute top-20 left-1/4 w-4 h-4 bg-red-400 rounded-full opacity-35 animate-ping"></div>
+          <div className="absolute top-32 right-1/3 w-3 h-3 bg-gray-400 rounded-full opacity-30 animate-pulse animation-delay-1000"></div>
+          <div className="absolute bottom-20 left-1/3 w-5 h-5 bg-red-300 rounded-full opacity-45 animate-bounce animation-delay-3000"></div>
 
           {/* Subtle grid pattern */}
           <div
@@ -77,13 +77,13 @@ const LandingPage = () => {
         </div>
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
+          <div className="text-center max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 lg:mb-10">
+              <h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold mb-8 sm:mb-10 lg:mb-12">
                 <span className="block bg-gradient-to-r from-gray-900 via-red-800 to-gray-900 bg-clip-text text-transparent drop-shadow-lg leading-tight tracking-tight">
                   SECRET BILL
                 </span>
@@ -92,7 +92,7 @@ const LandingPage = () => {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
                 <motion.button
                   onClick={handleStartSpin}
-                  className="group relative text-white font-bold text-sm sm:text-base lg:text-lg xl:text-xl px-6 sm:px-8 lg:px-10 xl:px-12 py-3 sm:py-4 lg:py-5 xl:py-6 rounded-3xl shadow-2xl hover:shadow-red-500/50 transform transition-all duration-500 border border-red-700/20 w-full sm:w-auto max-w-sm sm:max-w-none"
+                  className="group relative text-white font-bold text-base sm:text-lg lg:text-xl px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-full sm:rounded-full shadow-2xl hover:shadow-red-500/50 transform transition-all duration-500 border border-red-700/20 w-full sm:w-auto max-w-xs sm:max-w-none whitespace-nowrap"
                   style={{
                     background:
                       "linear-gradient(135deg, #74070E 0%, #8A080F 50%, #74070E 100%)",
@@ -104,17 +104,22 @@ const LandingPage = () => {
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="flex items-center justify-center space-x-2 sm:space-x-3 lg:space-x-4 relative z-10">
-                    <Gift className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 flex-shrink-0" />
-                    <span className="tracking-wide font-bold text-center">
-                      BỐC THĂM NGAY NHẬN ƯU ĐÃI
-                    </span>
-                    <ArrowRight className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
+                  <div className="flex items-center justify-center space-x-2 sm:space-x-3 relative z-10">
+                    <Gift className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                    <div className="text-center">
+                      <div className="font-bold text-base sm:text-lg leading-tight tracking-wide">
+                        BỐC THĂM NGAY
+                      </div>
+                      <div className="text-xs sm:text-sm opacity-90 leading-tight">
+                        NHẬN ƯU ĐÃI
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform duration-300 flex-shrink-0" />
                   </div>
 
                   {/* Enhanced glow effect */}
                   <div
-                    className="absolute inset-0 rounded-3xl blur-2xl opacity-40 group-hover:opacity-80 -z-10 transition-opacity duration-500"
+                    className="absolute inset-0 rounded-full blur-2xl opacity-40 group-hover:opacity-80 -z-10 transition-opacity duration-500"
                     style={{
                       background:
                         "linear-gradient(135deg, #74070E, #FF6B6B, #74070E)",
@@ -122,7 +127,7 @@ const LandingPage = () => {
                   ></div>
 
                   {/* Shimmer effect */}
-                  <div className="absolute inset-0 rounded-3xl overflow-hidden -z-5">
+                  <div className="absolute inset-0 rounded-full overflow-hidden -z-5">
                     <div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
                       style={{ width: "100%" }}
@@ -136,7 +141,7 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-gradient-to-b from-gray-200 via-white to-gray-100 relative">
+      <section className="py-16 sm:py-20 lg:py-24 xl:py-28 bg-gradient-to-b from-gray-200 via-white to-gray-100 relative">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-10 right-20 w-32 h-32 bg-red-100 rounded-full opacity-30 animate-pulse"></div>
@@ -148,18 +153,18 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-12 lg:mb-16"
           >
-            <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-800 via-red-700 to-gray-800 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 lg:mb-6 bg-gradient-to-r from-gray-800 via-red-700 to-gray-800 bg-clip-text text-transparent">
               Cách Nhận Ưu Đãi
             </h2>
-            <p className="text-xl text-gray-600 font-medium">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-medium px-2 sm:px-4">
               3 bước đơn giản để nhận voucher thời trang SECRET BILL!
             </p>
           </motion.div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 xl:gap-12">
               {[
                 {
                   step: "1",
@@ -204,7 +209,7 @@ const LandingPage = () => {
 
                   <div className="relative z-10 group">
                     <div
-                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6 shadow-2xl transform group-hover:scale-110 transition-all duration-300 border-4 border-white"
+                      className="w-20 h-20 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center text-white text-2xl sm:text-xl lg:text-2xl font-bold mx-auto mb-4 sm:mb-5 lg:mb-6 shadow-2xl transform group-hover:scale-110 transition-all duration-300 border-2 sm:border-4 border-white"
                       style={{
                         background:
                           "linear-gradient(135deg, #74070E 0%, #8A080F 50%, #74070E 100%)",
@@ -213,17 +218,19 @@ const LandingPage = () => {
                     >
                       {step.step}
                     </div>
-                    <div className="bg-white rounded-3xl p-8 shadow-2xl border border-gray-100 transform group-hover:-translate-y-2 group-hover:shadow-3xl transition-all duration-500 backdrop-blur-sm bg-white/95">
+                    <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-gray-100 transform group-hover:-translate-y-2 group-hover:shadow-3xl transition-all duration-500 backdrop-blur-sm bg-white/95">
                       <div
-                        className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300"
+                        className="mb-3 sm:mb-4 lg:mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300"
                         style={{ color: "#74070E" }}
                       >
-                        {step.icon}
+                        <div className="scale-110 sm:scale-100">
+                          {step.icon}
+                        </div>
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-800 transition-colors duration-300">
+                      <h3 className="text-lg sm:text-xl lg:text-xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4 group-hover:text-red-800 transition-colors duration-300">
                         {step.title}
                       </h3>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-sm sm:text-base lg:text-base text-gray-600 leading-relaxed">
                         {step.description}
                       </p>
 
@@ -246,7 +253,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-16 relative overflow-hidden">
+      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-8 sm:py-12 lg:py-16 relative overflow-hidden">
         {/* Footer background effects */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-64 h-64 bg-red-900/20 rounded-full filter blur-3xl"></div>
@@ -260,25 +267,25 @@ const LandingPage = () => {
             viewport={{ once: true }}
             className="text-center"
           >
-            <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="flex items-center justify-center space-x-3 mb-4 sm:mb-6">
               <LogoIcon
-                className="h-8 ml-0 text-white filter drop-shadow-lg"
+                className="h-6 sm:h-8 ml-0 text-white filter drop-shadow-lg"
                 fill="#FFFFFF"
               />
             </div>
-            <p className="text-gray-300 mb-3 text-lg font-medium">
+            <p className="text-gray-300 mb-2 sm:mb-3 text-base sm:text-lg font-medium px-2">
               © {new Date().getFullYear()} SECRET BILL - Thương Hiệu Thời Trang
               Hàng Đầu.
             </p>
-            <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
+            <p className="text-gray-400 max-w-md mx-auto leading-relaxed text-sm sm:text-base px-4">
               Mang đến phong cách thời trang độc đáo với giá cả hấp dẫn nhất
             </p>
 
             {/* Decorative line */}
-            <div className="mt-8 flex items-center justify-center">
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
-              <div className="mx-4 w-2 h-2 bg-red-500 rounded-full"></div>
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
+            <div className="mt-6 sm:mt-8 flex items-center justify-center">
+              <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
+              <div className="mx-3 sm:mx-4 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></div>
+              <div className="w-16 sm:w-24 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
             </div>
           </motion.div>
         </div>
@@ -353,6 +360,24 @@ const LandingPage = () => {
         /* Glow effect */
         .animate-glow {
           animation: pulse-glow 2s ease-in-out infinite alternate;
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 320px) {
+          .text-5xl {
+            font-size: 2.25rem;
+          }
+          .text-lg {
+            font-size: 1rem;
+          }
+        }
+
+        /* Very small screens optimization */
+        @media (max-width: 375px) {
+          .py-20 {
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+          }
         }
       `}</style>
     </div>
