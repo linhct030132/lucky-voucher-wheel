@@ -8,8 +8,12 @@ class SpinEngine {
    * Ensures every user receives a voucher while maintaining fairness through relative probabilities
    */
   static async spin(userProfile, deviceId, req) {
-    // Step 1: Validate one-time eligibility
-    const hasSpun = await this.checkSpinEligibility(userProfile.id, deviceId);
+    // Step 1: Validate one-time eligibility (check both device and phone number)
+    const hasSpun = await this.checkSpinEligibility(
+      userProfile.id,
+      deviceId,
+      userProfile.phone
+    );
     if (hasSpun) {
       throw new Error("ALREADY_SPUN");
     }
@@ -50,8 +54,10 @@ class SpinEngine {
 
   /**
    * Check if user/device combination has already spun
+   * Also checks by phone number to prevent multiple spins when switching networks (WiFi/4G)
    */
-  static async checkSpinEligibility(userId, deviceId) {
+  static async checkSpinEligibility(userId, deviceId, userPhone = null) {
+    // Check by user_id and device_id (original check)
     const [existingAttempt] = await query(
       `
       SELECT id FROM spin_attempts 
@@ -60,7 +66,27 @@ class SpinEngine {
       [userId, deviceId]
     );
 
-    return !!existingAttempt;
+    if (existingAttempt) {
+      return true;
+    }
+
+    // Additional check by phone number to prevent network switching abuse
+    if (userPhone) {
+      const [phoneBasedAttempt] = await query(
+        `
+        SELECT sa.id FROM spin_attempts sa
+        JOIN user_profiles up ON sa.user_id = up.id
+        WHERE up.phone = ?
+      `,
+        [userPhone]
+      );
+
+      if (phoneBasedAttempt) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

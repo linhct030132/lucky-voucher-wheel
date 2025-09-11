@@ -53,6 +53,7 @@ const VoucherManagement = () => {
     codePrefix: "LV",
     voucherCode: "",
   });
+  console.log(formData);
 
   // Fetch data on component mount
   useEffect(() => {

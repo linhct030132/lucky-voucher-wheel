@@ -83,33 +83,31 @@ router.post(
           .json({ error: "Định dạng số điện thoại không hợp lệ" });
       }
 
-      // Generate IP-only fingerprint for cross-browser detection
-      const ipOnlyFingerprint =
-        DeviceFingerprint.generateIPOnlyFingerprint(req);
+      // Use frontend-provided deviceId as primary, with IP-based as secondary
+      const frontendDeviceId = DeviceFingerprint.generateHMAC(deviceId);
 
-      // Check for existing IP-based device first
-      const ipBasedDevice = await prisma.device.findFirst({
-        where: { deviceFpHash: ipOnlyFingerprint },
+      // Check for existing device using frontend deviceId first
+      const frontendDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: frontendDeviceId },
         select: { id: true },
       });
 
-      // Create or get IP-based device record first
       let deviceRecordId;
 
-      if (ipBasedDevice) {
-        deviceRecordId = ipBasedDevice.id;
+      if (frontendDevice) {
+        deviceRecordId = frontendDevice.id;
         // Update last seen
         await prisma.device.update({
           where: { id: deviceRecordId },
           data: { lastSeenAt: new Date() },
         });
       } else {
-        // Create new IP-based device record
+        // Create new device record using frontend deviceId
         deviceRecordId = uuidv4();
         await prisma.device.create({
           data: {
             id: deviceRecordId,
-            deviceFpHash: ipOnlyFingerprint,
+            deviceFpHash: frontendDeviceId,
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -439,34 +437,31 @@ router.post(
           .json({ error: "Định dạng số điện thoại không hợp lệ" });
       }
 
-      // Generate IP-only fingerprint for cross-browser detection
-      const ipOnlyFingerprint =
-        DeviceFingerprint.generateIPOnlyFingerprint(req);
+      // Use frontend-provided deviceId as primary, with IP-based as secondary
+      const frontendDeviceId = DeviceFingerprint.generateHMAC(deviceId);
 
-      // Check for existing IP-based device first
-      const ipBasedDevice = await prisma.device.findFirst({
-        where: { deviceFpHash: ipOnlyFingerprint },
+      // Check for existing device using frontend deviceId first
+      const frontendDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: frontendDeviceId },
         select: { id: true },
       });
 
-      // Create or get IP-based device record
       let deviceRecordId;
-      const existingDevice = ipBasedDevice;
 
-      if (existingDevice) {
-        deviceRecordId = existingDevice.id;
+      if (frontendDevice) {
+        deviceRecordId = frontendDevice.id;
         // Update last seen
         await prisma.device.update({
           where: { id: deviceRecordId },
           data: { lastSeenAt: new Date() },
         });
       } else {
-        // Create new IP-based device record
+        // Create new device record using frontend deviceId
         deviceRecordId = uuidv4();
         await prisma.device.create({
           data: {
             id: deviceRecordId,
-            deviceFpHash: ipOnlyFingerprint,
+            deviceFpHash: frontendDeviceId,
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
           },
@@ -474,29 +469,23 @@ router.post(
       }
 
       // Create or update user profile
-      const userHash = SecurityUtils.hashUserIdentity(
-        sanitizedProfile.email,
-        sanitizedProfile.phone
-      );
       let userId;
 
-      // Check if user already exists
+      // Check if user already exists by phone number only
       const existingUser = await prisma.userProfile.findFirst({
         where: {
-          OR: [
-            { email: sanitizedProfile.email, email: { not: null } },
-            { phone: sanitizedProfile.phone, phone: { not: null } },
-          ],
+          phone: sanitizedProfile.phone,
         },
-        select: { id: true },
+        select: { id: true, fullName: true },
       });
 
       if (existingUser) {
-        userId = existingUser.id;
-        // Update user profile
-        await prisma.userProfile.update({
-          where: { id: userId },
+        // For the store-user-info endpoint, always create a new profile
+        // This allows multiple family members to use the same device/phone
+        userId = uuidv4();
+        await prisma.userProfile.create({
           data: {
+            id: userId,
             fullName: sanitizedProfile.fullName,
             phone: sanitizedProfile.phone,
             age: sanitizedProfile.age,
@@ -512,7 +501,6 @@ router.post(
           data: {
             id: userId,
             fullName: sanitizedProfile.fullName,
-            email: sanitizedProfile.email,
             phone: sanitizedProfile.phone,
             age: sanitizedProfile.age,
             address: sanitizedProfile.address,
@@ -567,13 +555,12 @@ router.post(
     try {
       const { deviceId } = req.body;
 
-      // Generate IP-only fingerprint for cross-browser detection
-      const ipOnlyFingerprint =
-        DeviceFingerprint.generateIPOnlyFingerprint(req);
+      // Use frontend-provided deviceId for consistency
+      const frontendDeviceId = DeviceFingerprint.generateHMAC(deviceId);
 
-      // Check for existing IP-based device first
+      // Check for existing device using frontend deviceId
       const device = await prisma.device.findFirst({
-        where: { deviceFpHash: ipOnlyFingerprint },
+        where: { deviceFpHash: frontendDeviceId },
         select: { id: true },
       });
 
@@ -695,20 +682,20 @@ router.post(
     try {
       const { deviceId } = req.body;
 
-      // Generate IP-only fingerprint for cross-browser detection
-      const ipOnlyFingerprint =
-        DeviceFingerprint.generateIPOnlyFingerprint(req);
+      // Use frontend-provided deviceId for primary device identification
+      const frontendDeviceId = DeviceFingerprint.generateHMAC(deviceId);
 
-      // Check for existing participation by IP first (cross-browser)
-      const ipBasedDevice = await prisma.device.findFirst({
-        where: { deviceFpHash: ipOnlyFingerprint },
+      // Check for existing device using frontend deviceId first
+      const primaryDevice = await prisma.device.findFirst({
+        where: { deviceFpHash: frontendDeviceId },
         select: { id: true },
       });
 
-      if (ipBasedDevice) {
-        // Check if this IP has already participated
-        const existingAttempt = await prisma.spinAttempt.findFirst({
-          where: { deviceId: ipBasedDevice.id },
+      let existingAttempt = null;
+
+      if (primaryDevice) {
+        existingAttempt = await prisma.spinAttempt.findFirst({
+          where: { deviceId: primaryDevice.id },
           include: {
             user: {
               select: {
@@ -721,139 +708,62 @@ router.post(
             },
           },
         });
-
-        // Get voucher details separately if there was a win
-        let voucherDetails = null;
-        if (
-          existingAttempt &&
-          existingAttempt.outcome === "win" &&
-          existingAttempt.voucherId
-        ) {
-          voucherDetails = await prisma.voucher.findUnique({
-            where: { id: existingAttempt.voucherId },
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              faceValue: true,
-              voucherType: true,
-              voucherCode: true,
-              validTo: true,
-              validFrom: true,
-              maxPerUser: true,
-            },
-          });
-        }
-
-        if (existingAttempt) {
-          const spinResult = {
-            outcome: existingAttempt.outcome,
-            participatedAt: existingAttempt.createdAt,
-            userProfile: existingAttempt.user,
-            voucher: voucherDetails
-              ? {
-                  id: voucherDetails.id,
-                  name: voucherDetails.name,
-                  description: voucherDetails.description,
-                  faceValue: voucherDetails.faceValue,
-                  voucherType: voucherDetails.voucherType,
-                  code: voucherDetails.voucherCode,
-                  validTo: voucherDetails.validTo,
-                  validFrom: voucherDetails.validFrom,
-                  maxPerUser: voucherDetails.maxPerUser,
-                }
-              : null,
-          };
-
-          return res.json({
-            eligible: false,
-            reason: "ALREADY_PARTICIPATED",
-            spinResult: spinResult,
-            message: "Địa chỉ IP này đã tham gia trước đó",
-          });
-        }
       }
 
-      // Also check the exact client+server combination for fallback
-      const serverDeviceId = DeviceFingerprint.generateServerFingerprint(req);
-      const combinedDeviceId = DeviceFingerprint.generateHMAC(
-        `${deviceId}:${serverDeviceId}`
-      );
-
-      const exactDevice = await prisma.device.findUnique({
-        where: { deviceFpHash: combinedDeviceId },
-        select: { id: true },
-      });
-
-      // Use IP-based device if found, otherwise use exact device
-      const device = ipBasedDevice || exactDevice;
-
-      if (device) {
-        // Check if already spun and get result details
-        const existingAttempt = await prisma.spinAttempt.findFirst({
-          where: { deviceId: device.id },
-          include: {
-            user: {
-              select: {
-                fullName: true,
-                email: true,
-                phone: true,
-              },
-            },
+      // Get voucher details separately if there was a win
+      let voucherDetails = null;
+      if (
+        existingAttempt &&
+        existingAttempt.outcome === "win" &&
+        existingAttempt.voucherId
+      ) {
+        voucherDetails = await prisma.voucher.findUnique({
+          where: { id: existingAttempt.voucherId },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            faceValue: true,
+            voucherType: true,
+            voucherCode: true,
+            validTo: true,
+            validFrom: true,
+            maxPerUser: true,
           },
         });
-
-        // Get voucher details separately if there was a win
-        let voucherDetails = null;
-        if (
-          existingAttempt &&
-          existingAttempt.outcome === "win" &&
-          existingAttempt.voucherId
-        ) {
-          voucherDetails = await prisma.voucher.findUnique({
-            where: { id: existingAttempt.voucherId },
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              faceValue: true,
-              voucherType: true,
-              voucherCode: true,
-              validTo: true,
-              validFrom: true,
-              maxPerUser: true,
-            },
-          });
-        }
-
-        if (existingAttempt) {
-          const spinResult = {
-            outcome: existingAttempt.outcome,
-            participatedAt: existingAttempt.createdAt,
-            userProfile: existingAttempt.user,
-            voucher: voucherDetails
-              ? {
-                  id: voucherDetails.id,
-                  name: voucherDetails.name,
-                  description: voucherDetails.description,
-                  faceValue: voucherDetails.faceValue,
-                  voucherType: voucherDetails.voucherType,
-                  code: voucherDetails.voucherCode,
-                  validTo: voucherDetails.validTo,
-                  validFrom: voucherDetails.validFrom,
-                  maxPerUser: voucherDetails.maxPerUser,
-                }
-              : null,
-          };
-
-          return res.json({
-            eligible: false,
-            reason: "ALREADY_PARTICIPATED",
-            spinResult: spinResult,
-            message: "Thiết bị này đã tham gia trước đó",
-          });
-        }
       }
+
+      if (existingAttempt) {
+        const spinResult = {
+          outcome: existingAttempt.outcome,
+          participatedAt: existingAttempt.createdAt,
+          userProfile: existingAttempt.user,
+          voucher: voucherDetails
+            ? {
+                id: voucherDetails.id,
+                name: voucherDetails.name,
+                description: voucherDetails.description,
+                faceValue: voucherDetails.faceValue,
+                voucherType: voucherDetails.voucherType,
+                code: voucherDetails.voucherCode,
+                validTo: voucherDetails.validTo,
+                validFrom: voucherDetails.validFrom,
+                maxPerUser: voucherDetails.maxPerUser,
+              }
+            : null,
+        };
+
+        const message = "Thiết bị này đã tham gia trước đó";
+
+        return res.json({
+          eligible: false,
+          reason: "ALREADY_PARTICIPATED",
+          spinResult: spinResult,
+          message: message,
+        });
+      }
+
+      // No need for additional device checks since we already checked both primary and IP-based devices
 
       // Check if there are available vouchers
       const availableStockSum = await prisma.voucher.aggregate({
