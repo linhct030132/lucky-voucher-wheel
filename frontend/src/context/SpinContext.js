@@ -81,6 +81,7 @@ export const SpinProvider = ({ children }) => {
           fullName: userProfile.fullName,
           email: userProfile.email,
           phone: userProfile.phone,
+          age: userProfile.age,
           address: userProfile.address,
           referralSource: userProfile.referralSource,
           consent: Boolean(userProfile.consent),
@@ -127,6 +128,7 @@ export const SpinProvider = ({ children }) => {
           payload.fullName = userProfile.fullName;
           payload.email = userProfile.email;
           payload.phone = userProfile.phone;
+          payload.age = userProfile.age;
           payload.address = userProfile.address;
           payload.referralSource = userProfile.referralSource;
           payload.consent = Boolean(userProfile.consent);
@@ -165,6 +167,7 @@ export const SpinProvider = ({ children }) => {
           fullName: userProfile.fullName,
           email: userProfile.email,
           phone: userProfile.phone,
+          age: userProfile.age,
           address: userProfile.address,
           referralSource: userProfile.referralSource,
           consent: Boolean(userProfile.consent),

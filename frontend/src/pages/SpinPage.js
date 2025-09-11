@@ -594,6 +594,19 @@ const SpinPage = () => {
                           </span>
                         </div>
                       )}
+                      {storedUserInfo.age && (
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="font-medium"
+                            style={{ color: "#B91C1C" }}
+                          >
+                            Tuổi:
+                          </span>
+                          <span style={{ color: "#7F1D1D" }}>
+                            {storedUserInfo.age}
+                          </span>
+                        </div>
+                      )}
                       {storedUserInfo.address && (
                         <div className="flex items-center justify-between">
                           <span
