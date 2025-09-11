@@ -11,10 +11,8 @@ import {
   Heart,
   Crown,
   ArrowLeft,
-  Target,
   RefreshCw,
   Clock,
-  ShoppingBag,
 } from "lucide-react";
 import { useSpin } from "../context/SpinContext";
 import UserInfoForm from "../components/UserInfoForm";
@@ -232,19 +230,22 @@ const SpinPage = () => {
 
       {/* Navigation Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <motion.button
               onClick={goHome}
-              className="flex items-center space-x-3 text-gray-700 transition-colors"
+              className="flex items-center space-x-2 sm:space-x-3 text-gray-700 transition-colors"
               style={{ "--hover-color": "#74070E" }}
               whileHover={{ x: -5 }}
             >
-              <ArrowLeft className="w-5 h-5" />
-              <div className="flex items-center space-x-2">
-                <Crown className="w-6 h-6" style={{ color: "#74070E" }} />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Crown
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  style={{ color: "#74070E" }}
+                />
                 <span
-                  className="font-bold text-lg"
+                  className="font-bold text-base sm:text-lg"
                   style={{ color: "#74070E" }}
                 >
                   Secret Bill
@@ -252,9 +253,9 @@ const SpinPage = () => {
               </div>
             </motion.button>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Progress Indicator */}
-              <div className="hidden sm:flex items-center space-x-2">
+              <div className="hidden md:flex items-center space-x-2">
                 {currentStep === "participated" ? (
                   // Show completed participation status
                   <div className="flex items-center space-x-2">
@@ -286,24 +287,27 @@ const SpinPage = () => {
                   [
                     {
                       step: 1,
-                      label: "Thông tin của bạn",
+                      label: "Thông tin",
+                      labelFull: "Thông tin của bạn",
                       active:
                         currentStep === "form" || currentStep === "stored_info",
                     },
                     {
                       step: 2,
-                      label: "Bốc Thăm thưởng",
+                      label: "Bốc thăm",
+                      labelFull: "Bốc Thăm thưởng",
                       active: currentStep === "spinning",
                     },
                     {
                       step: 3,
                       label: "Kết quả",
+                      labelFull: "Kết quả",
                       active: currentStep === "result",
                     },
                   ].map((item, index) => (
                     <div key={index} className="flex items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-medium ${
                           item.active
                             ? "text-white"
                             : "bg-gray-200 text-gray-600"
@@ -312,11 +316,14 @@ const SpinPage = () => {
                       >
                         {item.step}
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">
+                      <span className="ml-1 lg:ml-2 text-xs lg:text-sm text-gray-600 hidden lg:inline">
+                        {item.labelFull}
+                      </span>
+                      <span className="ml-1 text-xs text-gray-600 lg:hidden">
                         {item.label}
                       </span>
                       {index < 2 && (
-                        <div className="w-8 h-0.5 bg-gray-200 mx-3"></div>
+                        <div className="w-4 lg:w-8 h-0.5 bg-gray-200 mx-2 lg:mx-3"></div>
                       )}
                     </div>
                   ))
@@ -328,30 +335,30 @@ const SpinPage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-10 lg:mb-12"
         >
           {currentStep === "participated" ? (
             <>
               <motion.div
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6"
                 whileHover={{ scale: 1.05 }}
               >
-                <Clock className="w-5 h-5" />
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>✅ Đã Tham Gia</span>
               </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
                 <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                   Cảm Ơn Bạn Đã Tham Gia
                 </span>
               </h1>
 
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 Thiết bị này đã hoàn thành việc tham gia chương trình quay số
                 may mắn.
               </p>
@@ -359,17 +366,17 @@ const SpinPage = () => {
           ) : currentStep === "out_of_stock" ? (
             <>
               <motion.div
-                className="inline-flex items-center space-x-2 text-white px-6 py-3 rounded-full text-sm font-medium mb-6"
+                className="inline-flex items-center space-x-2 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6"
                 style={{
                   background: "linear-gradient(to right, #74070E, #EC4899)",
                 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <Gift className="w-5 h-5" />
+                <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>📦 Hết Giải Thưởng</span>
               </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
                 <span
                   className="bg-clip-text text-transparent"
                   style={{
@@ -382,7 +389,7 @@ const SpinPage = () => {
                 </span>
               </h1>
 
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã
                 quan tâm đến chương trình của chúng tôi!
               </p>
@@ -397,7 +404,7 @@ const SpinPage = () => {
             availableVouchers &&
             availableVouchers.length > 0 && (
               <motion.div
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto mb-8"
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 max-w-6xl mx-auto mb-6 sm:mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -405,21 +412,21 @@ const SpinPage = () => {
                 {availableVouchers.slice(0, 6).map((voucher, index) => (
                   <motion.div
                     key={voucher.id}
-                    className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
+                    className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ delay: index * 0.05 }}
                   >
                     <div
-                      className="mb-3 flex justify-center"
+                      className="mb-2 sm:mb-3 flex justify-center"
                       style={{ color: "#74070E" }}
                     >
-                      <Gift className="w-8 h-8" />
+                      <Gift className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <div className="text-gray-900 text-sm font-bold mb-2 line-clamp-2">
+                    <div className="text-gray-900 text-xs sm:text-sm font-bold mb-1 sm:mb-2 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
                       {voucher.name}
                     </div>
                     <div
-                      className="text-xs font-medium"
+                      className="text-xs font-medium truncate"
                       style={{ color: "#74070E" }}
                     >
                       {voucher.face_value}
@@ -434,7 +441,7 @@ const SpinPage = () => {
         </motion.div>
 
         {/* Step Content */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <AnimatePresence mode="wait">
             {currentStep === "form" && (
               <motion.div
@@ -443,79 +450,79 @@ const SpinPage = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start lg:items-center"
               >
                 {/* Left Side - Info */}
-                <div className="space-y-6">
-                  <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                <div className="order-2 lg:order-1 space-y-4 sm:space-y-6">
+                  <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-100">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                       🎊 Sẵn Sàng Nhận Ưu Đãi?
                     </h3>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div className="flex items-center space-x-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: "#FEF2F2" }}
                         >
                           <Check
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             style={{ color: "#74070E" }}
                           />
                         </div>
-                        <span className="text-gray-700">
+                        <span className="text-sm sm:text-base text-gray-700">
                           100% miễn phí tham gia
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: "#FEF2F2" }}
                         >
                           <Check
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             style={{ color: "#74070E" }}
                           />
                         </div>
-                        <span className="text-gray-700">
+                        <span className="text-sm sm:text-base text-gray-700">
                           Nhận voucher ngay lập tức
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: "#FEF2F2" }}
                         >
                           <Check
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             style={{ color: "#74070E" }}
                           />
                         </div>
-                        <span className="text-gray-700">
+                        <span className="text-sm sm:text-base text-gray-700">
                           Áp dụng cho tất cả sản phẩm
                         </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: "#FEF2F2" }}
                         >
                           <Check
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             style={{ color: "#74070E" }}
                           />
                         </div>
-                        <span className="text-gray-700">
+                        <span className="text-sm sm:text-base text-gray-700">
                           Bảo mật thông tin khách hàng
                         </span>
                       </div>
                     </div>
 
                     <div
-                      className="mt-8 p-4 rounded-2xl"
+                      className="mt-6 sm:mt-8 p-3 sm:p-4 rounded-xl sm:rounded-2xl"
                       style={{ backgroundColor: "#F3F4F6" }}
                     >
-                      <p className="text-sm text-gray-700">
+                      <p className="text-xs sm:text-sm text-gray-700">
                         <strong>Cách thức hoạt động:</strong> Nhập thông tin của
                         bạn, quay vòng thời trang và nhận ngay mã giảm giá cho
                         các sản phẩm thời trang tại Dezus!
@@ -525,7 +532,7 @@ const SpinPage = () => {
                 </div>
 
                 {/* Right Side - Form */}
-                <div>
+                <div className="order-1 lg:order-2">
                   <UserInfoForm
                     onSubmit={handleFormSubmit}
                     loading={isSpinning}
@@ -544,19 +551,19 @@ const SpinPage = () => {
                 transition={{ duration: 0.5 }}
                 className="text-center"
               >
-                <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 xl:p-12 shadow-2xl border border-gray-100 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
                     Bốc thăm voucher đã sẵn sàng!
                   </h2>
 
-                  <p className="text-xl text-gray-600 mb-8">
+                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 mb-4 sm:mb-6 lg:mb-8 px-2">
                     Thông tin của bạn đã được lưu. Hãy bắt đầu quay để nhận được
                     voucher hấp dẫn!
                   </p>
 
                   {/* User Info Display */}
                   <div
-                    className="rounded-2xl p-6 mb-8"
+                    className="rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6 lg:mb-8 overflow-hidden"
                     style={{
                       backgroundColor: "#FEF2F2",
                       borderColor: "#FCA5A5",
@@ -564,71 +571,86 @@ const SpinPage = () => {
                     }}
                   >
                     <h3
-                      className="text-lg font-semibold mb-4"
+                      className="text-sm sm:text-base lg:text-lg font-semibold mb-3 sm:mb-4"
                       style={{ color: "#991B1B" }}
                     >
                       Thông tin của bạn:
                     </h3>
-                    <div className="space-y-2 text-left">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="grid grid-cols-1 gap-1 text-center">
                         <span
-                          className="font-medium"
+                          className="font-medium text-xs sm:text-sm lg:text-base"
                           style={{ color: "#B91C1C" }}
                         >
                           Họ và tên:
                         </span>
-                        <span style={{ color: "#7F1D1D" }}>
+                        <span
+                          className="text-xs sm:text-sm lg:text-base break-words"
+                          style={{ color: "#7F1D1D" }}
+                        >
                           {storedUserInfo.fullName}
                         </span>
                       </div>
                       {storedUserInfo.phone && (
-                        <div className="flex items-center justify-between">
+                        <div className="grid grid-cols-1 gap-1 text-center">
                           <span
-                            className="font-medium"
+                            className="font-medium text-xs sm:text-sm lg:text-base"
                             style={{ color: "#B91C1C" }}
                           >
                             Số điện thoại:
                           </span>
-                          <span style={{ color: "#7F1D1D" }}>
+                          <span
+                            className="text-xs sm:text-sm lg:text-base break-words"
+                            style={{ color: "#7F1D1D" }}
+                          >
                             {storedUserInfo.phone}
                           </span>
                         </div>
                       )}
                       {storedUserInfo.age && (
-                        <div className="flex items-center justify-between">
+                        <div className="grid grid-cols-1 gap-1 text-center">
                           <span
-                            className="font-medium"
+                            className="font-medium text-xs sm:text-sm lg:text-base"
                             style={{ color: "#B91C1C" }}
                           >
                             Tuổi:
                           </span>
-                          <span style={{ color: "#7F1D1D" }}>
+                          <span
+                            className="text-xs sm:text-sm lg:text-base"
+                            style={{ color: "#7F1D1D" }}
+                          >
                             {storedUserInfo.age}
                           </span>
                         </div>
                       )}
                       {storedUserInfo.address && (
-                        <div className="flex items-center justify-between">
+                        <div className="grid grid-cols-1 gap-1 text-center">
                           <span
-                            className="font-medium"
+                            className="font-medium text-xs sm:text-sm lg:text-base"
                             style={{ color: "#B91C1C" }}
                           >
                             Địa chỉ:
                           </span>
-                          <span style={{ color: "#7F1D1D" }}>
+                          <span
+                            className="text-xs sm:text-sm lg:text-base break-words"
+                            style={{ color: "#7F1D1D" }}
+                          >
                             {storedUserInfo.address}
                           </span>
                         </div>
                       )}
                       {storedUserInfo.referralSource && (
-                        <div className="flex items-center justify-between">
+                        <div className="grid grid-cols-1 gap-1 text-center">
                           <span
-                            className="font-medium"
+                            className="font-medium text-xs sm:text-sm lg:text-base"
                             style={{ color: "#B91C1C" }}
                           >
                             Kênh biết đến:
                           </span>
-                          <span style={{ color: "#7F1D1D" }}>
+                          <span
+                            className="text-xs sm:text-sm lg:text-base break-words"
+                            style={{ color: "#7F1D1D" }}
+                          >
                             {storedUserInfo.referralSource}
                           </span>
                         </div>
@@ -637,20 +659,20 @@ const SpinPage = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
                     <motion.button
                       onClick={handleSpin}
                       disabled={isSpinning}
-                      className="disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
+                      className="disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 flex-1 sm:flex-none"
                       style={{
                         background: "#74070E",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <div className="flex items-center justify-center space-x-3">
-                        <Target className="w-6 h-6" />
-                        <span className="text-lg">
+                      <div className="flex items-center justify-center space-x-2 sm:space-x-3">
+                        <Gift className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <span className="text-base sm:text-lg">
                           {isSpinning ? "Đang quay..." : "Bốc Thăm Ngay!"}
                         </span>
                       </div>
@@ -658,7 +680,7 @@ const SpinPage = () => {
 
                     <motion.button
                       onClick={handleEditUserInfo}
-                      className="text-white font-medium py-3 px-6 rounded-xl transition-colors"
+                      className="text-white font-medium py-3 px-6 rounded-xl transition-colors flex-1 sm:flex-none"
                       style={{
                         background: "#6B7280",
                       }}
@@ -666,8 +688,10 @@ const SpinPage = () => {
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="flex items-center justify-center space-x-2">
-                        <RefreshCw className="w-5 h-5" />
-                        <span>Sửa thông tin</span>
+                        <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="text-sm sm:text-base">
+                          Sửa thông tin
+                        </span>
                       </div>
                     </motion.button>
                   </div>
@@ -684,7 +708,7 @@ const SpinPage = () => {
                 transition={{ duration: 0.5 }}
                 className="text-center"
               >
-                <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{
@@ -692,18 +716,18 @@ const SpinPage = () => {
                       repeat: Infinity,
                       ease: "linear",
                     }}
-                    className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8"
                     style={{ background: "#74070E" }}
                   >
-                    <Target className="w-12 h-12 text-white" />
+                    <Gift className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                   </motion.div>
 
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
                     Đang Bốc Thăm...
                   </h2>
 
                   <motion.p
-                    className="text-xl text-gray-600 mb-8"
+                    className="text-base sm:text-xl text-gray-600 mb-6 sm:mb-8"
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
@@ -871,39 +895,39 @@ const SpinPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
                 transition={{ duration: 0.5 }}
-                className="max-w-2xl mx-auto"
+                className="max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto"
               >
-                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
                   {/* Use previousResult if available (for returning users), otherwise use spinResult */}
                   {(previousResult && previousResult.outcome === "win") ||
                   spinResult?.outcome === "win" ? (
                     <>
                       {/* Winner Header */}
                       <div
-                        className="p-8 text-center text-white"
+                        className="p-4 sm:p-6 lg:p-8 text-center text-white"
                         style={{
                           background:
                             "linear-gradient(to right, #74070E, #8A080F)",
                         }}
                       >
-                        <h2 className="text-4xl font-bold mb-2">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 px-2">
                           🎉 Chúc Mừng!
                         </h2>
                       </div>
 
                       {/* Prize Details */}
-                      <div className="p-8">
+                      <div className="p-4 sm:p-6 lg:p-8">
                         {/* Previous Result Indicator */}
                         {previousResult && (
-                          <div className="text-center mb-6">
+                          <div className="text-center mb-4 sm:mb-6">
                             <div
-                              className="inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium"
+                              className="inline-flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium"
                               style={{
                                 backgroundColor: "#FEF2F2",
                                 color: "#991B1B",
                               }}
                             >
-                              <Clock className="w-4 h-4" />
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                               <span>
                                 Tham gia ngày:{" "}
                                 {new Date(
@@ -914,17 +938,17 @@ const SpinPage = () => {
                           </div>
                         )}
 
-                        <div className="text-center mb-8">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                        <div className="text-center mb-6 sm:mb-8">
+                          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-2">
                             {previousResult
                               ? "Giải Thưởng Bạn Đã Nhận"
                               : "Giải Thưởng Của Bạn"}
                           </h3>
 
                           {/* Enhanced Voucher Card */}
-                          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-8 border-2 border-red-100 shadow-lg">
+                          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-red-100 shadow-lg">
                             {/* Voucher Name */}
-                            <h4 className="text-2xl font-bold text-gray-900 mb-3">
+                            <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 break-words">
                               {
                                 (previousResult?.voucher || spinResult.voucher)
                                   ?.name
@@ -932,9 +956,9 @@ const SpinPage = () => {
                             </h4>
 
                             {/* Voucher Value Display */}
-                            <div className="mb-4">
+                            <div className="mb-3 sm:mb-4">
                               <div
-                                className="text-4xl font-black mb-2"
+                                className="text-2xl sm:text-3xl lg:text-4xl font-black mb-1 sm:mb-2 break-words"
                                 style={{ color: "#74070E" }}
                               >
                                 {(() => {
@@ -961,7 +985,7 @@ const SpinPage = () => {
                                   }
                                 })()}
                               </div>
-                              <div className="text-sm text-gray-600 font-medium">
+                              <div className="text-xs sm:text-sm text-gray-600 font-medium">
                                 {(() => {
                                   const voucher =
                                     previousResult?.voucher ||
@@ -987,7 +1011,7 @@ const SpinPage = () => {
                             {/* Description */}
                             {(previousResult?.voucher || spinResult.voucher)
                               ?.description && (
-                              <p className="text-gray-700 mb-6 text-lg font-medium">
+                              <p className="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base lg:text-lg font-medium break-words">
                                 {
                                   (
                                     previousResult?.voucher ||
@@ -998,13 +1022,13 @@ const SpinPage = () => {
                             )}
 
                             {/* Voucher Code Section */}
-                            <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-red-300 shadow-inner">
-                              <p className="text-sm font-semibold text-gray-600 mb-3">
+                            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 border-2 border-dashed border-red-300 shadow-inner">
+                              <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-2 sm:mb-3">
                                 Mã Voucher của bạn:
                               </p>
-                              <div className="flex items-center justify-center space-x-3">
+                              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
                                 <code
-                                  className="px-6 py-3 rounded-xl font-mono text-xl font-bold text-white tracking-wider shadow-lg"
+                                  className="px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-mono text-sm sm:text-lg lg:text-xl font-bold text-white tracking-wider shadow-lg break-all"
                                   style={{
                                     background:
                                       "linear-gradient(135deg, #74070E 0%, #A91D3A 100%)",
@@ -1026,15 +1050,15 @@ const SpinPage = () => {
                                       )?.code
                                     )
                                   }
-                                  className="text-white p-2 rounded-lg transition-colors"
+                                  className="text-white p-2 rounded-lg transition-colors flex-shrink-0"
                                   style={{ background: "#74070E" }}
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                 >
                                   {copiedCode ? (
-                                    <Check className="w-5 h-5" />
+                                    <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                                   ) : (
-                                    <Copy className="w-5 h-5" />
+                                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                                   )}
                                 </motion.button>
                               </div>
@@ -1042,7 +1066,7 @@ const SpinPage = () => {
                                 <motion.p
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="text-sm mt-2"
+                                  className="text-xs sm:text-sm mt-2"
                                   style={{ color: "#74070E" }}
                                 >
                                   ✅ Đã sao chép!
@@ -1052,16 +1076,10 @@ const SpinPage = () => {
                           </div>
                         </div>
 
-                        <div
-                          className={`grid gap-4 ${
-                            previousResult
-                              ? "grid-cols-1 sm:grid-cols-1"
-                              : "grid-cols-1 sm:grid-cols-1"
-                          }`}
-                        >
+                        <div className="grid gap-3 sm:gap-4 grid-cols-1">
                           <motion.button
                             onClick={goHome}
-                            className="text-white font-medium py-3 px-6 rounded-xl transition-colors"
+                            className="text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors w-full"
                             style={{
                               background:
                                 "linear-gradient(to right, #74070E, #8A080F)",
@@ -1070,8 +1088,10 @@ const SpinPage = () => {
                             whileTap={{ scale: 0.98 }}
                           >
                             <div className="flex items-center justify-center space-x-2">
-                              <span>Về Trang Chủ</span>
-                              <ChevronRight className="w-5 h-5" />
+                              <span className="text-sm sm:text-base">
+                                Về Trang Chủ
+                              </span>
+                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                           </motion.button>
                         </div>

@@ -200,29 +200,6 @@ const AdminLogin = () => {
             </motion.button>
           </motion.form>
 
-          {/* Default Credentials Info */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-8 p-4 bg-blue-500/20 border border-blue-400/30 rounded-lg"
-          >
-            <h3 className="text-white font-semibold mb-2">
-              Default Admin Credentials:
-            </h3>
-            <div className="text-white/80 text-sm space-y-1">
-              <p>
-                <strong>Email:</strong> admin@luckyvoucher.com
-              </p>
-              <p>
-                <strong>Password:</strong> admin123
-              </p>
-            </div>
-            <p className="text-white/60 text-xs mt-2">
-              Please change these credentials after first login in production.
-            </p>
-          </motion.div>
-
           {/* Help Text */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -231,7 +208,7 @@ const AdminLogin = () => {
             className="text-center mt-6"
           >
             <p className="text-white/60 text-sm">
-              Only authorized staff members can access this area.
+              🔒 Chỉ có thành viên nhân viên được truy cập vào khu vực này.
             </p>
           </motion.div>
         </motion.div>

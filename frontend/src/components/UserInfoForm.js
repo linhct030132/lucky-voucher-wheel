@@ -119,29 +119,29 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto px-2 sm:px-0">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden max-w-lg mx-auto"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden w-full"
       >
         {/* Header */}
         <div
-          className="p-4 sm:p-6 text-white text-center"
+          className="p-4 sm:p-6 lg:p-8 text-white text-center"
           style={{ background: "linear-gradient(to right, #74070E, #8A080F)" }}
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
-            className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4"
           >
-            <User className="w-8 h-8" />
+            <User className="w-7 h-7 sm:w-8 sm:h-8" />
           </motion.div>
-          <h2 className="text-xl sm:text-2xl font-bold mb-2">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">
             Thông tin liên hệ
           </h2>
-          <p style={{ color: "#FEE2E2" }}>
+          <p className="text-sm sm:text-base" style={{ color: "#FEE2E2" }}>
             Điền thông tin để nhận voucher thời trang
           </p>
         </div>
@@ -149,20 +149,20 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+          className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-5 lg:space-y-6"
         >
           {/* Full Name Field */}
           <motion.div
             variants={inputVariants}
             animate={focusedField === "fullName" ? "focused" : "unfocused"}
           >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
               Họ và Tên <span style={{ color: "#74070E" }}>*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                 <User
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     focusedField === "fullName" ? "" : "text-gray-400"
                   } transition-colors`}
                   style={
@@ -176,7 +176,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                 onChange={(e) => handleInputChange("fullName", e.target.value)}
                 onFocus={() => setFocusedField("fullName")}
                 onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 border-2 rounded-xl focus:outline-none transition-all duration-200 text-sm sm:text-base ${
                   errors.fullName
                     ? "bg-red-50"
                     : focusedField === "fullName"
@@ -197,10 +197,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
+                className="mt-2 text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.fullName}
               </motion.p>
             )}
@@ -211,13 +211,13 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
             variants={inputVariants}
             animate={focusedField === "phone" ? "focused" : "unfocused"}
           >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
               Số Điện Thoại <span style={{ color: "#74070E" }}>*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                 <Phone
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     focusedField === "phone" ? "" : "text-gray-400"
                   } transition-colors`}
                   style={focusedField === "phone" ? { color: "#74070E" } : {}}
@@ -229,7 +229,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 onFocus={() => setFocusedField("phone")}
                 onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 border-2 rounded-xl focus:outline-none transition-all duration-200 text-sm sm:text-base ${
                   errors.phone
                     ? "bg-red-50"
                     : focusedField === "phone"
@@ -250,10 +250,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
+                className="mt-2 text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.phone}
               </motion.p>
             )}
@@ -264,13 +264,13 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
             variants={inputVariants}
             animate={focusedField === "age" ? "focused" : "unfocused"}
           >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
               Tuổi <span style={{ color: "#74070E" }}>*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                 <Calendar
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     focusedField === "age" ? "" : "text-gray-400"
                   } transition-colors`}
                   style={focusedField === "age" ? { color: "#74070E" } : {}}
@@ -284,7 +284,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                 onChange={(e) => handleInputChange("age", e.target.value)}
                 onFocus={() => setFocusedField("age")}
                 onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 border-2 rounded-xl focus:outline-none transition-all duration-200 text-sm sm:text-base ${
                   errors.age
                     ? "bg-red-50"
                     : focusedField === "age"
@@ -305,10 +305,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
+                className="mt-2 text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.age}
               </motion.p>
             )}
@@ -319,13 +319,13 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
             variants={inputVariants}
             animate={focusedField === "address" ? "focused" : "unfocused"}
           >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
               Địa Chỉ (Quận/Huyện)
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                 <MapPin
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     focusedField === "address" ? "" : "text-gray-400"
                   } transition-colors`}
                   style={focusedField === "address" ? { color: "#74070E" } : {}}
@@ -337,7 +337,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 onFocus={() => setFocusedField("address")}
                 onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 border-2 rounded-xl focus:outline-none transition-all duration-200 text-sm sm:text-base ${
                   errors.address
                     ? "bg-red-50"
                     : focusedField === "address"
@@ -358,10 +358,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
+                className="mt-2 text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.address}
               </motion.p>
             )}
@@ -374,13 +374,13 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               focusedField === "referralSource" ? "focused" : "unfocused"
             }
           >
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
               Bạn biết DEZUS qua kênh nào?
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                 <Users
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     focusedField === "referralSource" ? "" : "text-gray-400"
                   } transition-colors`}
                   style={
@@ -397,7 +397,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                 }
                 onFocus={() => setFocusedField("referralSource")}
                 onBlur={() => setFocusedField(null)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                className={`w-full pl-10 sm:pl-12 pr-8 sm:pr-4 py-3 sm:py-3.5 border-2 rounded-xl focus:outline-none transition-all duration-200 text-sm sm:text-base appearance-none bg-white ${
                   errors.referralSource
                     ? "bg-red-50"
                     : focusedField === "referralSource"
@@ -409,6 +409,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                     errors.referralSource || focusedField === "referralSource"
                       ? "#74070E"
                       : undefined,
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1.5em 1.5em",
                 }}
                 disabled={isSubmitting || loading}
               >
@@ -427,23 +431,25 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="mt-2 text-sm flex items-center"
+                className="mt-2 text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.referralSource}
               </motion.p>
             )}
           </motion.div>
 
           {/* Privacy and Consent */}
-          <div className="space-y-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4">
               <div className="flex items-center space-x-2 text-gray-700 mb-2">
-                <Shield className="w-5 h-5" />
-                <p className="text-sm font-medium">Bảo Mật & An Toàn</p>
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <p className="text-xs sm:text-sm font-medium">
+                  Bảo Mật & An Toàn
+                </p>
               </div>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 leading-relaxed">
                 Thông tin của bạn được mã hóa bảo mật và chỉ được sử dụng để
                 phân phối giải thưởng. Chúng tôi không bao giờ chia sẻ dữ liệu
                 với bên thứ ba.
@@ -451,7 +457,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
             </div>
 
             <motion.label
-              className={`flex items-start space-x-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${
+              className={`flex items-start space-x-3 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${
                 errors.consent
                   ? "bg-red-50"
                   : formData.consent
@@ -464,7 +470,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="relative">
+              <div className="relative mt-0.5">
                 <input
                   type="checkbox"
                   checked={formData.consent}
@@ -475,7 +481,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                   disabled={isSubmitting || loading}
                 />
                 <div
-                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
                     formData.consent
                       ? "border-green-500 bg-green-500"
                       : errors.consent
@@ -495,16 +501,16 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
                       animate={{ scale: 1 }}
                       transition={{ type: "spring" }}
                     >
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     </motion.div>
                   )}
                 </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  Tôi đồng ý tham gia quay số may mắn
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-900">
+                  Tôi đồng ý tham gia bốc thăm may mắn
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                   Bằng cách đánh dấu vào ô này, bạn xác nhận rằng bạn hiểu các
                   quy tắc và đồng ý nhận thông báo giải thưởng.
                 </p>
@@ -515,10 +521,10 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-sm flex items-center"
+                className="text-xs sm:text-sm flex items-center"
                 style={{ color: "#B91C1C" }}
               >
-                <AlertTriangle className="w-4 h-4 mr-1" />
+                <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                 {errors.consent}
               </motion.p>
             )}
@@ -528,7 +534,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
           <motion.button
             type="submit"
             disabled={isSubmitting || loading}
-            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 ${
+            className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 ${
               isSubmitting || loading
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "text-white shadow-lg hover:shadow-xl"
@@ -543,15 +549,18 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
           >
             {isSubmitting || loading ? (
               <div className="flex items-center justify-center space-x-2">
-                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Đang Xử Lý...</span>
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm sm:text-base">Đang Xử Lý...</span>
               </div>
             ) : (
               <div className="flex items-center justify-center space-x-2">
-                <span>🎯 Bắt Đầu Bốc Thăm!</span>
+                <span className="text-sm sm:text-base">
+                  🎯 Bắt Đầu Bốc Thăm!
+                </span>
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-sm sm:text-base"
                 >
                   ✨
                 </motion.div>
@@ -561,8 +570,8 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
 
           {/* Additional Info */}
           <div className="text-center">
-            <p className="text-xs text-gray-500">
-              🔒 Your information is safe and secure
+            <p className="text-xs sm:text-sm text-gray-500">
+              🔒 Thông tin của bạn được bảo mật và an toàn
             </p>
           </div>
         </form>
