@@ -74,15 +74,15 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0 sticky top-0 h-screen">
-        <div className="flex flex-col w-64 xl:w-72">
-          <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5  overflow-y-auto">
+        <div className="flex flex-col w-60 xl:w-64">
+          <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-4 overflow-y-auto">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0 px-4 lg:px-6">
               <LogoIcon />
             </div>
 
             {/* Navigation */}
-            <nav className="mt-5 flex-1 px-2 lg:px-3 space-y-1">
+            <nav className="mt-4 flex-1 px-3 space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isCurrent = isCurrentPath(item.path);
@@ -91,14 +91,14 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                       isCurrent
-                        ? "bg-indigo-100 text-indigo-900"
+                        ? "bg-indigo-50 text-indigo-900 border-l-4 border-indigo-500"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
                     <Icon
-                      className={`mr-3 flex-shrink-0 h-5 w-5 lg:h-6 lg:w-6 ${
+                      className={`mr-3 flex-shrink-0 h-5 w-5 ${
                         isCurrent
                           ? "text-indigo-500"
                           : "text-gray-400 group-hover:text-gray-500"
@@ -108,7 +108,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
                       <div className="text-sm font-medium truncate">
                         {item.label}
                       </div>
-                      <div className="text-xs text-gray-500 truncate hidden xl:block">
+                      <div className="text-xs text-gray-500 truncate hidden xl:block mt-0.5">
                         {item.description}
                       </div>
                     </div>
@@ -121,30 +121,28 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
             </nav>
 
             {/* Bottom Actions */}
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-              <div className="flex-shrink-0 w-full group block">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center min-w-0 flex-1">
-                    <div className="w-8 h-8 lg:w-9 lg:h-9 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Settings className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
-                    </div>
-                    <div className="ml-3 min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">
-                        Admin
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        Quản trị viên
-                      </p>
-                    </div>
+            <div className="flex-shrink-0 border-t border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center min-w-0 flex-1">
+                  <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Settings className="w-4 h-4 text-white" />
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-2"
-                    title="Đăng xuất"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
+                  <div className="ml-3 min-w-0">
+                    <p className="text-sm font-medium text-gray-700 truncate">
+                      Admin
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      Quản trị viên
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 p-1"
+                  title="Đăng xuất"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
@@ -152,31 +150,39 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
       </div>
 
       {/* Mobile menu */}
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between bg-white px-4 sm:px-6 py-3 border-b border-gray-200">
-          <div className="flex items-center">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40">
+        <div className="flex items-center justify-between bg-white px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200 shadow-sm">
+          <div className="flex items-center min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="text-gray-500 hover:text-gray-900 p-1"
+              className="text-gray-500 hover:text-gray-900 p-1 mr-2 flex-shrink-0"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="ml-3 flex items-center">
-              <div className="scale-75 sm:scale-100 origin-left">
+            <div className="flex items-center min-w-0">
+              <div className="scale-75 sm:scale-75 origin-left flex-shrink-0">
                 <LogoIcon />
+              </div>
+              <div className="ml-2 sm:ml-3 min-w-0">
+                <h1 className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                  {title}
+                </h1>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700 hidden sm:block">
-              {title}
-            </span>
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+              {new Date().toLocaleDateString("vi-VN", {
+                day: "numeric",
+                month: "short",
+              })}
+            </div>
             <button
               onClick={handleLogout}
               className="text-gray-400 hover:text-red-500 transition-colors p-1"
               title="Đăng xuất"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -200,7 +206,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
                 initial={{ x: -300 }}
                 animate={{ x: 0 }}
                 exit={{ x: -300 }}
-                className="relative flex-1 flex flex-col max-w-xs w-full bg-white"
+                className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl"
               >
                 <div className="absolute top-0 right-0 -mr-12 pt-2">
                   <button
@@ -210,11 +216,11 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
                     <X className="h-6 w-6 text-white" />
                   </button>
                 </div>
-                <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-                  <div className="flex-shrink-0 flex items-center px-4 mb-8">
+                <div className="flex-1 h-0 pt-4 pb-4 overflow-y-auto">
+                  <div className="flex-shrink-0 flex items-center px-4 mb-6">
                     <LogoIcon />
                   </div>
-                  <nav className="mt-5 px-2 space-y-1">
+                  <nav className="mt-4 px-3 space-y-2">
                     {menuItems.map((item) => {
                       const Icon = item.icon;
                       const isCurrent = isCurrentPath(item.path);
@@ -224,23 +230,28 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
                           key={item.path}
                           to={item.path}
                           onClick={() => setSidebarOpen(false)}
-                          className={`group flex items-center px-3 py-3 text-base font-medium rounded-md transition-colors ${
+                          className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                             isCurrent
-                              ? "bg-indigo-100 text-indigo-900"
+                              ? "bg-indigo-50 text-indigo-900 border-l-4 border-indigo-500"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                           }`}
                         >
                           <Icon
-                            className={`mr-4 flex-shrink-0 h-6 w-6 ${
+                            className={`mr-3 flex-shrink-0 h-5 w-5 ${
                               isCurrent ? "text-indigo-500" : "text-gray-400"
                             }`}
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="truncate">{item.label}</div>
-                            <div className="text-sm text-gray-500 truncate">
+                            <div className="truncate font-medium">
+                              {item.label}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate mt-0.5">
                               {item.description}
                             </div>
                           </div>
+                          {isCurrent && (
+                            <ChevronRight className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                          )}
                         </Link>
                       );
                     })}
@@ -249,14 +260,27 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
 
                 {/* Mobile bottom section */}
                 <div className="flex-shrink-0 border-t border-gray-200 p-4">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                      <Settings className="w-4 h-4 text-white" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center min-w-0">
+                      <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Settings className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="ml-3 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          Admin
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          Quản trị viên
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-700">Admin</p>
-                      <p className="text-xs text-gray-500">Quản trị viên</p>
-                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 p-1"
+                      title="Đăng xuất"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -266,27 +290,21 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        {/* Top bar */}
-        <div className="relative z-10 flex-shrink-0 flex h-14 sm:h-16 bg-white shadow lg:border-b lg:border-gray-200">
-          <div className="flex-1 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <div className="flex flex-col flex-1 min-w-0 lg:overflow-hidden">
+        {/* Top bar - only show on desktop */}
+        <div className="hidden lg:flex relative z-10 flex-shrink-0 h-14 xl:h-16 bg-white shadow border-b border-gray-200 items-center">
+          <div className="flex-1 px-6 lg:px-8 flex justify-between items-center">
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate">
+              <h1 className="text-lg xl:text-xl font-semibold text-gray-900 truncate">
                 {title}
               </h1>
             </div>
             <div className="ml-4 flex items-center space-x-4">
-              <div className="text-xs sm:text-sm text-gray-500 hidden md:block">
+              <div className="text-sm text-gray-500">
                 {new Date().toLocaleDateString("vi-VN", {
                   weekday: "short",
                   month: "short",
                   day: "numeric",
-                })}
-              </div>
-              <div className="text-xs text-gray-500 md:hidden">
-                {new Date().toLocaleDateString("vi-VN", {
-                  day: "numeric",
-                  month: "short",
                 })}
               </div>
             </div>
@@ -294,9 +312,9 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-4 sm:py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none pt-24 lg:pt-0">
+          <div className="py-3 sm:py-4 lg:py-6">
+            <div className="max-w-full mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
               {children}
             </div>
           </div>
