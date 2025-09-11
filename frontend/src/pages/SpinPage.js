@@ -366,17 +366,17 @@ const SpinPage = () => {
           ) : currentStep === "out_of_stock" ? (
             <>
               <motion.div
-                className="inline-flex items-center space-x-2 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6"
+                className="inline-flex items-center space-x-2 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6"
                 style={{
                   background: "linear-gradient(to right, #74070E, #EC4899)",
                 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Gift className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 <span>📦 Hết Giải Thưởng</span>
               </motion.div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-4 sm:px-2 leading-tight">
                 <span
                   className="bg-clip-text text-transparent"
                   style={{
@@ -389,7 +389,7 @@ const SpinPage = () => {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+              <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 mb-6 sm:mb-8 max-w-md sm:max-w-lg lg:max-w-2xl mx-auto px-6 sm:px-4 leading-relaxed">
                 Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã
                 quan tâm đến chương trình của chúng tôi!
               </p>
@@ -822,48 +822,54 @@ const SpinPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
                 transition={{ duration: 0.5 }}
-                className="text-center"
+                className="text-center px-4 sm:px-6"
               >
-                <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 shadow-2xl border border-gray-100 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"
+                    className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8"
                     style={{
                       background: "linear-gradient(to right, #74070E, #EC4899)",
                     }}
                   >
-                    <Gift className="w-12 h-12 text-white" />
+                    <Gift className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
                   </motion.div>
 
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
                     📦 Hết Giải Thưởng Rồi!
                   </h2>
 
-                  <p className="text-xl text-gray-600 mb-8">
+                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed px-2">
                     Rất tiếc, tất cả giải thưởng đã được phát hết. Cảm ơn bạn đã
                     quan tâm đến chương trình của chúng tôi!
                   </p>
 
                   <div
-                    className="rounded-2xl p-6 mb-8"
+                    className="rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8"
                     style={{
                       background: "linear-gradient(to right, #FEF2F2, #FDF2F8)",
                       borderColor: "#FCA5A5",
                       borderWidth: "1px",
                     }}
                   >
-                    <div className="flex items-center justify-center space-x-3 mb-4">
-                      <Gift className="w-6 h-6" style={{ color: "#74070E" }} />
+                    <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+                      <Gift
+                        className="w-5 h-5 sm:w-6 sm:h-6"
+                        style={{ color: "#74070E" }}
+                      />
                       <span
-                        className="font-medium"
+                        className="font-medium text-sm sm:text-base"
                         style={{ color: "#991B1B" }}
                       >
                         Chương trình đã kết thúc
                       </span>
                     </div>
-                    <p className="text-sm" style={{ color: "#B91C1C" }}>
+                    <p
+                      className="text-xs sm:text-sm leading-relaxed px-2"
+                      style={{ color: "#B91C1C" }}
+                    >
                       Tất cả giải thưởng trong chương trình quay số may mắn này
                       đã được phát hết. Hãy theo dõi để cập nhật các chương
                       trình khuyến mãi mới nhé!
@@ -872,7 +878,7 @@ const SpinPage = () => {
 
                   <motion.button
                     onClick={goHome}
-                    className="text-white font-medium py-3 px-8 rounded-xl transition-colors"
+                    className="text-white font-medium py-3 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl transition-colors w-full sm:w-auto"
                     style={{
                       background: "linear-gradient(to right, #74070E, #8A080F)",
                     }}
@@ -880,8 +886,8 @@ const SpinPage = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center justify-center space-x-2">
-                      <span>Về Trang Chủ</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="text-sm sm:text-base">Về Trang Chủ</span>
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </motion.button>
                 </div>
