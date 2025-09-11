@@ -37,7 +37,16 @@ const voucherValidation = [
     ),
   body("baseProbability")
     .isFloat({ min: 0, max: 1 })
-    .withMessage("Xác suất cơ bản phải từ 0 đến 1"),
+    .withMessage("Xác suất cơ bản phải từ 0 đến 1")
+    .custom((value) => {
+      const prob = parseFloat(value);
+      if (prob < 0.0001 && prob > 0) {
+        console.warn(
+          `Very low probability detected: ${prob} (${(prob * 100).toFixed(4)}%)`
+        );
+      }
+      return true;
+    }),
   body("initialStock")
     .isInt({ min: 0 })
     .withMessage("Số lượng ban đầu phải là số nguyên không âm"),
@@ -65,6 +74,10 @@ const voucherValidation = [
     .optional()
     .isLength({ min: 1, max: 10 })
     .withMessage("Tiền tố mã phải từ 1 đến 10 ký tự"),
+  body("voucherCode")
+    .isLength({ min: 1, max: 50 })
+    .trim()
+    .withMessage("Mã voucher là bắt buộc và phải từ 1 đến 50 ký tự"),
 ];
 
 /**
@@ -224,6 +237,7 @@ router.post(
         status = "draft",
         codeGeneration = "auto",
         codePrefix = "LV",
+        voucherCode,
       } = req.body;
 
       // Validate date range
@@ -240,6 +254,17 @@ router.post(
       const remainingStockNum = initialStockNum;
       const maxPerUserNum = parseInt(maxPerUser) || 1;
       const baseProbabilityNum = parseFloat(baseProbability);
+
+      // Check if voucher code already exists
+      const existingVoucher = await prisma.voucher.findFirst({
+        where: { voucherCode },
+      });
+
+      if (existingVoucher) {
+        return res.status(400).json({
+          error: `Mã voucher "${voucherCode}" đã tồn tại. Vui lòng chọn mã khác.`,
+        });
+      }
 
       // Create voucher using Prisma transaction
       const createdVoucher = await prisma.$transaction(async (tx) => {
@@ -260,6 +285,7 @@ router.post(
             status,
             codeGeneration: codeGeneration,
             codePrefix: codePrefix,
+            voucherCode: voucherCode,
           },
         });
 
@@ -330,6 +356,7 @@ router.put(
         status,
         codeGeneration,
         codePrefix,
+        voucherCode,
       } = req.body;
 
       // Get current voucher for audit log
@@ -356,6 +383,21 @@ router.put(
         ? parseFloat(baseProbability)
         : currentVoucher.baseProbability;
 
+      if (voucherCode && voucherCode !== currentVoucher.voucherCode) {
+        const existingVoucher = await prisma.voucher.findFirst({
+          where: {
+            voucherCode,
+            id: { not: id },
+          },
+        });
+
+        if (existingVoucher) {
+          return res.status(400).json({
+            error: `Mã voucher "${voucherCode}" đã tồn tại. Vui lòng chọn mã khác.`,
+          });
+        }
+      }
+
       // Update voucher
       const updatedVoucher = await prisma.voucher.update({
         where: { id },
@@ -370,6 +412,7 @@ router.put(
           status,
           codeGeneration: codeGeneration,
           codePrefix: codePrefix,
+          voucherCode: voucherCode,
           updatedAt: new Date(),
         },
       });

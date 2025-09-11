@@ -8,7 +8,7 @@ import {
   Check,
   AlertTriangle,
   Shield,
-  Info,
+  Calendar,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -17,6 +17,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
     fullName: initialData?.fullName || "",
     phone: initialData?.phone || "",
     address: initialData?.address || "",
+    age: initialData?.age || "",
     referralSource: initialData?.referralSource || "",
     consent: initialData?.consent || false,
   });
@@ -31,6 +32,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
         fullName: initialData.fullName || "",
         phone: initialData.phone || "",
         address: initialData.address || "",
+        age: initialData.age || "",
         referralSource: initialData.referralSource || "",
         consent: initialData.consent || false,
       });
@@ -54,6 +56,16 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
       const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
       if (!phoneRegex.test(formData.phone)) {
         newErrors.phone = "Vui lòng nhập số điện thoại hợp lệ";
+      }
+    }
+
+    // Age validation (required)
+    if (!formData.age.trim()) {
+      newErrors.age = "Vui lòng nhập tuổi";
+    } else {
+      const age = parseInt(formData.age);
+      if (isNaN(age) || age < 13 || age > 100) {
+        newErrors.age = "Tuổi phải từ 13 đến 100";
       }
     }
 
@@ -247,6 +259,61 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
             )}
           </motion.div>
 
+          {/* Age Field */}
+          <motion.div
+            variants={inputVariants}
+            animate={focusedField === "age" ? "focused" : "unfocused"}
+          >
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Tuổi <span style={{ color: "#74070E" }}>*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Calendar
+                  className={`w-5 h-5 ${
+                    focusedField === "age" ? "" : "text-gray-400"
+                  } transition-colors`}
+                  style={focusedField === "age" ? { color: "#74070E" } : {}}
+                />
+              </div>
+              <input
+                type="number"
+                min="13"
+                max="100"
+                value={formData.age}
+                onChange={(e) => handleInputChange("age", e.target.value)}
+                onFocus={() => setFocusedField("age")}
+                onBlur={() => setFocusedField(null)}
+                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                  errors.age
+                    ? "bg-red-50"
+                    : focusedField === "age"
+                    ? "bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                style={{
+                  borderColor:
+                    errors.age || focusedField === "age"
+                      ? "#74070E"
+                      : undefined,
+                }}
+                placeholder="Nhập tuổi của bạn"
+                disabled={isSubmitting || loading}
+              />
+            </div>
+            {errors.age && (
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mt-2 text-sm flex items-center"
+                style={{ color: "#B91C1C" }}
+              >
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                {errors.age}
+              </motion.p>
+            )}
+          </motion.div>
+
           {/* Address Field */}
           <motion.div
             variants={inputVariants}
@@ -347,6 +414,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               >
                 <option value="">Chọn kênh</option>
                 <option value="Facebook">Facebook</option>
+                <option value="Tiktok">Tiktok</option>
                 <option value="Zalo">Zalo</option>
                 <option value="Website">Website</option>
                 <option value="Instagram">Instagram</option>

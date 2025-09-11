@@ -26,11 +26,20 @@ class SpinEngine {
       );
     }
 
-    // Step 4: Guaranteed win - select voucher based on baseProbability
-    const outcome = this.weightedRandomSelection(eligibleVouchers);
+    // Step 4: Determine if this is a win or lose based on probability
+    const outcome = this.determineSpinOutcome(eligibleVouchers);
 
-    // Step 5: Process the win result atomically
-    return await this.processWin(userProfile, deviceId, outcome.voucher, req);
+    // Step 5: Process the result
+    if (outcome.type === "win") {
+      return await this.processWin(userProfile, deviceId, outcome.voucher, req);
+    } else {
+      return await this.processLose(
+        userProfile,
+        deviceId,
+        eligibleVouchers,
+        req
+      );
+    }
   }
 
   /**
@@ -73,34 +82,106 @@ class SpinEngine {
   }
 
   /**
-   * Weighted random selection algorithm - always returns a win when vouchers available
+   * Determine if this spin results in a win or lose, respecting low probabilities
+   */
+  static determineSpinOutcome(vouchers) {
+    if (vouchers.length === 0) {
+      return { type: "lose" };
+    }
+
+    // Calculate total probability of winning anything
+    const totalWinProbability = vouchers.reduce((sum, voucher) => {
+      const probability = parseFloat(voucher.base_probability);
+      return sum + (isNaN(probability) || probability <= 0 ? 0 : probability);
+    }, 0);
+
+    console.log(`🎲 Spin outcome calculation:`, {
+      totalWinProbability,
+      totalWinPercentage: `${(totalWinProbability * 100).toFixed(4)}%`,
+      loseProbability: 1 - totalWinProbability,
+      losePercentage: `${((1 - totalWinProbability) * 100).toFixed(4)}%`,
+    });
+
+    // Generate random number to determine win/lose
+    const randomOutcome = Math.random();
+    console.log(
+      `🎯 Random outcome: ${randomOutcome.toFixed(
+        6
+      )} (win if < ${totalWinProbability.toFixed(6)})`
+    );
+
+    // If random number is within win probability, it's a win
+    if (randomOutcome < totalWinProbability) {
+      console.log(`✅ Result: WIN! Now selecting which voucher...`);
+      // Now select which voucher using weighted selection
+      return this.weightedRandomSelection(vouchers);
+    } else {
+      console.log(
+        `❌ Result: LOSE (${randomOutcome.toFixed(
+          6
+        )} >= ${totalWinProbability.toFixed(6)})`
+      );
+      return { type: "lose" };
+    }
+  }
+
+  /**
+   * Weighted random selection algorithm - handles very low probabilities correctly
    */
   static weightedRandomSelection(vouchers) {
     if (vouchers.length === 0) {
       return { type: "lose" };
     }
 
-    // Calculate total weight from voucher probabilities
-    const voucherWeights = vouchers.map((v) => parseFloat(v.base_probability));
+    // Calculate total weight from voucher probabilities with high precision
+    const voucherWeights = vouchers.map((v) => {
+      const probability = parseFloat(v.base_probability);
+      // Ensure we have valid positive numbers
+      return isNaN(probability) || probability <= 0 ? 0 : probability;
+    });
+
     const totalWeight = voucherWeights.reduce((sum, weight) => sum + weight, 0);
 
-    // If total weight is 0, distribute equally
-    if (totalWeight === 0) {
-      const randomIndex = Math.floor(Math.random() * vouchers.length);
-      return {
-        type: "win",
-        voucher: vouchers[randomIndex],
-      };
+    // Debug logging for very low probabilities
+    console.log(`🎯 Spin calculation:`, {
+      vouchers: vouchers.map((v, i) => ({
+        name: v.name,
+        probability: voucherWeights[i],
+        percentage: `${(voucherWeights[i] * 100).toFixed(4)}%`,
+      })),
+      totalWeight,
+      totalPercentage: `${(totalWeight * 100).toFixed(4)}%`,
+    });
+
+    // If total weight is 0 or very close to 0, return lose
+    if (totalWeight <= 0 || totalWeight < 0.0000001) {
+      console.log(`❌ Total weight too low (${totalWeight}), returning lose`);
+      return { type: "lose" };
     }
 
-    // Generate random number within total weight
+    // Generate random number within total weight with high precision
     const random = Math.random() * totalWeight;
+    console.log(
+      `🎲 Random number generated: ${random} (out of ${totalWeight})`
+    );
 
     // Find which voucher was selected based on probability
     let cumulativeWeight = 0;
     for (let i = 0; i < vouchers.length; i++) {
+      const previousCumulative = cumulativeWeight;
       cumulativeWeight += voucherWeights[i];
+
+      console.log(`🔍 Checking voucher ${i}: ${vouchers[i].name}`, {
+        weight: voucherWeights[i],
+        range: `${previousCumulative.toFixed(6)} - ${cumulativeWeight.toFixed(
+          6
+        )}`,
+        random: random.toFixed(6),
+        matches: random >= previousCumulative && random < cumulativeWeight,
+      });
+
       if (random < cumulativeWeight) {
+        console.log(`✅ Selected voucher: ${vouchers[i].name}`);
         return {
           type: "win",
           voucher: vouchers[i],
@@ -109,6 +190,9 @@ class SpinEngine {
     }
 
     // Fallback to last voucher (should not happen with proper implementation)
+    console.log(
+      `⚠️ Fallback to last voucher: ${vouchers[vouchers.length - 1].name}`
+    );
     return {
       type: "win",
       voucher: vouchers[vouchers.length - 1],
@@ -122,35 +206,24 @@ class SpinEngine {
     const spinAttemptId = uuidv4();
 
     try {
-      const results = await transaction([
-        // Lock and check voucher stock
-        {
-          sql: `SELECT remaining_stock FROM vouchers WHERE id = ? FOR UPDATE`,
-          params: [selectedVoucher.id],
-        },
-        // Get available voucher code
-        {
-          sql: `SELECT id, code FROM voucher_codes 
-                WHERE voucher_id = ? AND status = 'available' 
-                ORDER BY created_at ASC LIMIT 1 FOR UPDATE`,
-          params: [selectedVoucher.id],
-        },
-      ]);
-
-      const [voucherStock] = results[0];
-      const [availableCode] = results[1];
+      // Lock and check voucher stock and get full voucher details
+      const [voucherStock] = await query(
+        `SELECT remaining_stock, voucher_code, face_value, voucher_type, description, valid_to, valid_from, max_per_user FROM vouchers WHERE id = ? FOR UPDATE`,
+        [selectedVoucher.id]
+      );
 
       // Verify stock is still available
       if (!voucherStock || voucherStock.remaining_stock <= 0) {
-        // Stock depleted, retry once or fall back to lose
+        // Stock depleted, fall back to lose
         console.warn(
           `Voucher ${selectedVoucher.id} stock depleted during transaction`
         );
         return await this.processLose(userProfile, deviceId, [], req);
       }
 
-      if (!availableCode) {
-        console.warn(`No available codes for voucher ${selectedVoucher.id}`);
+      // Check if voucher has a code
+      if (!voucherStock.voucher_code) {
+        console.warn(`No voucher code set for voucher ${selectedVoucher.id}`);
         return await this.processLose(userProfile, deviceId, [], req);
       }
 
@@ -161,25 +234,17 @@ class SpinEngine {
           sql: `UPDATE vouchers SET remaining_stock = remaining_stock - 1 WHERE id = ?`,
           params: [selectedVoucher.id],
         },
-        // Mark code as issued
-        {
-          sql: `UPDATE voucher_codes 
-                SET status = 'issued', issued_to_user_id = ?, issued_at = NOW() 
-                WHERE id = ?`,
-          params: [userProfile.id, availableCode.id],
-        },
         // Record spin attempt
         {
           sql: `INSERT INTO spin_attempts 
-                (id, user_id, device_id, outcome, voucher_id, voucher_code_id, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                (id, user_id, device_id, outcome, voucher_id, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
           params: [
             spinAttemptId,
             userProfile.id,
             deviceId,
             "win",
             selectedVoucher.id,
-            availableCode.id,
             req.ip,
             req.get("User-Agent"),
           ],
@@ -203,9 +268,13 @@ class SpinEngine {
         voucher: {
           id: selectedVoucher.id,
           name: selectedVoucher.name,
-          code: availableCode.code,
-          faceValue: selectedVoucher.face_value,
-          validTo: null, // Will be populated from voucher data
+          code: voucherStock.voucher_code,
+          faceValue: voucherStock.face_value,
+          voucherType: voucherStock.voucher_type,
+          description: voucherStock.description,
+          validTo: voucherStock.valid_to,
+          validFrom: voucherStock.valid_from,
+          maxPerUser: voucherStock.max_per_user,
         },
         spinAttemptId,
       };

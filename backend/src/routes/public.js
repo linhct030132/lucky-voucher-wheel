@@ -20,6 +20,9 @@ const spinValidation = [
   body("phone")
     .isMobilePhone()
     .withMessage("Vui lòng nhập số điện thoại hợp lệ"),
+  body("age")
+    .isInt({ min: 13, max: 100 })
+    .withMessage("Tuổi phải từ 13 đến 100"),
   body("address")
     .optional()
     .isLength({ max: 500 })
@@ -50,15 +53,23 @@ router.post(
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { fullName, phone, address, referralSource, consent, deviceId } =
-        req.body;
+      const {
+        fullName,
+        phone,
+        age,
+        address,
+        referralSource,
+        consent,
+        deviceId,
+      } = req.body;
 
-      // Phone is required (validated by express-validator)
+      // Phone and age are required (validated by express-validator)
 
       // Sanitize inputs
       const sanitizedProfile = {
         fullName: SecurityUtils.sanitizeInput(fullName),
         phone: SecurityUtils.sanitizeInput(phone),
+        age: parseInt(age),
         address: address ? SecurityUtils.sanitizeInput(address) : null,
         referralSource: referralSource
           ? SecurityUtils.sanitizeInput(referralSource)
@@ -131,6 +142,7 @@ router.post(
           data: {
             fullName: sanitizedProfile.fullName,
             phone: sanitizedProfile.phone,
+            age: sanitizedProfile.age,
             address: sanitizedProfile.address || null,
             referralSource: sanitizedProfile.referralSource || null,
             consentAt: new Date(),
@@ -161,6 +173,7 @@ router.post(
               id: userId,
               fullName: sanitizedProfile.fullName,
               phone: sanitizedProfile.phone,
+              age: sanitizedProfile.age,
               address: sanitizedProfile.address,
               referralSource: sanitizedProfile.referralSource,
               consentAt: new Date(),
@@ -374,6 +387,9 @@ router.post(
     body("phone")
       .isMobilePhone()
       .withMessage("Vui lòng nhập số điện thoại hợp lệ"),
+    body("age")
+      .isInt({ min: 13, max: 100 })
+      .withMessage("Tuổi phải từ 13 đến 100"),
     body("address")
       .optional()
       .isLength({ max: 500 })
@@ -395,15 +411,23 @@ router.post(
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { fullName, phone, address, referralSource, consent, deviceId } =
-        req.body;
+      const {
+        fullName,
+        phone,
+        age,
+        address,
+        referralSource,
+        consent,
+        deviceId,
+      } = req.body;
 
-      // Phone is required (validated by express-validator)
+      // Phone and age are required (validated by express-validator)
 
       // Sanitize inputs
       const sanitizedProfile = {
         fullName: SecurityUtils.sanitizeInput(fullName),
         phone: SecurityUtils.sanitizeInput(phone),
+        age: parseInt(age),
         address: address ? SecurityUtils.sanitizeInput(address) : null,
         referralSource: referralSource
           ? SecurityUtils.sanitizeInput(referralSource)
@@ -477,6 +501,7 @@ router.post(
           data: {
             fullName: sanitizedProfile.fullName,
             phone: sanitizedProfile.phone,
+            age: sanitizedProfile.age,
             address: sanitizedProfile.address,
             referralSource: sanitizedProfile.referralSource,
             consentAt: new Date(),
@@ -491,6 +516,7 @@ router.post(
             fullName: sanitizedProfile.fullName,
             email: sanitizedProfile.email,
             phone: sanitizedProfile.phone,
+            age: sanitizedProfile.age,
             address: sanitizedProfile.address,
             referralSource: sanitizedProfile.referralSource,
             consentAt: new Date(),
@@ -569,6 +595,7 @@ router.post(
               fullName: true,
               email: true,
               phone: true,
+              age: true,
               address: true,
               referralSource: true,
             },
@@ -636,6 +663,7 @@ router.post(
             fullName: deviceSession.user.fullName,
             email: deviceSession.user.email,
             phone: deviceSession.user.phone,
+            age: deviceSession.user.age,
             address: deviceSession.user.address,
             referralSource: deviceSession.user.referralSource,
           },
@@ -693,34 +721,50 @@ router.post(
                 referralSource: true,
               },
             },
-            voucherCode: {
-              include: {
-                voucher: {
-                  select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    faceValue: true,
-                    voucherType: true,
-                  },
-                },
-              },
-            },
           },
         });
+
+        // Get voucher details separately if there was a win
+        let voucherDetails = null;
+        if (
+          existingAttempt &&
+          existingAttempt.outcome === "win" &&
+          existingAttempt.voucherId
+        ) {
+          voucherDetails = await prisma.voucher.findUnique({
+            where: { id: existingAttempt.voucherId },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              faceValue: true,
+              voucherType: true,
+              voucherCode: true,
+              validTo: true,
+              validFrom: true,
+              maxPerUser: true,
+            },
+          });
+        }
 
         if (existingAttempt) {
           const spinResult = {
             outcome: existingAttempt.outcome,
             participatedAt: existingAttempt.createdAt,
             userProfile: existingAttempt.user,
-            voucher:
-              existingAttempt.outcome === "win"
-                ? {
-                    ...existingAttempt.voucherCode?.voucher,
-                    code: existingAttempt.voucherCode?.code,
-                  }
-                : null,
+            voucher: voucherDetails
+              ? {
+                  id: voucherDetails.id,
+                  name: voucherDetails.name,
+                  description: voucherDetails.description,
+                  faceValue: voucherDetails.faceValue,
+                  voucherType: voucherDetails.voucherType,
+                  code: voucherDetails.voucherCode,
+                  validTo: voucherDetails.validTo,
+                  validFrom: voucherDetails.validFrom,
+                  maxPerUser: voucherDetails.maxPerUser,
+                }
+              : null,
           };
 
           return res.json({
@@ -758,34 +802,50 @@ router.post(
                 phone: true,
               },
             },
-            voucherCode: {
-              include: {
-                voucher: {
-                  select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    faceValue: true,
-                    voucherType: true,
-                  },
-                },
-              },
-            },
           },
         });
+
+        // Get voucher details separately if there was a win
+        let voucherDetails = null;
+        if (
+          existingAttempt &&
+          existingAttempt.outcome === "win" &&
+          existingAttempt.voucherId
+        ) {
+          voucherDetails = await prisma.voucher.findUnique({
+            where: { id: existingAttempt.voucherId },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              faceValue: true,
+              voucherType: true,
+              voucherCode: true,
+              validTo: true,
+              validFrom: true,
+              maxPerUser: true,
+            },
+          });
+        }
 
         if (existingAttempt) {
           const spinResult = {
             outcome: existingAttempt.outcome,
             participatedAt: existingAttempt.createdAt,
             userProfile: existingAttempt.user,
-            voucher:
-              existingAttempt.outcome === "win"
-                ? {
-                    ...existingAttempt.voucherCode?.voucher,
-                    code: existingAttempt.voucherCode?.code,
-                  }
-                : null,
+            voucher: voucherDetails
+              ? {
+                  id: voucherDetails.id,
+                  name: voucherDetails.name,
+                  description: voucherDetails.description,
+                  faceValue: voucherDetails.faceValue,
+                  voucherType: voucherDetails.voucherType,
+                  code: voucherDetails.voucherCode,
+                  validTo: voucherDetails.validTo,
+                  validFrom: voucherDetails.validFrom,
+                  maxPerUser: voucherDetails.maxPerUser,
+                }
+              : null,
           };
 
           return res.json({

@@ -1,19 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Gift,
-  Sparkles,
-  Crown,
-  Zap,
-  Heart,
-  Trophy,
-  Target,
-  Users,
-  ArrowRight,
-  CheckCircle,
-  Play,
-} from "lucide-react";
+import { Gift, Trophy, Users, ArrowRight } from "lucide-react";
 import LogoIcon from "../components/LogoIcon";
 
 const LandingPage = () => {
@@ -26,39 +14,6 @@ const LandingPage = () => {
   const handleStartSpin = () => {
     navigate("/spin");
   };
-
-  const features = [
-    {
-      icon: <Gift className="w-8 h-8" />,
-      title: "Ưu Đãi Thời Trang Độc Quyền",
-      description:
-        "Giảm giá sâu cho bộ sưu tập mới, phụ kiện thời trang và miễn phí vận chuyển",
-      color: "from-red-900 to-red-900",
-      customStyle: { background: "#74070E" },
-    },
-    {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Mã Giảm Giá Ngay Lập Tức",
-      description:
-        "Nhận mã voucher thời trang ngay sau khi quay và áp dụng luôn",
-      color: "from-gray-500 to-gray-600",
-    },
-    {
-      icon: <Heart className="w-8 h-8" />,
-      title: "An Toàn & Minh Bạch",
-      description:
-        "Hệ thống bảo mật thông tin khách hàng và đảm bảo tính công bằng tuyệt đối",
-      color: "from-red-900 to-red-900",
-      customStyle: { background: "#74070E" },
-    },
-    {
-      icon: <Crown className="w-8 h-8" />,
-      title: "Khách Hàng VIP",
-      description:
-        "Ưu đãi đặc biệt chỉ dành riêng cho khách hàng thân thiết của Dezus",
-      color: "from-gray-600 to-gray-700",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-200">
@@ -80,7 +35,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-24 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
+      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
         {/* Enhanced Background Elements */}
         <div className="absolute inset-0">
           {/* Floating orbs with improved gradients */}
@@ -124,48 +79,37 @@ const LandingPage = () => {
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
             >
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-8">
-                <span className="block bg-gradient-to-r from-gray-900 via-red-800 to-gray-900 bg-clip-text text-transparent drop-shadow-lg">
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 lg:mb-10">
+                <span className="block bg-gradient-to-r from-gray-900 via-red-800 to-gray-900 bg-clip-text text-transparent drop-shadow-lg leading-tight tracking-tight">
                   SECRET BILL
                 </span>
               </h1>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 sm:mb-16">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
                 <motion.button
                   onClick={handleStartSpin}
-                  className="group relative text-white font-bold text-lg px-10 py-5 rounded-3xl shadow-2xl hover:shadow-red-500/50 transform transition-all duration-500 border border-red-700/20"
+                  className="group relative text-white font-bold text-sm sm:text-base lg:text-lg xl:text-xl px-6 sm:px-8 lg:px-10 xl:px-12 py-3 sm:py-4 lg:py-5 xl:py-6 rounded-3xl shadow-2xl hover:shadow-red-500/50 transform transition-all duration-500 border border-red-700/20 w-full sm:w-auto max-w-sm sm:max-w-none"
                   style={{
                     background:
                       "linear-gradient(135deg, #74070E 0%, #8A080F 50%, #74070E 100%)",
                     backgroundSize: "200% 200%",
                   }}
                   whileHover={{
-                    scale: 1.08,
+                    scale: 1.05,
                     backgroundPosition: "right center",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                  }}
-                  transition={{
-                    backgroundPosition: {
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "linear",
-                    },
-                  }}
                 >
-                  <div className="flex items-center space-x-3 relative z-10">
-                    <Play className="w-6 h-6 group-hover:animate-spin" />
-                    <span className="tracking-wide">
-                      🎯 QUAY NGAY NHẬN ƯU ĐÃI
+                  <div className="flex items-center justify-center space-x-2 sm:space-x-3 lg:space-x-4 relative z-10">
+                    <Gift className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 flex-shrink-0" />
+                    <span className="tracking-wide font-bold text-center">
+                      BỐC THĂM NGAY NHẬN ƯU ĐÃI
                     </span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                    <ArrowRight className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
                   </div>
 
                   {/* Enhanced glow effect */}
@@ -210,7 +154,7 @@ const LandingPage = () => {
               Cách Nhận Ưu Đãi
             </h2>
             <p className="text-xl text-gray-600 font-medium">
-              3 bước đơn giản để nhận voucher thời trang Dezus!
+              3 bước đơn giản để nhận voucher thời trang SECRET BILL!
             </p>
           </motion.div>
 
@@ -226,10 +170,10 @@ const LandingPage = () => {
                 },
                 {
                   step: "2",
-                  title: "Quay Thưởng",
+                  title: "Bốc Thăm",
                   description:
-                    "Nhấn nút quay và khám phá ưu đãi thời trang dành cho bạn",
-                  icon: <Target className="w-8 h-8" />,
+                    "Nhấn nút bốc thăm và khám phá ưu đãi thời trang dành cho bạn",
+                  icon: <Gift className="w-8 h-8" />,
                 },
                 {
                   step: "3",
@@ -323,8 +267,8 @@ const LandingPage = () => {
               />
             </div>
             <p className="text-gray-300 mb-3 text-lg font-medium">
-              © {new Date().getFullYear()} Dezus Fashion - Thương Hiệu Thời
-              Trang Hàng Đầu.
+              © {new Date().getFullYear()} SECRET BILL - Thương Hiệu Thời Trang
+              Hàng Đầu.
             </p>
             <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
               Mang đến phong cách thời trang độc đáo với giá cả hấp dẫn nhất

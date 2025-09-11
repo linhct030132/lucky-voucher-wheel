@@ -5,7 +5,6 @@ import Confetti from "react-confetti";
 import toast from "react-hot-toast";
 import {
   Gift,
-  Trophy,
   ChevronRight,
   Copy,
   Check,
@@ -200,16 +199,6 @@ const SpinPage = () => {
     // Keep storedUserInfo so form can be pre-filled
   };
 
-  // Try again
-  const handleTryAgain = () => {
-    if (storedUserInfo) {
-      setCurrentStep("stored_info"); // Go back to stored info if we have it
-    } else {
-      setCurrentStep("form"); // Go to form if no stored info
-    }
-    setShowConfetti(false);
-  };
-
   // Loading state
   if (currentStep === "loading" || !availableVouchers) {
     return (
@@ -399,20 +388,7 @@ const SpinPage = () => {
               </p>
             </>
           ) : (
-            <>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    background: "#74070E",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                  }}
-                >
-                  Secret Bill
-                </span>
-              </h1>
-            </>
+            <></>
           )}
 
           {/* Prize Preview */}
@@ -926,40 +902,101 @@ const SpinPage = () => {
                         )}
 
                         <div className="text-center mb-8">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-6">
                             {previousResult
                               ? "Giải Thưởng Bạn Đã Nhận"
                               : "Giải Thưởng Của Bạn"}
                           </h3>
-                          <div
-                            className="rounded-2xl p-6"
-                            style={{
-                              backgroundColor: "#FEF2F2",
-                              borderColor: "#FCA5A5",
-                              borderWidth: "1px",
-                            }}
-                          >
-                            <div className="mb-3" style={{ color: "#74070E" }}>
-                              <Gift className="w-12 h-12 mx-auto" />
-                            </div>
-                            <h4 className="text-xl font-bold text-gray-900 mb-2">
+
+                          {/* Enhanced Voucher Card */}
+                          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-8 border-2 border-red-100 shadow-lg">
+                            {/* Voucher Name */}
+                            <h4 className="text-2xl font-bold text-gray-900 mb-3">
                               {
                                 (previousResult?.voucher || spinResult.voucher)
                                   ?.name
                               }
                             </h4>
-                            <p className="text-gray-600 mb-4">
-                              {
-                                (previousResult?.voucher || spinResult.voucher)
-                                  ?.description
-                              }
-                            </p>
-                            <div className="bg-white rounded-xl p-4 border border-green-200">
-                              <p className="text-sm text-gray-600 mb-2">
-                                Mã Voucher:
+
+                            {/* Voucher Value Display */}
+                            <div className="mb-4">
+                              <div
+                                className="text-4xl font-black mb-2"
+                                style={{ color: "#74070E" }}
+                              >
+                                {(() => {
+                                  const voucher =
+                                    previousResult?.voucher ||
+                                    spinResult.voucher;
+                                  const voucherType =
+                                    voucher?.voucherType ||
+                                    voucher?.voucher_type;
+                                  const faceValue =
+                                    voucher?.faceValue || voucher?.face_value;
+
+                                  switch (voucherType) {
+                                    case "discount_percentage":
+                                      return `${faceValue}% GIẢM GIÁ`;
+                                    case "discount_amount":
+                                      return `${parseInt(
+                                        faceValue
+                                      ).toLocaleString("vi-VN")}₫ GIẢM GIÁ`;
+                                    case "free_product":
+                                      return "MIỄN PHÍ";
+                                    default:
+                                      return faceValue;
+                                  }
+                                })()}
+                              </div>
+                              <div className="text-sm text-gray-600 font-medium">
+                                {(() => {
+                                  const voucher =
+                                    previousResult?.voucher ||
+                                    spinResult.voucher;
+                                  const voucherType =
+                                    voucher?.voucherType ||
+                                    voucher?.voucher_type;
+
+                                  switch (voucherType) {
+                                    case "discount_percentage":
+                                      return "Giảm giá theo phần trăm";
+                                    case "discount_amount":
+                                      return "Giảm giá cố định";
+                                    case "free_product":
+                                      return "Sản phẩm miễn phí";
+                                    default:
+                                      return "Voucher đặc biệt";
+                                  }
+                                })()}
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            {(previousResult?.voucher || spinResult.voucher)
+                              ?.description && (
+                              <p className="text-gray-700 mb-6 text-lg font-medium">
+                                {
+                                  (
+                                    previousResult?.voucher ||
+                                    spinResult.voucher
+                                  )?.description
+                                }
+                              </p>
+                            )}
+
+                            {/* Voucher Code Section */}
+                            <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-red-300 shadow-inner">
+                              <p className="text-sm font-semibold text-gray-600 mb-3">
+                                Mã Voucher của bạn:
                               </p>
                               <div className="flex items-center justify-center space-x-3">
-                                <code className="bg-gray-100 px-4 py-2 rounded-lg font-mono text-lg font-bold text-gray-900">
+                                <code
+                                  className="px-6 py-3 rounded-xl font-mono text-xl font-bold text-white tracking-wider shadow-lg"
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #74070E 0%, #A91D3A 100%)",
+                                  }}
+                                >
                                   {
                                     (
                                       previousResult?.voucher ||

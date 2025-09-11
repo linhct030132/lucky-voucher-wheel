@@ -51,6 +51,7 @@ const VoucherManagement = () => {
     status: "active",
     codeGeneration: "auto",
     codePrefix: "LV",
+    voucherCode: "",
   });
 
   // Fetch data on component mount
@@ -133,6 +134,7 @@ const VoucherManagement = () => {
       status: voucher.status,
       codeGeneration: voucher.codeGeneration || "auto",
       codePrefix: voucher.codePrefix || "LV",
+      voucherCode: voucher.voucherCode || "",
     });
     setShowModal(true);
   };
@@ -170,6 +172,7 @@ const VoucherManagement = () => {
       status: "active",
       codeGeneration: "auto",
       codePrefix: "LV",
+      voucherCode: "",
     });
   };
 
@@ -645,6 +648,28 @@ const VoucherManagement = () => {
                         <Gift className="w-5 h-5 mr-2 text-indigo-600" />
                         Thông Tin Cơ Bản
                       </h3>
+                      {/* Voucher Code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Mã Voucher *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.voucherCode}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              voucherCode: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Nhập mã voucher (ví dụ: SUMMER2024)"
+                        />
+                        <p className="mt-1 text-sm text-gray-500">
+                          Mã voucher mà người dùng sẽ nhận được khi thắng
+                        </p>
+                      </div>
 
                       {/* Name */}
                       <div>
@@ -761,7 +786,7 @@ const VoucherManagement = () => {
                           required
                           min="0"
                           max="1"
-                          step="0.01"
+                          step="0.0001"
                           value={formData.baseProbability}
                           onChange={(e) =>
                             setFormData({
@@ -770,11 +795,23 @@ const VoucherManagement = () => {
                             })
                           }
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                          placeholder="0.1"
+                          placeholder="0.0003"
                         />
-                        <p className="mt-1 text-sm text-gray-500">
-                          0.1 = 10% cơ hội thắng
-                        </p>
+                        <div className="mt-1 space-y-1">
+                          <p className="text-sm text-gray-500">
+                            Ví dụ: 0.0003 = 0.03%, 0.001 = 0.1%, 0.01 = 1%, 0.1
+                            = 10%
+                          </p>
+                          {formData.baseProbability && (
+                            <p className="text-sm font-medium text-indigo-600">
+                              ={" "}
+                              {(
+                                parseFloat(formData.baseProbability) * 100
+                              ).toFixed(4)}
+                              % cơ hội thắng
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Initial Stock */}

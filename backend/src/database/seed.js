@@ -34,15 +34,16 @@ const seedData = {
       description: "Get 10% off your next purchase",
       faceValue: "10%",
       voucherType: "discount_percentage",
-      baseProbability: 0.15,
+      baseProbability: 0.0003,
       initialStock: 100,
       remainingStock: 100,
       maxPerUser: 1,
       validFrom: new Date(),
       validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       status: "active",
-      codeGeneration: "auto",
+      codeGeneration: "pre_seeded",
       codePrefix: "SAVE10",
+      voucherCode: "DISCOUNT10OFF",
     },
     {
       id: "550e8400-e29b-41d4-a716-446655440002",
@@ -50,15 +51,16 @@ const seedData = {
       description: "Get $5 off your next purchase",
       faceValue: "$5",
       voucherType: "discount_amount",
-      baseProbability: 0.1,
+      baseProbability: 0.0005,
       initialStock: 50,
       remainingStock: 50,
       maxPerUser: 1,
       validFrom: new Date(),
       validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       status: "active",
-      codeGeneration: "auto",
+      codeGeneration: "pre_seeded",
       codePrefix: "SAVE5",
+      voucherCode: "SAVE5DOLLARS",
     },
     {
       id: "550e8400-e29b-41d4-a716-446655440003",
@@ -66,15 +68,16 @@ const seedData = {
       description: "Get a free coffee on us!",
       faceValue: "Free Coffee",
       voucherType: "free_product",
-      baseProbability: 0.05,
+      baseProbability: 0.0001,
       initialStock: 25,
       remainingStock: 25,
       maxPerUser: 1,
       validFrom: new Date(),
       validTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       status: "active",
-      codeGeneration: "auto",
+      codeGeneration: "pre_seeded",
       codePrefix: "FREE",
+      voucherCode: "FREECOFFEE2024",
     },
   ],
 };
@@ -139,46 +142,8 @@ async function seedDatabase() {
       );
     }
 
-    // Generate voucher codes for each voucher
-    console.log("\n🔢 Generating voucher codes...");
-    for (const voucherData of seedData.vouchers) {
-      // Check how many codes already exist
-      const existingCodes = await prisma.voucherCode.count({
-        where: { voucherId: voucherData.id },
-      });
-
-      const codesNeeded = Math.min(
-        voucherData.initialStock - existingCodes,
-        10
-      ); // Generate up to 10 codes
-
-      if (codesNeeded > 0) {
-        const codes = [];
-        for (let i = 1; i <= codesNeeded; i++) {
-          codes.push({
-            id: uuidv4(),
-            voucherId: voucherData.id,
-            code: `${voucherData.codePrefix}-${Date.now()
-              .toString()
-              .slice(-6)}-${i.toString().padStart(2, "0")}`,
-            status: "available",
-          });
-        }
-
-        await prisma.voucherCode.createMany({
-          data: codes,
-          skipDuplicates: true,
-        });
-
-        console.log(
-          `  ✅ Generated ${codesNeeded} codes for ${voucherData.name}`
-        );
-      } else {
-        console.log(
-          `  ℹ️  Voucher ${voucherData.name} already has sufficient codes`
-        );
-      }
-    }
+    // Voucher codes are now stored directly on the voucher (voucherCode field)
+    console.log("  ℹ️  Voucher codes are set directly on vouchers");
 
     // Create sample user profiles
     console.log("\n👤 Creating sample user profiles...");
