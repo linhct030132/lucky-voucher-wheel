@@ -264,9 +264,7 @@ router.post(
           res.json({
             outcome: "win",
             voucher: {
-              id: spinResult.voucher.id,
-              name: spinResult.voucher.name,
-              code: spinResult.voucher.code,
+              ...spinResult.voucher,
               faceValue: spinResult.voucher.faceValue,
               validTo: null, // Will be set from voucher data
             },
