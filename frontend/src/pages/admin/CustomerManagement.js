@@ -468,7 +468,7 @@ const CustomerManagement = () => {
                   {/* Spin History */}
                   <div>
                     <h5 className="text-md font-medium text-gray-900 mb-4">
-                      Lịch Sử Quay Số
+                      Lịch Sử Bốc Thăm Số
                     </h5>
 
                     {spinLoading ? (

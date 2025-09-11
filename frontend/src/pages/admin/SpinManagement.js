@@ -114,7 +114,7 @@ const SpinManagement = () => {
 
   if (loading && spins.length === 0) {
     return (
-      <AdminLayout title="Quản Lý Lượt Quay">
+      <AdminLayout title="Quản Lý Lượt Bốc Thăm">
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
@@ -126,12 +126,12 @@ const SpinManagement = () => {
   }
 
   return (
-    <AdminLayout title="Quản Lý Lượt Quay">
+    <AdminLayout title="Quản Lý Lượt Bốc Thăm">
       <div className="space-y-6">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Quản Lý Lượt Quay
+            Quản Lý Lượt Bốc Thăm
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
             Theo dõi và quản lý tất cả hoạt động quay số của khách hàng
@@ -142,7 +142,7 @@ const SpinManagement = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {[
             {
-              label: "Tổng Lượt Quay",
+              label: "Tổng Lượt Bốc Thăm",
               value: stats.totalSpins,
               icon: RotateCcw,
               color: "bg-blue-500",

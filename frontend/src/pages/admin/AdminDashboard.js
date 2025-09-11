@@ -272,7 +272,7 @@ const AdminDashboard = () => {
       description: "Voucher đã được trao thưởng",
     },
     {
-      label: "Tổng Lượt Quay",
+      label: "Tổng Lượt Bốc Thăm",
       value: stats.totalSpins || 0,
       change: "+15%",
       trend: "up",
@@ -337,7 +337,7 @@ const AdminDashboard = () => {
       gradient: "from-blue-500 to-blue-600",
     },
     {
-      title: "Xem Lượt Quay",
+      title: "Xem Lượt Bốc Thăm",
       description: "Theo dõi hoạt động quay số",
       icon: <RotateCcw className="w-6 h-6" />,
       link: "/admin/spins",

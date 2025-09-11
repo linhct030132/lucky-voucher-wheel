@@ -4,7 +4,8 @@ const AuditLogger = require("../utils/auditLogger");
 
 class SpinEngine {
   /**
-   * Main spin method that handles the weighted random selection
+   * Main spin method that guarantees a win using normalized probability distribution
+   * Ensures every user receives a voucher while maintaining fairness through relative probabilities
    */
   static async spin(userProfile, deviceId, req) {
     // Step 1: Validate one-time eligibility
@@ -16,8 +17,11 @@ class SpinEngine {
     // Step 2: Get eligible vouchers
     const eligibleVouchers = await this.getEligibleVouchers();
 
-    // Step 3: If no vouchers available, return lose
+    // Step 3: If no vouchers available, return lose (should be very rare)
     if (eligibleVouchers.length === 0) {
+      console.warn(
+        "⚠️ No eligible vouchers available - this should be very rare!"
+      );
       return await this.processLose(
         userProfile,
         deviceId,
@@ -26,13 +30,15 @@ class SpinEngine {
       );
     }
 
-    // Step 4: Determine if this is a win or lose based on probability
+    // Step 4: Select voucher using normalized probabilities (guarantees win)
     const outcome = this.determineSpinOutcome(eligibleVouchers);
 
-    // Step 5: Process the result
+    // Step 5: Process the result (should always be a win with available vouchers)
     if (outcome.type === "win") {
       return await this.processWin(userProfile, deviceId, outcome.voucher, req);
     } else {
+      // This should virtually never happen with the new guaranteed win logic
+      console.warn("⚠️ Unexpected lose outcome with available vouchers!");
       return await this.processLose(
         userProfile,
         deviceId,
@@ -82,47 +88,109 @@ class SpinEngine {
   }
 
   /**
-   * Determine if this spin results in a win or lose, respecting low probabilities
+   * Determine voucher selection using normalized probabilities (always wins)
    */
   static determineSpinOutcome(vouchers) {
     if (vouchers.length === 0) {
       return { type: "lose" };
     }
 
-    // Calculate total probability of winning anything
-    const totalWinProbability = vouchers.reduce((sum, voucher) => {
+    // Calculate total probability of all vouchers
+    const totalProbability = vouchers.reduce((sum, voucher) => {
       const probability = parseFloat(voucher.base_probability);
       return sum + (isNaN(probability) || probability <= 0 ? 0 : probability);
     }, 0);
 
-    console.log(`🎲 Spin outcome calculation:`, {
-      totalWinProbability,
-      totalWinPercentage: `${(totalWinProbability * 100).toFixed(4)}%`,
-      loseProbability: 1 - totalWinProbability,
-      losePercentage: `${((1 - totalWinProbability) * 100).toFixed(4)}%`,
+    console.log(`🎲 Guaranteed win spin calculation:`, {
+      totalProbability,
+      totalPercentage: `${(totalProbability * 100).toFixed(4)}%`,
+      voucherCount: vouchers.length,
+      strategy: "normalized_probabilities",
     });
 
-    // Generate random number to determine win/lose
-    const randomOutcome = Math.random();
+    // Always use weighted selection with normalized probabilities to ensure fair distribution
     console.log(
-      `🎯 Random outcome: ${randomOutcome.toFixed(
-        6
-      )} (win if < ${totalWinProbability.toFixed(6)})`
+      `✅ Guaranteed WIN! Selecting voucher using normalized probabilities...`
     );
+    return this.normalizedWeightedSelection(vouchers);
+  }
 
-    // If random number is within win probability, it's a win
-    if (randomOutcome < totalWinProbability) {
-      console.log(`✅ Result: WIN! Now selecting which voucher...`);
-      // Now select which voucher using weighted selection
-      return this.weightedRandomSelection(vouchers);
-    } else {
-      console.log(
-        `❌ Result: LOSE (${randomOutcome.toFixed(
-          6
-        )} >= ${totalWinProbability.toFixed(6)})`
-      );
+  /**
+   * Normalized weighted selection - guarantees a win while maintaining fair probability distribution
+   */
+  static normalizedWeightedSelection(vouchers) {
+    if (vouchers.length === 0) {
       return { type: "lose" };
     }
+
+    // Extract and validate probabilities
+    const voucherWeights = vouchers.map((v) => {
+      const probability = parseFloat(v.base_probability);
+      return isNaN(probability) || probability <= 0 ? 0.000001 : probability; // Minimum weight to ensure fairness
+    });
+
+    // Calculate total weight
+    const totalWeight = voucherWeights.reduce((sum, weight) => sum + weight, 0);
+
+    // Normalize probabilities to sum to 1 (100%)
+    const normalizedWeights = voucherWeights.map(
+      (weight) => weight / totalWeight
+    );
+
+    // Debug logging for transparency
+    console.log(`🎯 Normalized fair distribution:`, {
+      vouchers: vouchers.map((v, i) => ({
+        name: v.name,
+        originalProbability: voucherWeights[i],
+        originalPercentage: `${(voucherWeights[i] * 100).toFixed(4)}%`,
+        normalizedProbability: normalizedWeights[i],
+        normalizedPercentage: `${(normalizedWeights[i] * 100).toFixed(4)}%`,
+      })),
+      totalOriginalWeight: totalWeight,
+      normalizedSum: normalizedWeights.reduce((sum, w) => sum + w, 0),
+    });
+
+    // Generate random number between 0 and 1
+    const random = Math.random();
+    console.log(
+      `🎲 Random number generated: ${random.toFixed(6)} (guaranteed win)`
+    );
+
+    // Find which voucher was selected using normalized probabilities
+    let cumulativeWeight = 0;
+    for (let i = 0; i < vouchers.length; i++) {
+      const previousCumulative = cumulativeWeight;
+      cumulativeWeight += normalizedWeights[i];
+
+      console.log(`🔍 Checking voucher ${i}: ${vouchers[i].name}`, {
+        normalizedWeight: normalizedWeights[i],
+        normalizedPercentage: `${(normalizedWeights[i] * 100).toFixed(4)}%`,
+        range: `${previousCumulative.toFixed(6)} - ${cumulativeWeight.toFixed(
+          6
+        )}`,
+        random: random.toFixed(6),
+        matches: random >= previousCumulative && random < cumulativeWeight,
+      });
+
+      if (random < cumulativeWeight) {
+        console.log(
+          `✅ Selected voucher: ${vouchers[i].name} (fair normalized selection)`
+        );
+        return {
+          type: "win",
+          voucher: vouchers[i],
+        };
+      }
+    }
+
+    // Fallback to last voucher (should virtually never happen with proper normalization)
+    console.log(
+      `⚠️ Fallback to last voucher: ${vouchers[vouchers.length - 1].name}`
+    );
+    return {
+      type: "win",
+      voucher: vouchers[vouchers.length - 1],
+    };
   }
 
   /**

@@ -171,7 +171,7 @@ const SpinPage = () => {
         }
       } else {
         setCurrentStep("stored_info"); // Go back to stored info instead of form
-        toast.error(result?.error || "Quay thất bại. Vui lòng thử lại.");
+        toast.error(result?.error || "Bốc Thăm thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
       console.error("Spin error:", error);
@@ -292,7 +292,7 @@ const SpinPage = () => {
                     },
                     {
                       step: 2,
-                      label: "Quay thưởng",
+                      label: "Bốc Thăm thưởng",
                       active: currentStep === "spinning",
                     },
                     {
@@ -546,7 +546,7 @@ const SpinPage = () => {
               >
                 <div className="bg-white rounded-3xl p-12 shadow-2xl border border-gray-100 max-w-2xl mx-auto">
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    Vòng quay voucher đã sẵn sàng!
+                    Bốc thăm voucher đã sẵn sàng!
                   </h2>
 
                   <p className="text-xl text-gray-600 mb-8">
@@ -651,7 +651,7 @@ const SpinPage = () => {
                       <div className="flex items-center justify-center space-x-3">
                         <Target className="w-6 h-6" />
                         <span className="text-lg">
-                          {isSpinning ? "Đang quay..." : "Quay Ngay!"}
+                          {isSpinning ? "Đang quay..." : "Bốc Thăm Ngay!"}
                         </span>
                       </div>
                     </motion.button>
@@ -699,7 +699,7 @@ const SpinPage = () => {
                   </motion.div>
 
                   <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    Đang Quay Vòng Thời Trang...
+                    Đang Bốc Thăm...
                   </h2>
 
                   <motion.p
@@ -1139,29 +1139,10 @@ const SpinPage = () => {
                         <div
                           className={`grid gap-4 ${
                             previousResult
-                              ? "grid-cols-1 sm:grid-cols-2"
-                              : "grid-cols-1 sm:grid-cols-2"
+                              ? "grid-cols-1 sm:grid-cols-1"
+                              : "grid-cols-1 sm:grid-cols-1"
                           }`}
                         >
-                          {/* Shop Now Button */}
-                          <motion.button
-                            onClick={() =>
-                              window.open("https://dezus.com/", "_blank")
-                            }
-                            className="text-white font-medium py-3 px-6 rounded-xl transition-colors"
-                            style={{
-                              background:
-                                "linear-gradient(to right, #059669, #047857)",
-                            }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <div className="flex items-center justify-center space-x-2">
-                              <ShoppingBag className="w-5 h-5" />
-                              <span>Mua Sắm Ngay</span>
-                            </div>
-                          </motion.button>
-
                           <motion.button
                             onClick={goHome}
                             className="font-medium py-3 px-6 rounded-xl transition-colors"

@@ -499,9 +499,9 @@ const VoucherManagement = () => {
                     <div className="text-center">
                       <div className="text-2xl font-bold text-indigo-600">
                         {voucher.voucherType === "discount_percentage"
-                          ? `${voucher.faceValue}% OFF`
+                          ? `${voucher.faceValue} OFF`
                           : voucher.voucherType === "discount_amount"
-                          ? `$${voucher.faceValue}`
+                          ? `${voucher.faceValue}`
                           : "Free Product"}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">

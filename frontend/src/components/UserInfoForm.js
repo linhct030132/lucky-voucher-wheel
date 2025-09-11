@@ -548,7 +548,7 @@ const UserInfoForm = ({ onSubmit, loading = false, initialData = null }) => {
               </div>
             ) : (
               <div className="flex items-center justify-center space-x-2">
-                <span>🎯 Bắt Đầu Quay!</span>
+                <span>🎯 Bắt Đầu Bốc Thăm!</span>
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}

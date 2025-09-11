@@ -46,7 +46,7 @@ const AuditLogs = () => {
     { value: "create_voucher", label: "Tạo phiếu mua hàng" },
     { value: "update_voucher", label: "Cập nhật phiếu mua hàng" },
     { value: "delete_voucher", label: "Xóa phiếu mua hàng" },
-    { value: "spin_attempt", label: "Quay số" },
+    { value: "spin_attempt", label: "Bốc Thăm số" },
     { value: "view_reports", label: "Xem báo cáo" },
     { value: "export_data", label: "Xuất dữ liệu" },
   ];

@@ -185,7 +185,7 @@ export const SpinProvider = ({ children }) => {
       } catch (error) {
         console.error("Spin failed:", error);
 
-        let errorMessage = "Quay thất bại. Vui lòng thử lại.";
+        let errorMessage = "Bốc Thăm thất bại. Vui lòng thử lại.";
         let errorCode = "UNKNOWN_ERROR";
 
         if (error.response?.status === 409) {

@@ -37,7 +37,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
       description: "Tạo và quản lý voucher",
     },
     {
-      label: "Quản Lý Lượt Quay",
+      label: "Quản Lý Lượt Bốc Thăm",
       path: "/admin/spins",
       icon: RotateCcw,
       description: "Theo dõi hoạt động quay số",
