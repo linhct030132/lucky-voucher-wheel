@@ -53,7 +53,8 @@ const SpinManagement = () => {
       debouncedSearch ||
       filters.outcome ||
       filters.dateFrom ||
-      filters.dateTo
+      filters.dateTo ||
+      currentPage !== 1
     );
   };
 
@@ -109,6 +110,7 @@ const SpinManagement = () => {
     filters.outcome,
     filters.dateFrom,
     filters.dateTo,
+    currentPage,
   ]);
 
   const fetchSpins = async (isFiltering = false) => {
@@ -171,16 +173,6 @@ const SpinManagement = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString("vi-VN");
-  };
-
-  const getOutcomeColor = (outcome) => {
-    return outcome === "win"
-      ? "bg-green-100 text-green-800 border-green-200"
-      : "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
   const getOutcomeIcon = (outcome) => {
     return outcome === "win" ? (
       <Trophy className="w-4 h-4" />
@@ -199,62 +191,6 @@ const SpinManagement = () => {
         return <Gift className="w-4 h-4 text-purple-600" />;
       default:
         return <Gift className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getVoucherTypeLabel = (type) => {
-    switch (type) {
-      case "discount_percentage":
-        return "Giảm %";
-      case "discount_amount":
-        return "Giảm tiền";
-      case "free_product":
-        return "Miễn phí";
-      default:
-        return "Voucher";
-    }
-  };
-
-  const getVoucherStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      case "draft":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getCodeStatusColor = (status) => {
-    switch (status) {
-      case "issued":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "redeemed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "available":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      case "expired":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getCodeStatusIcon = (status) => {
-    switch (status) {
-      case "issued":
-        return <Clock className="w-3 h-3" />;
-      case "redeemed":
-        return <CheckCircle className="w-3 h-3" />;
-      case "available":
-        return <AlertCircle className="w-3 h-3" />;
-      case "expired":
-        return <X className="w-3 h-3" />;
-      default:
-        return <Info className="w-3 h-3" />;
     }
   };
 
