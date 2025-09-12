@@ -67,31 +67,14 @@ const AdminDashboard = () => {
         if (statsResponse.data.success) {
           const statsData = statsResponse.data.data;
 
-          // Get additional data for topVouchers and recentActivity
-          const [vouchersResponse, auditResponse] = await Promise.all([
-            axios.get(`/api/admin/vouchers`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`/api/admin/logs`, {
-              headers: { Authorization: `Bearer ${token}` },
-              params: { limit: 10 },
-            }),
-          ]);
+          // Get additional data for recentActivity only (topVouchers now included in stats)
+          const auditResponse = await axios.get(`/api/admin/logs`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { limit: 10 },
+          });
 
-          const vouchers =
-            vouchersResponse.data.data || vouchersResponse.data.vouchers || [];
           const auditLogs =
             auditResponse.data.data || auditResponse.data.logs || [];
-
-          // Calculate top vouchers based on remaining stock or other metrics
-          const topVouchers = vouchers
-            .map((voucher) => ({
-              ...voucher,
-              wins: 0, // Would need spin data to calculate actual wins
-              winRate: 0,
-            }))
-            .sort((a, b) => (b.remaining_stock || 0) - (a.remaining_stock || 0))
-            .slice(0, 5);
 
           setStats({
             totalUsers: statsData.totalUsers || 0,
@@ -105,11 +88,11 @@ const AdminDashboard = () => {
                   (parseFloat(statsData.redemptionRate) / 100)
               ) || 0,
             conversionRate: parseFloat(statsData.redemptionRate) || 0,
-            stockValue: vouchers.reduce(
-              (sum, v) => sum + (v.remaining_stock || v.remainingStock || 0),
+            stockValue: (statsData.topVouchers || []).reduce(
+              (sum, v) => sum + (v.remaining_stock || 0),
               0
             ),
-            topVouchers,
+            topVouchers: statsData.topVouchers || [],
             recentActivity: auditLogs.slice(0, 8),
           });
           return;
@@ -664,7 +647,10 @@ const AdminDashboard = () => {
                       {voucher?.wins || 0} lượt thắng
                     </span>
                     <span className="text-gray-500">
-                      {(voucher?.winRate || 0).toFixed(1)}% tỷ lệ
+                      {(voucher?.winRate ? voucher?.winRate * 100 : 0).toFixed(
+                        1
+                      )}
+                      % tỷ lệ
                     </span>
                   </div>
                 </div>

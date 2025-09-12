@@ -995,6 +995,36 @@ router.get("/stats", async (req, res, next) => {
         ? ((parseInt(total_wins) / parseInt(total_spins)) * 100).toFixed(1)
         : 0;
 
+    // Get top vouchers by wins
+    const topVouchersQuery = `
+      SELECT 
+        v.id,
+        v.name,
+        v.face_value,
+        v.voucher_type,
+        v.initial_stock,
+        v.remaining_stock,
+        COUNT(sa.id) as wins,
+        CAST(v.base_probability AS DOUBLE) as win_rate
+      FROM vouchers v
+      LEFT JOIN spin_attempts sa ON v.id = sa.voucher_id AND sa.outcome = 'win'
+      WHERE v.status = 'active'
+      GROUP BY v.id, v.name, v.face_value, v.voucher_type, v.initial_stock, v.remaining_stock
+      ORDER BY wins DESC
+      LIMIT 5
+    `;
+    const topVouchersResult = await query(topVouchersQuery);
+    const topVouchers = topVouchersResult.map((voucher) => ({
+      id: voucher.id,
+      name: voucher.name,
+      face_value: voucher.face_value,
+      voucher_type: voucher.voucher_type,
+      initial_stock: voucher.initial_stock,
+      remaining_stock: voucher.remaining_stock,
+      wins: voucher.wins,
+      winRate: parseFloat((Number(voucher.win_rate) || 0).toFixed(4)),
+    }));
+
     res.json({
       success: true,
       data: {
@@ -1007,6 +1037,7 @@ router.get("/stats", async (req, res, next) => {
         codesIssued: parseInt(codes_issued) || 0,
         codesRedeemed: parseInt(codes_redeemed) || 0,
         redemptionRate: winRate,
+        topVouchers: topVouchers,
       },
     });
   } catch (error) {
