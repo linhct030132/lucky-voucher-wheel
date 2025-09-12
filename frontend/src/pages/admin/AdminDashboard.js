@@ -97,9 +97,13 @@ const AdminDashboard = () => {
             totalUsers: statsData.totalUsers || 0,
             totalVouchers: statsData.totalVouchers || 0,
             totalSpins: statsData.totalSpins || 0,
-            totalWins: statsData.codesIssued || 0,
+            totalWins: statsData.totalWins || 0,
             todaySpins: statsData.todaySpins || 0,
-            todayWins: Math.floor(statsData.todaySpins * 0.3) || 0, // Estimate
+            todayWins:
+              Math.floor(
+                statsData.todaySpins *
+                  (parseFloat(statsData.redemptionRate) / 100)
+              ) || 0,
             conversionRate: parseFloat(statsData.redemptionRate) || 0,
             stockValue: vouchers.reduce(
               (sum, v) => sum + (v.remaining_stock || v.remainingStock || 0),
@@ -301,7 +305,7 @@ const AdminDashboard = () => {
       value: stats.todaySpins || 0,
       icon: <Calendar className="w-5 h-5" />,
       color: "text-indigo-600",
-      suffix: "lượt quay",
+      suffix: "lượt bốc thắm",
     },
     {
       label: "Thành Công",

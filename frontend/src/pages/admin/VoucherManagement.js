@@ -31,9 +31,11 @@ const VoucherManagement = () => {
   const { token } = useAuth();
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filtering, setFiltering] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -53,22 +55,75 @@ const VoucherManagement = () => {
     codePrefix: "LV",
     voucherCode: "",
   });
-  console.log(formData);
+
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch data on component mount
   useEffect(() => {
-    fetchVouchers();
-  }, []);
+    if (token) {
+      fetchVouchers(false); // Initial load
+    }
+  }, [token]);
 
-  const fetchVouchers = async () => {
+  // Fetch data when filters change (after initial load)
+  useEffect(() => {
+    if (token && !loading) {
+      fetchVouchers(true); // Filtering
+    }
+  }, [debouncedSearchTerm, filterStatus, sortBy, sortOrder]);
+
+  const fetchVouchers = async (isFiltering = false) => {
     try {
       if (!token) {
         toast.error("Không có token xác thực");
         return;
       }
-      const response = await axios.get(`/api/admin/vouchers`, {
+
+      // Set appropriate loading state
+      if (isFiltering) {
+        setFiltering(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (debouncedSearchTerm.trim()) {
+        params.append("search", debouncedSearchTerm.trim());
+      }
+      if (filterStatus && filterStatus !== "all") {
+        params.append("status", filterStatus);
+      }
+      if (sortBy) {
+        // Map frontend sortBy values to backend values
+        const sortByMapping = {
+          created_at: "createdAt",
+          name: "name",
+          remainingStock: "remainingStock",
+          base_probability: "baseProbability",
+        };
+        params.append("sortBy", sortByMapping[sortBy] || "createdAt");
+      }
+      if (sortOrder) {
+        params.append("sortOrder", sortOrder);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/admin/vouchers${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching vouchers with URL:", url); // Debug log
+
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       console.log("API Response:", response.data); // Debug log
       // Handle both old and new response structures
       const vouchersData = response.data.data || response.data.vouchers || [];
@@ -79,6 +134,7 @@ const VoucherManagement = () => {
       toast.error("Không thể tải voucher");
     } finally {
       setLoading(false);
+      setFiltering(false);
     }
   };
 
@@ -177,35 +233,8 @@ const VoucherManagement = () => {
     });
   };
 
-  const filteredVouchers = vouchers
-    .filter((voucher) => {
-      // Safety check for voucher properties
-      if (!voucher || !voucher.name) return false;
-
-      const matchesSearch = voucher.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        filterStatus === "all" || voucher.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      let aVal = a[sortBy];
-      let bVal = b[sortBy];
-
-      if (sortBy === "remainingStock_percentage") {
-        aVal =
-          (a.remainingStock / (a.initialStock || a.remainingStock || 1)) * 100;
-        bVal =
-          (b.remainingStock / (b.initialStock || b.remainingStock || 1)) * 100;
-      }
-
-      if (sortOrder === "asc") {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
-    });
+  // Since filtering is now done server-side, we just use vouchers directly
+  const filteredVouchers = vouchers;
   const getStatusColor = (status) => {
     switch (status) {
       case "active":
@@ -382,7 +411,9 @@ const VoucherManagement = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8"
+          className={`bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8 ${
+            filtering ? "opacity-75 pointer-events-none" : ""
+          }`}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
@@ -443,8 +474,14 @@ const VoucherManagement = () => {
           </div>
 
           <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-            <span>
-              Hiển thị {filteredVouchers.length} trong {vouchers.length} voucher
+            <span className="flex items-center">
+              {filtering && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2"></div>
+              )}
+              Hiển thị {filteredVouchers.length} voucher
+              {(debouncedSearchTerm || filterStatus !== "all") && (
+                <span className="text-indigo-600 ml-1">(đã lọc)</span>
+              )}
             </span>
             <span>
               Tổng kho:{" "}

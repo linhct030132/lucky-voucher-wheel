@@ -88,24 +88,63 @@ router.get(
   "/vouchers",
   [
     queryValidator("status").optional().isIn(["draft", "active", "inactive"]),
+    queryValidator("search").optional().isLength({ min: 0, max: 255 }),
+    queryValidator("sortBy")
+      .optional()
+      .isIn(["createdAt", "name", "remainingStock", "baseProbability"]),
+    queryValidator("sortOrder").optional().isIn(["asc", "desc"]),
     queryValidator("page").optional().isInt({ min: 1 }),
     queryValidator("limit").optional().isInt({ min: 1, max: 100 }),
   ],
   handleValidationErrors,
   async (req, res, next) => {
     try {
-      const { status, page = 1, limit = 20 } = req.query;
+      const {
+        status,
+        search,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+        page = 1,
+        limit = 20,
+      } = req.query;
+
       const pageNum = Math.max(1, parseInt(page) || 1);
       const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
       const offset = (pageNum - 1) * limitNum;
 
       // Build where clause for Prisma
       const where = {};
-      if (status) {
+      if (status && status !== "all") {
         where.status = status;
+      }
+      if (search && search.trim()) {
+        where.OR = [
+          { name: { contains: search.trim() } },
+          { description: { contains: search.trim() } },
+          { voucherCode: { contains: search.trim() } },
+        ];
+      }
+
+      // Build orderBy clause
+      const orderBy = {};
+      switch (sortBy) {
+        case "name":
+          orderBy.name = sortOrder;
+          break;
+        case "remainingStock":
+          orderBy.remainingStock = sortOrder;
+          break;
+        case "baseProbability":
+          orderBy.baseProbability = sortOrder;
+          break;
+        case "createdAt":
+        default:
+          orderBy.createdAt = sortOrder;
+          break;
       }
 
       console.log("Prisma where clause:", where);
+      console.log("Prisma orderBy clause:", orderBy);
       console.log("Pagination params:", { pageNum, limitNum, offset });
 
       // Get vouchers with aggregated counts using Prisma
@@ -121,9 +160,7 @@ router.get(
               },
             },
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+          orderBy,
           skip: offset,
           take: limitNum,
         }),
@@ -764,48 +801,68 @@ router.get(
  * GET /api/admin/spins
  * Get all spin attempts with user and outcome details
  */
-router.get("/spins", async (req, res, next) => {
-  try {
-    const {
-      page = 1,
-      limit = 20,
-      outcome,
-      dateFrom,
-      dateTo,
-      userId,
-    } = req.query;
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
-    const offset = (pageNum - 1) * limitNum;
+router.get(
+  "/spins",
+  [
+    queryValidator("search").optional().isLength({ min: 0, max: 255 }),
+    queryValidator("outcome").optional().isIn(["win", "lose"]),
+    queryValidator("dateFrom").optional().isISO8601(),
+    queryValidator("dateTo").optional().isISO8601(),
+    queryValidator("userId").optional().isUUID(),
+    queryValidator("page").optional().isInt({ min: 1 }),
+    queryValidator("limit").optional().isInt({ min: 1, max: 100 }),
+  ],
+  handleValidationErrors,
+  async (req, res, next) => {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        search,
+        outcome,
+        dateFrom,
+        dateTo,
+        userId,
+      } = req.query;
+      const pageNum = Math.max(1, parseInt(page) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+      const offset = (pageNum - 1) * limitNum;
 
-    const safeLimitNum = Number.isInteger(limitNum) ? limitNum : 20;
-    const safeOffset = Number.isInteger(offset) ? offset : 0;
+      const safeLimitNum = Number.isInteger(limitNum) ? limitNum : 20;
+      const safeOffset = Number.isInteger(offset) ? offset : 0;
 
-    let whereClause = "WHERE 1=1";
-    const params = [];
+      let whereClause = "WHERE 1=1";
+      const params = [];
 
-    if (outcome) {
-      whereClause += " AND sa.outcome = ?";
-      params.push(outcome);
-    }
+      if (search && search.trim()) {
+        whereClause +=
+          " AND (up.full_name LIKE ? OR up.email LIKE ? OR up.phone LIKE ?)";
+        const searchTerm = `%${search.trim()}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
+      }
 
-    if (dateFrom) {
-      whereClause += " AND sa.created_at >= ?";
-      params.push(dateFrom);
-    }
+      if (outcome) {
+        whereClause += " AND sa.outcome = ?";
+        params.push(outcome);
+      }
 
-    if (dateTo) {
-      whereClause += " AND sa.created_at <= ?";
-      params.push(dateTo);
-    }
+      if (dateFrom) {
+        whereClause += " AND sa.created_at >= ?";
+        params.push(dateFrom);
+      }
 
-    if (userId) {
-      whereClause += " AND sa.user_id = ?";
-      params.push(userId);
-    }
+      if (dateTo) {
+        whereClause += " AND sa.created_at <= ?";
+        params.push(dateTo);
+      }
 
-    const spins = await query(
-      `SELECT 
+      if (userId) {
+        whereClause += " AND sa.user_id = ?";
+        params.push(userId);
+      }
+
+      const spins = await query(
+        `SELECT 
         sa.id,
         sa.outcome,
         sa.created_at,
@@ -814,8 +871,14 @@ router.get("/spins", async (req, res, next) => {
         up.email,
         up.phone,
         v.name as voucher_name,
-        vc.code as voucher_code,
-        v.face_value as voucher_value
+        v.description as voucher_description,
+        v.voucher_type,
+        v.face_value as voucher_value,
+        v.status as voucher_status,
+        v.voucher_code as voucher_code,
+        vc.status as voucher_code_status,
+        vc.issued_at as voucher_issued_at,
+        vc.redeemed_at as voucher_redeemed_at
        FROM spin_attempts sa
        LEFT JOIN user_profiles up ON sa.user_id = up.id
        LEFT JOIN vouchers v ON sa.voucher_id = v.id
@@ -823,15 +886,17 @@ router.get("/spins", async (req, res, next) => {
        ${whereClause}
        ORDER BY sa.created_at DESC
        LIMIT ${safeLimitNum} OFFSET ${safeOffset}`,
-      params
-    );
+        params
+      );
 
-    const [{ total }] = await query(
-      `SELECT COUNT(*) as total FROM spin_attempts sa ${whereClause}`,
-      params
-    );
+      const [{ total }] = await query(
+        `SELECT COUNT(*) as total FROM spin_attempts sa 
+       LEFT JOIN user_profiles up ON sa.user_id = up.id
+       ${whereClause}`,
+        params
+      );
 
-    const [stats] = await query(`
+      const [stats] = await query(`
       SELECT 
         COUNT(*) as total_spins,
         COUNT(CASE WHEN outcome = 'win' THEN 1 END) as total_wins,
@@ -840,41 +905,42 @@ router.get("/spins", async (req, res, next) => {
       FROM spin_attempts
     `);
 
-    // Convert BigInt values to numbers
-    const numericStats = {
-      total_spins: Number(stats.total_spins),
-      total_wins: Number(stats.total_wins),
-      total_losses: Number(stats.total_losses),
-      today_spins: Number(stats.today_spins),
-    };
+      // Convert BigInt values to numbers
+      const numericStats = {
+        total_spins: Number(stats.total_spins),
+        total_wins: Number(stats.total_wins),
+        total_losses: Number(stats.total_losses),
+        today_spins: Number(stats.today_spins),
+      };
 
-    res.json({
-      success: true,
-      data: spins,
-      pagination: {
-        page: pageNum,
-        limit: safeLimitNum,
-        total: parseInt(total) || 0,
-        pages: Math.ceil((parseInt(total) || 0) / safeLimitNum),
-      },
-      stats: {
-        totalSpins: numericStats.total_spins || 0,
-        totalWins: numericStats.total_wins || 0,
-        totalLosses: numericStats.total_losses || 0,
-        todaySpins: numericStats.today_spins || 0,
-        winRate:
-          numericStats.total_spins > 0
-            ? (
-                (numericStats.total_wins / numericStats.total_spins) *
-                100
-              ).toFixed(1)
-            : 0,
-      },
-    });
-  } catch (error) {
-    next(error);
+      res.json({
+        success: true,
+        data: spins,
+        pagination: {
+          page: pageNum,
+          limit: safeLimitNum,
+          total: parseInt(total) || 0,
+          pages: Math.ceil((parseInt(total) || 0) / safeLimitNum),
+        },
+        stats: {
+          totalSpins: numericStats.total_spins || 0,
+          totalWins: numericStats.total_wins || 0,
+          totalLosses: numericStats.total_losses || 0,
+          todaySpins: numericStats.today_spins || 0,
+          winRate:
+            numericStats.total_spins > 0
+              ? (
+                  (numericStats.total_wins / numericStats.total_spins) *
+                  100
+                ).toFixed(1)
+              : 0,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * GET /api/admin/stats
@@ -892,20 +958,25 @@ router.get("/stats", async (req, res, next) => {
       "SELECT COUNT(*) as active_vouchers FROM vouchers WHERE status = 'active'"
     );
 
-    // Get total spins (from spin_attempts or audit_logs)
+    // Get total spins from spin_attempts table
     const [{ total_spins }] = await query(
-      "SELECT COUNT(*) as total_spins FROM audit_logs WHERE entity_type = 'spin_attempt'"
+      "SELECT COUNT(*) as total_spins FROM spin_attempts"
     );
 
-    // Get today's spins
+    // Get today's spins from spin_attempts table
     const [{ today_spins }] = await query(
-      `SELECT COUNT(*) as today_spins FROM audit_logs 
-       WHERE entity_type = 'spin_attempt' AND DATE(created_at) = CURDATE()`
+      `SELECT COUNT(*) as today_spins FROM spin_attempts 
+       WHERE DATE(created_at) = CURDATE()`
     );
 
-    // Get total users (from audit_logs user activities)
+    // Get total users from user_profiles table
     const [{ total_users }] = await query(
-      "SELECT COUNT(DISTINCT actor_id) as total_users FROM audit_logs WHERE actor_id IS NOT NULL"
+      "SELECT COUNT(*) as total_users FROM user_profiles"
+    );
+
+    // Get total wins from spin_attempts table
+    const [{ total_wins }] = await query(
+      "SELECT COUNT(*) as total_wins FROM spin_attempts WHERE outcome = 'win'"
     );
 
     // Get total voucher codes issued
@@ -918,6 +989,12 @@ router.get("/stats", async (req, res, next) => {
       "SELECT COUNT(*) as codes_redeemed FROM voucher_codes WHERE status = 'redeemed'"
     );
 
+    // Calculate win rate (success rate) as percentage of winning spins
+    const winRate =
+      parseInt(total_spins) > 0
+        ? ((parseInt(total_wins) / parseInt(total_spins)) * 100).toFixed(1)
+        : 0;
+
     res.json({
       success: true,
       data: {
@@ -926,15 +1003,10 @@ router.get("/stats", async (req, res, next) => {
         totalSpins: parseInt(total_spins) || 0,
         todaySpins: parseInt(today_spins) || 0,
         totalUsers: parseInt(total_users) || 0,
+        totalWins: parseInt(total_wins) || 0,
         codesIssued: parseInt(codes_issued) || 0,
         codesRedeemed: parseInt(codes_redeemed) || 0,
-        redemptionRate:
-          parseInt(codes_issued) > 0
-            ? (
-                (parseInt(codes_redeemed) / parseInt(codes_issued)) *
-                100
-              ).toFixed(1)
-            : 0,
+        redemptionRate: winRate,
       },
     });
   } catch (error) {
