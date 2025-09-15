@@ -21,6 +21,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "../../components/AdminLayout";
+import ExportModal from "../../components/ExportModal";
 
 const CustomerManagement = () => {
   const { token } = useAuth();
@@ -40,6 +41,7 @@ const CustomerManagement = () => {
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filtering, setFiltering] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -160,6 +162,14 @@ const CustomerManagement = () => {
     });
     setDebouncedSearch("");
     setCurrentPage(1);
+  };
+
+  const handleShowExportModal = () => {
+    setShowExportModal(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
   };
 
   const formatDate = (dateString) => {
@@ -336,7 +346,7 @@ const CustomerManagement = () => {
                 </button>
               </div>
               <button
-                onClick={() => toast.success("Xuất dữ liệu thành công!")}
+                onClick={handleShowExportModal}
                 className="inline-flex items-center px-4 py-2 text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-all text-sm font-medium shadow-sm"
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -869,6 +879,21 @@ const CustomerManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Export Modal */}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={handleCloseExportModal}
+          token={token}
+          exportType="customers"
+          currentFilters={{
+            search: debouncedSearch,
+            activityStatus: filters.activityStatus,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+          }}
+          title="Xuất Dữ Liệu Khách Hàng"
+        />
       </div>
     </AdminLayout>
   );

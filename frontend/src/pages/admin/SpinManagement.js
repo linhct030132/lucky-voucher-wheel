@@ -24,6 +24,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "../../components/AdminLayout";
+import ExportModal from "../../components/ExportModal";
 
 const SpinManagement = () => {
   const { token } = useAuth();
@@ -46,6 +47,7 @@ const SpinManagement = () => {
     search: "",
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Check if any filters are active
   const hasActiveFilters = () => {
@@ -165,12 +167,12 @@ const SpinManagement = () => {
     setCurrentPage(1);
   };
 
-  const exportData = async () => {
-    try {
-      toast.success("Xuất dữ liệu thành công!");
-    } catch (error) {
-      toast.error("Không thể xuất dữ liệu");
-    }
+  const handleShowExportModal = () => {
+    setShowExportModal(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
   };
 
   const getOutcomeIcon = (outcome) => {
@@ -359,7 +361,7 @@ const SpinManagement = () => {
                 Xóa bộ lọc
               </button>
               <button
-                onClick={exportData}
+                onClick={handleShowExportModal}
                 className="px-4 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4 mr-2 inline" />
@@ -679,6 +681,21 @@ const SpinManagement = () => {
             </div>
           )}
         </div>
+
+        {/* Export Modal */}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={handleCloseExportModal}
+          token={token}
+          exportType="spins"
+          currentFilters={{
+            search: debouncedSearch,
+            outcome: filters.outcome,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+          }}
+          title="Xuất Dữ Liệu Lượt Bốc Thăm"
+        />
       </div>
     </AdminLayout>
   );

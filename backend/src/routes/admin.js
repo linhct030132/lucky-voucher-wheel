@@ -1243,4 +1243,393 @@ router.post("/seed", requireRole(["ADMIN"]), async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/admin/spins/export
+ * Export spin data to Excel
+ */
+router.get("/spins/export", async (req, res, next) => {
+  try {
+    const XLSX = require("xlsx");
+    const {
+      search,
+      outcome,
+      dateFrom,
+      dateTo,
+      format = "excel",
+      includeDetails = "true",
+    } = req.query;
+
+    // Build query with filters
+    let whereConditions = [];
+    let queryParams = [];
+
+    // Search filter
+    if (search && search.trim()) {
+      whereConditions.push(`(
+        up.full_name LIKE ? OR 
+        up.email LIKE ? OR 
+        up.phone LIKE ?
+      )`);
+      const searchPattern = `%${search.trim()}%`;
+      queryParams.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    // Outcome filter
+    if (outcome && (outcome === "win" || outcome === "lose")) {
+      whereConditions.push("sa.outcome = ?");
+      queryParams.push(outcome);
+    }
+
+    // Date range filters
+    if (dateFrom) {
+      whereConditions.push("DATE(sa.created_at) >= ?");
+      queryParams.push(dateFrom);
+    }
+
+    if (dateTo) {
+      whereConditions.push("DATE(sa.created_at) <= ?");
+      queryParams.push(dateTo);
+    }
+
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
+
+    // Base query
+    const baseFields = `
+      sa.id,
+      up.full_name,
+      up.email,
+      up.phone,
+      sa.outcome,
+      sa.created_at,
+      sa.ip_address
+    `;
+
+    const detailFields =
+      includeDetails === "true"
+        ? `,
+      v.name as voucher_name,
+      v.face_value as voucher_value,
+      v.voucher_type,
+      v.voucher_code as voucher_code,
+      vc.status as voucher_code_status
+    `
+        : "";
+
+    const spinsQuery = `
+      SELECT ${baseFields}${detailFields}
+      FROM spin_attempts sa
+      LEFT JOIN user_profiles up ON sa.user_id = up.id
+      ${
+        includeDetails === "true"
+          ? `
+        LEFT JOIN vouchers v ON sa.voucher_id = v.id
+        LEFT JOIN voucher_codes vc ON sa.voucher_code_id = vc.id
+      `
+          : ""
+      }
+      ${whereClause}
+      ORDER BY sa.created_at DESC
+    `;
+
+    const spins = await query(spinsQuery, queryParams);
+
+    // Transform data for Excel
+    const excelData = spins.map((spin, index) => {
+      const baseData = {
+        STT: index + 1,
+        "Tên khách hàng": spin.full_name || "Ẩn danh",
+        Email: spin.email || "",
+        "Điện thoại": spin.phone || "",
+        "Kết quả": spin.outcome === "win" ? "Thắng" : "Thua",
+        "Thời gian": new Date(spin.created_at).toLocaleString("vi-VN"),
+        "IP Address": spin.ip_address || "",
+      };
+
+      if (includeDetails === "true") {
+        baseData["Tên voucher"] = spin.voucher_name || "";
+        baseData["Giá trị voucher"] = spin.voucher_value || "";
+        baseData["Loại voucher"] = spin.voucher_type || "";
+        baseData["Mã voucher"] = spin.voucher_code || "";
+        baseData["Trạng thái mã"] = spin.voucher_code_status || "";
+      }
+
+      return baseData;
+    });
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 5 }, // STT
+      { wch: 20 }, // Tên khách hàng
+      { wch: 25 }, // Email
+      { wch: 15 }, // Điện thoại
+      { wch: 10 }, // Kết quả
+      { wch: 20 }, // Thời gian
+      { wch: 15 }, // IP Address
+    ];
+
+    if (includeDetails === "true") {
+      colWidths.push(
+        { wch: 20 }, // Tên voucher
+        { wch: 15 }, // Giá trị voucher
+        { wch: 15 }, // Loại voucher
+        { wch: 15 }, // Mã voucher
+        { wch: 15 } // Trạng thái mã
+      );
+    }
+
+    worksheet["!cols"] = colWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Dữ liệu lượt quay");
+
+    // Generate Excel buffer
+    const excelBuffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    // Set response headers
+    const timestamp = new Date().toISOString().split("T")[0];
+    const filename = `spin-data-${timestamp}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", excelBuffer.length);
+
+    // Log audit trail
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "EXPORT_SPINS_DATA",
+      entityType: "SPIN_ATTEMPTS",
+      entityId: null,
+      afterData: {
+        exportCount: spins.length,
+        filters: { search, outcome, dateFrom, dateTo },
+        includeDetails: includeDetails === "true",
+      },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error("Error exporting spins data:", error);
+    next(error);
+  }
+});
+
+/**
+ * GET /api/admin/users/export
+ * Export customer data to Excel
+ */
+router.get("/users/export", async (req, res, next) => {
+  try {
+    const XLSX = require("xlsx");
+    const {
+      search,
+      activityStatus,
+      dateFrom,
+      dateTo,
+      format = "excel",
+      includeDetails = "true",
+    } = req.query;
+
+    // Build query with filters
+    let whereConditions = [];
+    let queryParams = [];
+
+    // Search filter
+    if (search && search.trim()) {
+      whereConditions.push(`(
+        up.full_name LIKE ? OR 
+        up.email LIKE ? OR 
+        up.phone LIKE ?
+      )`);
+      const searchPattern = `%${search.trim()}%`;
+      queryParams.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    // Date range filters
+    if (dateFrom) {
+      whereConditions.push("DATE(up.created_at) >= ?");
+      queryParams.push(dateFrom);
+    }
+
+    if (dateTo) {
+      whereConditions.push("DATE(up.created_at) <= ?");
+      queryParams.push(dateTo);
+    }
+
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
+
+    // Get users with activity stats
+    const usersQuery = `
+      SELECT 
+        up.id,
+        up.full_name,
+        up.email,
+        up.phone,
+        up.age,
+        up.created_at as first_activity,
+        COUNT(sa.id) as activity_count,
+        MAX(sa.created_at) as last_activity,
+        COUNT(CASE WHEN sa.outcome = 'win' THEN 1 END) as wins_count,
+        COUNT(CASE WHEN sa.outcome = 'lose' THEN 1 END) as losses_count
+      FROM user_profiles up
+      LEFT JOIN spin_attempts sa ON up.id = sa.user_id
+      ${whereClause}
+      GROUP BY up.id, up.full_name, up.email, up.phone, up.age, up.created_at
+      ORDER BY up.created_at DESC
+    `;
+
+    let users = await query(usersQuery, queryParams);
+
+    // Apply activity status filter if specified
+    if (activityStatus && activityStatus !== "all") {
+      users = users.filter((user) => {
+        if (!user.last_activity && activityStatus === "new") return true;
+        if (!user.last_activity) return false;
+
+        const daysSinceActivity = Math.floor(
+          (new Date() - new Date(user.last_activity)) / (1000 * 60 * 60 * 24)
+        );
+
+        switch (activityStatus) {
+          case "active":
+            return daysSinceActivity <= 7;
+          case "idle":
+            return daysSinceActivity > 7 && daysSinceActivity <= 30;
+          case "inactive":
+            return daysSinceActivity > 30;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Transform data for Excel
+    const excelData = users.map((user, index) => {
+      const getActivityStatus = (lastActivity) => {
+        if (!lastActivity) return "Mới";
+        const daysSinceActivity = Math.floor(
+          (new Date() - new Date(lastActivity)) / (1000 * 60 * 60 * 24)
+        );
+        if (daysSinceActivity <= 7) return "Hoạt động";
+        if (daysSinceActivity <= 30) return "Ít hoạt động";
+        return "Không hoạt động";
+      };
+
+      const baseData = {
+        STT: index + 1,
+        "Tên khách hàng": user.full_name || "Ẩn danh",
+        Email: user.email || "",
+        "Điện thoại": user.phone || "",
+        Tuổi: user.age || "",
+        "Ngày tham gia": new Date(user.first_activity).toLocaleString("vi-VN"),
+        "Trạng thái": getActivityStatus(user.last_activity),
+      };
+
+      if (includeDetails === "true") {
+        baseData["Tổng lượt quay"] = Number(user.activity_count) || 0;
+        baseData["Số lần thắng"] = Number(user.wins_count) || 0;
+        baseData["Số lần thua"] = Number(user.losses_count) || 0;
+        baseData["Hoạt động cuối"] = user.last_activity
+          ? new Date(user.last_activity).toLocaleString("vi-VN")
+          : "Chưa có";
+        baseData["Tỷ lệ thắng (%)"] =
+          user.activity_count > 0
+            ? (
+                (Number(user.wins_count) / Number(user.activity_count)) *
+                100
+              ).toFixed(1)
+            : "0";
+      }
+
+      return baseData;
+    });
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Set column widths
+    const colWidths = [
+      { wch: 5 }, // STT
+      { wch: 20 }, // Tên khách hàng
+      { wch: 25 }, // Email
+      { wch: 15 }, // Điện thoại
+      { wch: 8 }, // Tuổi
+      { wch: 20 }, // Ngày tham gia
+      { wch: 15 }, // Trạng thái
+    ];
+
+    if (includeDetails === "true") {
+      colWidths.push(
+        { wch: 12 }, // Tổng lượt quay
+        { wch: 12 }, // Số lần thắng
+        { wch: 12 }, // Số lần thua
+        { wch: 20 }, // Hoạt động cuối
+        { wch: 15 } // Tỷ lệ thắng
+      );
+    }
+
+    worksheet["!cols"] = colWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Dữ liệu khách hàng");
+
+    // Generate Excel buffer
+    const excelBuffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    // Set response headers
+    const timestamp = new Date().toISOString().split("T")[0];
+    const filename = `customer-data-${timestamp}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", excelBuffer.length);
+
+    // Log audit trail
+    await AuditLogger.log({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: "EXPORT_CUSTOMERS_DATA",
+      entityType: "USER_PROFILES",
+      entityId: null,
+      afterData: {
+        exportCount: users.length,
+        filters: { search, activityStatus, dateFrom, dateTo },
+        includeDetails: includeDetails === "true",
+      },
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    });
+
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error("Error exporting customers data:", error);
+    next(error);
+  }
+});
+
 module.exports = router;
